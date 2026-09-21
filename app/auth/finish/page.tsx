@@ -18,16 +18,19 @@ export default function AuthFinishPage() {
         : "/profil";
 
     const finish = async () => {
-      await new Promise((resolve) => window.setTimeout(resolve, 250));
-      const { data, error } = await supabase.auth.getSession();
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (error || !data.session) {
-        setMessage("Nie udało się dokończyć logowania. Wróć do ekranu logowania.");
-        return;
+        if (!error && data.session) {
+          router.replace(next);
+          router.refresh();
+          return;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
       }
 
-      router.replace(next);
-      router.refresh();
+      setMessage("Nie udało się dokończyć logowania. Wróć do ekranu logowania.");
     };
 
     void finish();
