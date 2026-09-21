@@ -167,12 +167,15 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Tylko host może rozpocząć grę." }, { status: 403 });
       }
 
+      const room = await lookupPlatformRoom(code);
       const ok = await startPlatformRoom(code, hostToken);
       if (!ok) {
-        return NextResponse.json(
-          { error: "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę." },
-          { status: 400 },
-        );
+        const message =
+          room?.game_slug === "zakrecone-haslo"
+            ? "Do startu potrzeba 3–12 graczy i wszyscy muszą być gotowi."
+            : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
+
+        return NextResponse.json({ error: message }, { status: 400 });
       }
 
       return NextResponse.json({ ok: true });
@@ -186,7 +189,7 @@ export async function POST(request: Request, context: RouteContext) {
       : rawMessage.includes("Name already taken")
         ? "Ta nazwa jest już zajęta w tym pokoju."
       : rawMessage.includes("Room is full")
-        ? "Pokój jest pełny, maksymalnie 14 osób."
+        ? "Pokój jest pełny."
         : rawMessage.includes("Invalid name")
           ? "Wpisz imię od 1 do 20 znaków."
           : "Nie udało się wykonać tej akcji.";
