@@ -299,7 +299,8 @@ export type ClpRound2DistributionItem = {
 };
 
 export type ClpRound2Prediction = {
-  answer: string;
+  answer: string | null;
+  locked: boolean;
   playerId: string;
 } | null;
 
@@ -738,7 +739,7 @@ export async function nextClpRound7Question(code: string, hostToken: string) {
 export type ClpFinalBoardItem = {
   label: string;
   percent: number | null;
-  rank: number;
+  rank: number | null;
 };
 
 export type ClpFinalPrediction = {
