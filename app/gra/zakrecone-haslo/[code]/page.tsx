@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { lookupPlatformRoom } from "@/lib/platform-db";
 import GameClient from "./game-client";
 
+// Zakręcone Hasło preview trigger
+
 type GamePageProps = {
   params: Promise<{ code: string }>;
 };
