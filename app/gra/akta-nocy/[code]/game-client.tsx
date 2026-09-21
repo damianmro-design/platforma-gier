@@ -559,16 +559,208 @@ function HostView({
         </section>
 
         {allEvidenceB && (
-          <section className="mt-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5">
-            <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
-              Następny etap
-            </span>
-            <h2 className="mt-2 text-xl font-black">Rekonstrukcja nocy</h2>
-            <p className="mt-2 text-sm leading-6 text-orange-50/50">
-              Kolejny moduł będzie wymagał od grupy ułożenia wydarzeń 22:47–23:05 w prawidłowej kolejności i wskazania, które elementy sceny zostały upozorowane.
-            </p>
+          <section className="mt-4 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
+                Następny etap
+              </span>
+              <h2 className="mt-2 text-xl font-black">Rekonstrukcja nocy</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-orange-50/50">
+                Każdy gracz wybierze 7 z 9 wydarzeń, ułoży je w kolejności i wskaże sprawcę, motyw oraz element upozorowania.
+              </p>
+            </div>
+            <PrimaryButton disabled={busy} onClick={onAdvance}>
+              {busy ? "URUCHAMIANIE…" : "ROZPOCZNIJ REKONSTRUKCJĘ →"}
+            </PrimaryButton>
           </section>
         )}
+      </HostShell>
+    );
+  }
+
+  if (phase === "rekonstrukcja") {
+    const reconstruction = data.reconstruction;
+    const submitted = reconstruction?.players.filter((item) => item.submitted).length ?? 0;
+    const total = reconstruction?.players.length ?? data.progress.length;
+    const allSubmitted = total > 0 && submitted === total;
+
+    return (
+      <HostShell code={data.room.code} label="REKONSTRUKCJA NOCY">
+        <section className="rounded-[1.8rem] border border-red-400/15 bg-red-950/15 p-6 shadow-2xl sm:p-8">
+          <span className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
+            ETAP 05 · REKONSTRUKCJA NOCY
+          </span>
+          <h1 className="mt-3 max-w-4xl font-serif text-4xl font-black tracking-[-.035em] sm:text-5xl">
+            Teraz każdy buduje własną wersję kluczowych 18 minut.
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
+            Gracze wybierają 7 wydarzeń spośród 9, ustawiają je w kolejności i wskazują, kto ich zdaniem odpowiada za śmierć Marka. Nie pokazuj jeszcze żadnego rozwiązania.
+          </p>
+        </section>
+
+        <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_.75fr]">
+          <div className="rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5 sm:p-6">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+                  Przesłane rekonstrukcje
+                </span>
+                <strong className="mt-1 block text-4xl font-black">{submitted}/{total}</strong>
+              </div>
+              <span className={`rounded-full border px-3 py-2 text-xs font-black ${
+                allSubmitted
+                  ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                  : "border-orange-100/10 bg-white/[.03] text-orange-100/45"
+              }`}>
+                {allSubmitted ? "WSZYSCY GOTOWI" : "CZEKAMY"}
+              </span>
+            </div>
+
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/35">
+              <i
+                className="block h-full rounded-full bg-gradient-to-r from-red-700 to-orange-500 transition-all"
+                style={{
+                  width: `${total ? Math.round((submitted / total) * 100) : 0}%`,
+                }}
+              />
+            </div>
+
+            <div className="mt-5 space-y-2">
+              {reconstruction?.players.map((player) => (
+                <div
+                  key={player.playerId}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
+                      {AVATARS[player.avatar] ?? "●"}
+                    </span>
+                    <strong className="truncate text-sm">{player.displayName}</strong>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-[.14em] ${
+                    player.submitted ? "text-emerald-300" : "text-orange-100/30"
+                  }`}>
+                    {player.submitted ? "wysłano" : "układa"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[1.5rem] border border-orange-100/10 bg-white/[.025] p-5 sm:p-6">
+            <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
+              Zasada
+            </span>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-orange-50/58">
+              <p>Każdy wybiera dokładnie 7 wydarzeń. Dwa z dziewięciu są fałszywymi tropami.</p>
+              <p>Potem wskazuje podejrzanego, główny motyw i element, który miał stworzyć fałszywy obraz nocy.</p>
+              <p>Po zebraniu wszystkich odpowiedzi pokażemy nie rozwiązanie, tylko wspólną teorię grupy.</p>
+            </div>
+          </div>
+        </section>
+
+        {error && <ErrorBox message={error} />}
+
+        <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <strong className="block text-lg">Wszyscy gotowi?</strong>
+            <span className="mt-1 block text-sm text-orange-50/45">
+              Pokaż na wspólnym ekranie, jaką teorię zbudowała cała grupa.
+            </span>
+          </div>
+          <PrimaryButton disabled={!allSubmitted || busy} onClick={onAdvance}>
+            {busy ? "LICZENIE…" : "POKAŻ WSPÓLNĄ TEORIĘ →"}
+          </PrimaryButton>
+        </section>
+      </HostShell>
+    );
+  }
+
+  if (phase === "rekonstrukcja_wynik") {
+    const summary = data.reconstruction?.summary;
+    const topSuspect = summary?.suspectRanking[0];
+    const topMotive = summary?.motiveRanking[0];
+    const topCoverup = summary?.coverupRanking[0];
+
+    return (
+      <HostShell code={data.room.code} label="WSPÓLNA TEORIA">
+        <section className="rounded-[1.8rem] border border-orange-100/10 bg-[#120907]/95 p-6 shadow-2xl sm:p-8">
+          <span className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
+            WYNIK REKONSTRUKCJI
+          </span>
+          <h1 className="mt-3 max-w-4xl font-serif text-4xl font-black tracking-[-.035em] sm:text-5xl">
+            Tak grupa odtworzyła noc w apartamencie 214.
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
+            To nadal tylko Wasza teoria. System nie potwierdza jeszcze, które elementy są poprawne.
+          </p>
+        </section>
+
+        {summary && (
+          <>
+            <section className="mt-6 grid gap-4 lg:grid-cols-3">
+              <TheoryCard label="Najczęściej wskazywany podejrzany">
+                {topSuspect ? (
+                  <>
+                    <strong className="block text-2xl">{topSuspect.characterName}</strong>
+                    <span className="mt-1 block text-sm text-orange-50/45">
+                      grany przez {topSuspect.displayName}
+                    </span>
+                    <b className="mt-3 block text-red-300">{topSuspect.count}/{summary.total} wskazań</b>
+                  </>
+                ) : (
+                  <span>Brak danych</span>
+                )}
+              </TheoryCard>
+
+              <TheoryCard label="Najczęściej wskazywany motyw">
+                <strong className="block text-xl">{topMotive?.label ?? "Brak danych"}</strong>
+                {topMotive && (
+                  <b className="mt-3 block text-red-300">{topMotive.count}/{summary.total} wskazań</b>
+                )}
+              </TheoryCard>
+
+              <TheoryCard label="Najczęściej wskazane upozorowanie">
+                <strong className="block text-xl">{topCoverup?.label ?? "Brak danych"}</strong>
+                {topCoverup && (
+                  <b className="mt-3 block text-red-300">{topCoverup.count}/{summary.total} wskazań</b>
+                )}
+              </TheoryCard>
+            </section>
+
+            <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#100806]/90 p-5 sm:p-6">
+              <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+                Uśredniona kolejność wydarzeń
+              </span>
+              <div className="mt-4 space-y-2">
+                {summary.consensusTimeline.map((item, index) => (
+                  <div
+                    key={item.key}
+                    className="grid grid-cols-[36px_1fr_auto] items-center gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3"
+                  >
+                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-red-950/40 text-sm font-black text-red-200">
+                      {index + 1}
+                    </span>
+                    <strong className="text-sm">{item.title}</strong>
+                    <span className="text-[10px] font-black text-orange-100/35">
+                      {item.count}/{summary.total}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        <section className="mt-6 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5">
+          <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
+            Następny etap
+          </span>
+          <h2 className="mt-2 text-xl font-black">Akt oskarżenia</h2>
+          <p className="mt-2 text-sm leading-6 text-orange-50/50">
+            Za chwilę każdy prywatnie wskaże sprawcę, motyw i najważniejszy dowód. Dopiero po zebraniu oskarżeń odkryjemy prawdziwy przebieg nocy.
+          </p>
+        </section>
       </HostShell>
     );
   }
