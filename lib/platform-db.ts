@@ -970,3 +970,82 @@ export async function getPartyPlayAccountHistory(
     won: Boolean(row.won),
   })) as PartyPlayAccountHistoryItem[];
 }
+
+
+export type MyPartyPlayPlatformStats = {
+  summary: PartyPlayAccountSummary;
+  history: PartyPlayAccountHistoryItem[];
+};
+
+export async function getMyPartyPlayPlatformStats(accessToken: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": accessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const { data, error } = await supabase.rpc("get_my_partyplay_platform_stats");
+
+  if (error) throw new Error(error.message);
+
+  const payload = (data ?? {}) as {
+    summary?: Record<string, unknown>;
+    history?: Array<Record<string, unknown>>;
+  };
+
+  const rawSummary = payload.summary ?? {};
+  const rawGames = Array.isArray(rawSummary.games) ? rawSummary.games : [];
+
+  const summary: PartyPlayAccountSummary = {
+    games_completed: Number(rawSummary.games_completed ?? 0),
+    wins: Number(rawSummary.wins ?? 0),
+    total_score: Number(rawSummary.total_score ?? 0),
+    best_placement:
+      rawSummary.best_placement == null ? null : Number(rawSummary.best_placement),
+    last_played_at:
+      rawSummary.last_played_at == null ? null : String(rawSummary.last_played_at),
+    games: rawGames.map((game) => {
+      const item = game as Record<string, unknown>;
+      return {
+        gameSlug: String(item.gameSlug ?? ""),
+        gamesCompleted: Number(item.gamesCompleted ?? 0),
+        wins: Number(item.wins ?? 0),
+        totalScore: Number(item.totalScore ?? 0),
+        bestPlacement:
+          item.bestPlacement == null ? null : Number(item.bestPlacement),
+      };
+    }),
+  };
+
+  const history: PartyPlayAccountHistoryItem[] = (
+    Array.isArray(payload.history) ? payload.history : []
+  ).map((row) => ({
+    game_slug: String(row.game_slug ?? ""),
+    display_name: String(row.display_name ?? ""),
+    avatar: String(row.avatar ?? ""),
+    team:
+      row.team === "A" || row.team === "B"
+        ? row.team
+        : null,
+    final_score:
+      row.final_score == null ? null : Number(row.final_score),
+    placement:
+      row.placement == null ? null : Number(row.placement),
+    won: Boolean(row.won),
+    completed_at: String(row.completed_at ?? ""),
+  }));
+
+  return { summary, history } as MyPartyPlayPlatformStats;
+}
