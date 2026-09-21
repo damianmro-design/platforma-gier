@@ -264,6 +264,25 @@ function HostGame({
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
                     Pytajcie o tok myślenia. Oszust może kłamać, tłumaczyć się i odwracać podejrzenia.
                   </p>
+
+                  {game.mission.discussionPrompts.length > 0 && (
+                    <div className="mt-5 rounded-2xl border border-white/9 bg-black/20 p-4 text-left">
+                      <p className="text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">PYTANIA, GDY DYSKUSJA SIADA</p>
+                      <div className="mt-3 space-y-2">
+                        {game.mission.discussionPrompts.map((prompt, index) => (
+                          <button
+                            key={prompt}
+                            type="button"
+                            className="block w-full rounded-xl border border-white/8 bg-white/[.025] px-3 py-3 text-left text-xs font-bold leading-5 text-zinc-300"
+                          >
+                            <span className="mr-2 text-cyan-300">{index + 1}.</span>
+                            {prompt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <button type="button" disabled={busy} onClick={onAdvance} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
                     PRZEJDŹ DO TYPOWANIA →
                   </button>
@@ -439,22 +458,67 @@ function PlayerGame({
                 }}
                 className="rounded-[1.75rem] border border-white/10 bg-white/[.025] p-6"
               >
-                <label htmlFor="pp-answer" className="text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">TWOJA ODPOWIEDŹ</label>
-                <textarea
-                  id="pp-answer"
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value.slice(0, 120))}
-                  maxLength={120}
-                  rows={4}
-                  placeholder={game.mission.placeholder}
-                  className="mt-3 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-base font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-300/45"
-                />
-                <div className="mt-2 flex items-center justify-between text-xs text-zinc-600">
-                  <span>{me.answer ? "Możesz zmienić odpowiedź, dopóki host jej nie odkryje." : "Krótko i konkretnie."}</span>
-                  <span>{answer.length}/120</span>
-                </div>
+                <label htmlFor="pp-answer" className="text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">
+                  {game.mission.responseMode === "choice" ? "TWÓJ WYBÓR" : "TWOJA ODPOWIEDŹ"}
+                </label>
+
+                {game.mission.responseMode === "choice" ? (
+                  <div className="mt-3 grid gap-3">
+                    {game.mission.options.map((option) => {
+                      const selected = answer === option;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setAnswer(option)}
+                          className={`flex min-h-16 items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-black transition active:scale-[.99] ${
+                            selected
+                              ? "border-cyan-300/55 bg-cyan-300/10 text-white"
+                              : "border-white/9 bg-black/20 text-zinc-300"
+                          }`}
+                        >
+                          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border ${
+                            selected ? "border-cyan-300 bg-cyan-300 text-slate-950" : "border-white/15 text-zinc-600"
+                          }`}>
+                            {selected ? "✓" : ""}
+                          </span>
+                          <span>{option}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <>
+                    <textarea
+                      id="pp-answer"
+                      value={answer}
+                      onChange={(event) => setAnswer(event.target.value.slice(0, 120))}
+                      maxLength={120}
+                      rows={4}
+                      placeholder={game.mission.placeholder}
+                      className="mt-3 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-base font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-300/45"
+                    />
+                    <div className="mt-2 flex items-center justify-between text-xs text-zinc-600">
+                      <span>{me.answer ? "Możesz zmienić odpowiedź, dopóki host jej nie odkryje." : "Krótko i konkretnie."}</span>
+                      <span>{answer.length}/120</span>
+                    </div>
+                  </>
+                )}
+
+                {game.mission.responseMode === "choice" && (
+                  <p className="mt-3 text-xs leading-5 text-zinc-600">
+                    Wybierz jedną odpowiedź. Możesz ją zmienić, dopóki host nie pokaże wyników.
+                  </p>
+                )}
+
                 <button type="submit" disabled={busy || !answer.trim()} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
-                  {busy ? "ZAPISUJĘ…" : me.answer ? "ZAPISZ ZMIANĘ" : "ZATWIERDŹ ODPOWIEDŹ"}
+                  {busy
+                    ? "ZAPISUJĘ…"
+                    : me.answer
+                      ? "ZAPISZ ZMIANĘ"
+                      : game.mission.responseMode === "choice"
+                        ? "ZATWIERDŹ WYBÓR"
+                        : "ZATWIERDŹ ODPOWIEDŹ"}
                 </button>
                 {me.answer && <p className="mt-3 text-center text-xs font-black text-emerald-300">✓ Odpowiedź zapisana</p>}
               </form>
