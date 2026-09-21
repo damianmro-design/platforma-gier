@@ -892,3 +892,81 @@ export async function submitClpFinalTiebreak(
   if (error) throw new Error(error.message);
   return data as ClpFinalState["lastEvent"];
 }
+
+
+export type PartyPlayGameSummary = {
+  gameSlug: string;
+  gamesCompleted: number;
+  wins: number;
+  totalScore: number;
+  bestPlacement: number | null;
+};
+
+export type PartyPlayAccountSummary = {
+  games_completed: number;
+  wins: number;
+  total_score: number;
+  best_placement: number | null;
+  last_played_at: string | null;
+  games: PartyPlayGameSummary[];
+};
+
+export type PartyPlayAccountHistoryItem = {
+  game_slug: string;
+  display_name: string;
+  avatar: string;
+  team: "A" | "B" | null;
+  final_score: number | null;
+  placement: number | null;
+  won: boolean;
+  completed_at: string;
+};
+
+export async function getPartyPlayAccountSummary(partyPlayUserId: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_partyplay_account_summary", {
+    p_partyplay_user_id: partyPlayUserId,
+  });
+
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    return {
+      games_completed: 0,
+      wins: 0,
+      total_score: 0,
+      best_placement: null,
+      last_played_at: null,
+      games: [],
+    } as PartyPlayAccountSummary;
+  }
+
+  return {
+    ...row,
+    games_completed: Number(row.games_completed ?? 0),
+    wins: Number(row.wins ?? 0),
+    total_score: Number(row.total_score ?? 0),
+    best_placement:
+      row.best_placement == null ? null : Number(row.best_placement),
+    games: Array.isArray(row.games) ? row.games : [],
+  } as PartyPlayAccountSummary;
+}
+
+export async function getPartyPlayAccountHistory(
+  partyPlayUserId: string,
+  limit = 20,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_partyplay_account_history", {
+    p_partyplay_user_id: partyPlayUserId,
+    p_limit: limit,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    ...row,
+    final_score: row.final_score == null ? null : Number(row.final_score),
+    placement: row.placement == null ? null : Number(row.placement),
+    won: Boolean(row.won),
+  })) as PartyPlayAccountHistoryItem[];
+}
