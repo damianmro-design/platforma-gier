@@ -20,12 +20,15 @@ export async function createRoom(formData: FormData) {
     redirect("/?roomError=unsupported-game");
   }
 
+  let room;
+
   try {
-    const room = await createPlatformRoom(gameSlug);
-    redirect(`/pokoj/${room.code}?host=1`);
+    room = await createPlatformRoom(gameSlug);
   } catch {
     redirect(`/gry/${gameSlug}?roomError=create-failed`);
   }
+
+  redirect(`/pokoj/${room.code}?host=1`);
 }
 
 export async function joinRoom(formData: FormData) {
@@ -35,15 +38,17 @@ export async function joinRoom(formData: FormData) {
     redirect("/?roomError=invalid-code#dolacz");
   }
 
+  let room;
+
   try {
-    const room = await lookupPlatformRoom(code);
-
-    if (!room) {
-      redirect(`/?roomError=not-found&code=${encodeURIComponent(code)}#dolacz`);
-    }
-
-    redirect(`/pokoj/${room.code}`);
+    room = await lookupPlatformRoom(code);
   } catch {
     redirect("/?roomError=lookup-failed#dolacz");
   }
+
+  if (!room) {
+    redirect(`/?roomError=not-found&code=${encodeURIComponent(code)}#dolacz`);
+  }
+
+  redirect(`/pokoj/${room.code}`);
 }
