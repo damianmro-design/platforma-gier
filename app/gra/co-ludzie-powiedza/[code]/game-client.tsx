@@ -539,6 +539,17 @@ function HostRound1({
 
         <h1>{round.prompt}</h1>
 
+        {!between && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Podajecie odpowiedzi po kolei. Każde trafienie daje punkty z tablicy.
+              Po 2 błędach rywale dostają 1 próbę przejęcia i mogą zdobyć odpowiedź
+              oraz bonus równy 50% punktów zebranych w puli tego pytania.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r1-status-row">
           <div className={`clp-active-team team-${round.activeTeam.toLowerCase()}`}>
             <span>{steal ? "PRÓBA PRZEJĘCIA" : "GRA"}</span>
@@ -631,6 +642,11 @@ function PlayerRound1({
                 : "KOLEJ RYWALI"}
           </span>
           <h1>{round.prompt}</h1>
+          {round.mode !== "between" && (
+            <p className="clp-inline-rule">
+              Macie 2 błędy. Potem rywale dostają 1 próbę przejęcia. Odpowiada tylko wskazana osoba.
+            </p>
+          )}
         </div>
 
         <AnswerBoard round={round} compact />
