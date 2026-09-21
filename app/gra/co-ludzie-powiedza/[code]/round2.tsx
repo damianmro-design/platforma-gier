@@ -63,6 +63,16 @@ export function HostRound2({
 
         <h1>{round.prompt}</h1>
 
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Wybierzcie odpowiedź, którą Waszym zdaniem wskazało najwięcej osób z tego pokoju.
+              Do 60 pkt zależy od udziału wybranej odpowiedzi, +40 pkt za trafienie najpopularniejszej.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r2-predictors">
           <PredictorCard
             team="A"
@@ -105,8 +115,8 @@ export function HostRound2({
             <div>
               <span>ODPOWIEDZI ODSŁONIĘTE</span>
               <p>
-                10 pkt za każdą osobę, która wybrała typowaną odpowiedź, plus
-                40 pkt bonusu za trafienie najpopularniejszej odpowiedzi.
+                Do 60 pkt za udział osób, które wybrały Wasz typ, plus 40 pkt
+                bonusu za trafienie najpopularniejszej odpowiedzi.
               </p>
             </div>
             <button type="button" disabled={busy} onClick={onNext}>
@@ -166,6 +176,11 @@ export function PlayerRound2({
                 : "TYPOWANIE"}
           </span>
           <h1>{round.prompt}</h1>
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Naradźcie się. Punkty zależą od tego, ile osób wybrało Wasz typ, a trafienie nr 1 daje dodatkowe 40 pkt.
+            </p>
+          )}
         </div>
 
         {reveal ? (
