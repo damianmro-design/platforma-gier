@@ -24,6 +24,7 @@ type Evidence = {
   summary: string;
   details: string[];
   question: string;
+  image?: string;
 };
 
 type HostInterrogation = {
@@ -2120,53 +2121,105 @@ function EvidenceCards({
   compact?: boolean;
 }) {
   const latestId = evidence.at(-1)?.id;
+  const [preview, setPreview] = useState<Evidence | null>(null);
 
   return (
-    <div className={`mt-6 grid gap-4 ${compact ? "" : "lg:grid-cols-2"}`}>
-      {evidence.map((item) => {
-        const latest = item.id === latestId;
-        return (
-          <article
-            key={item.id}
-            className={`relative overflow-hidden rounded-[1.5rem] border p-5 sm:p-6 ${
-              latest
-                ? "border-red-400/25 bg-red-950/20 shadow-[0_20px_65px_rgba(127,29,29,.16)]"
-                : "border-orange-100/10 bg-[#100806]/90"
-            }`}
-          >
-            {latest && evidence.length > 1 && (
-              <span className="absolute right-4 top-4 rounded-full border border-red-400/20 bg-red-500/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.18em] text-red-200">
-                nowy
+    <>
+      <div className={`mt-6 grid gap-4 ${compact ? "" : "lg:grid-cols-2"}`}>
+        {evidence.map((item) => {
+          const latest = item.id === latestId;
+          return (
+            <article
+              key={item.id}
+              className={`relative overflow-hidden rounded-[1.5rem] border p-5 sm:p-6 ${
+                latest
+                  ? "border-red-400/25 bg-red-950/20 shadow-[0_20px_65px_rgba(127,29,29,.16)]"
+                  : "border-orange-100/10 bg-[#100806]/90"
+              }`}
+            >
+              {latest && evidence.length > 1 && (
+                <span className="absolute right-4 top-4 z-10 rounded-full border border-red-400/20 bg-red-500/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.18em] text-red-200">
+                  nowy
+                </span>
+              )}
+              <span className="text-[9px] font-black uppercase tracking-[.24em] text-orange-300/50">
+                DOWÓD {item.no}
               </span>
-            )}
-            <span className="text-[9px] font-black uppercase tracking-[.24em] text-orange-300/50">
-              DOWÓD {item.no}
-            </span>
-            <h2 className="mt-2 pr-14 text-2xl font-black">{item.title}</h2>
-            <p className="mt-1 text-xs font-bold text-orange-100/35">
-              {item.source}{item.time ? ` · ${item.time}` : ""}
-            </p>
-            <p className="mt-4 text-sm leading-7 text-orange-50/67">{item.summary}</p>
+              <h2 className="mt-2 pr-14 text-2xl font-black">{item.title}</h2>
+              <p className="mt-1 text-xs font-bold text-orange-100/35">
+                {item.source}{item.time ? ` · ${item.time}` : ""}
+              </p>
 
-            <div className="mt-4 space-y-2">
-              {item.details.map((detail) => (
-                <div
-                  key={detail}
-                  className="flex gap-3 rounded-xl border border-orange-100/7 bg-black/15 p-3 text-xs leading-5 text-orange-50/52"
+              {item.image && (
+                <button
+                  type="button"
+                  onClick={() => setPreview(item)}
+                  className="group relative mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
                 >
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-orange-300/50" />
-                  <span>{detail}</span>
-                </div>
-              ))}
-            </div>
+                  <img
+                    src={item.image}
+                    alt={`Materiał dowodowy ${item.no}: ${item.title}`}
+                    className="max-h-[480px] w-full object-contain transition duration-300 group-hover:scale-[1.015]"
+                  />
+                  <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
+                    powiększ dokument
+                  </span>
+                </button>
+              )}
 
-            <div className="mt-4 border-l-2 border-red-500/45 pl-4 text-sm font-bold leading-6 text-orange-100/62">
-              {item.question}
-            </div>
-          </article>
-        );
-      })}
-    </div>
+              <p className="mt-4 text-sm leading-7 text-orange-50/67">{item.summary}</p>
+
+              <div className="mt-4 space-y-2">
+                {item.details.map((detail) => (
+                  <div
+                    key={detail}
+                    className="flex gap-3 rounded-xl border border-orange-100/7 bg-black/15 p-3 text-xs leading-5 text-orange-50/52"
+                  >
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-orange-300/50" />
+                    <span>{detail}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 border-l-2 border-red-500/45 pl-4 text-sm font-bold leading-6 text-orange-100/62">
+                {item.question}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {preview?.image && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Podgląd dowodu ${preview.no}`}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 backdrop-blur-sm sm:p-8"
+          onClick={() => setPreview(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-xs font-black text-white"
+          >
+            ZAMKNIJ ×
+          </button>
+          <div
+            className="max-h-full max-w-5xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={preview.image}
+              alt={`Powiększony materiał dowodowy ${preview.no}: ${preview.title}`}
+              className="max-h-[88vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.8)]"
+            />
+            <p className="mt-3 text-center text-xs font-bold text-orange-50/55">
+              {preview.no} · {preview.title}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
