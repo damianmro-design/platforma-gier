@@ -11,12 +11,13 @@ import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
-import type { ClpRound1State, ClpRound2State, ClpRound3State, ClpRound4State, ClpRound5State, ClpRound6State } from "@/lib/platform-db";
+import type { ClpRound1State, ClpRound2State, ClpRound3State, ClpRound4State, ClpRound5State, ClpRound6State, ClpRound7State } from "@/lib/platform-db";
 import { HostRound2, PlayerRound2 } from "./round2";
 import { HostRound3, PlayerRound3 } from "./round3";
 import { HostRound4, PlayerRound4 } from "./round4";
 import { HostRound5, PlayerRound5 } from "./round5";
 import { HostRound6, PlayerRound6 } from "./round6";
+import { HostRound7, PlayerRound7 } from "./round7";
 
 type RoomState = {
   code: string;
@@ -131,6 +132,19 @@ type PlayerRound6State = {
   round6: ClpRound6State;
 };
 
+type HostRound7State = {
+  role: "host";
+  room: RoomState;
+  round7: ClpRound7State;
+};
+
+type PlayerRound7State = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  round7: ClpRound7State;
+};
+
 type GameState =
   | HostWarmupState
   | PlayerWarmupState
@@ -145,7 +159,9 @@ type GameState =
   | HostRound5State
   | PlayerRound5State
   | HostRound6State
-  | PlayerRound6State;
+  | PlayerRound6State
+  | HostRound7State
+  | PlayerRound7State;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -226,17 +242,43 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "round_7") {
+  if (data.room.phase === "final") {
     return (
       <main className="clp-game-shell">
         <section className="clp-transition-card">
-          <span>RUNDA 6 ZAKOŃCZONA ✓</span>
-          <h1>Liczby nie kłamią.</h1>
+          <span>POJEDYNEK ZAKOŃCZONY ✓</span>
+          <h1>Czas na finał.</h1>
           <p>
-            Wynik jest zapisany. Następny etap to pojedynek drużyn przed finałem.
+            Wszystkie rundy główne są zamknięte. Punkty obu drużyn są zapisane.
           </p>
         </section>
       </main>
+    );
+  }
+
+  if (data.room.phase === "round_7" && "round7" in data) {
+    if (data.role === "host") {
+      return (
+        <HostRound7
+          code={data.room.code}
+          round={data.round7}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "round7Next" })}
+        />
+      );
+    }
+
+    return (
+      <PlayerRound7
+        player={data.player}
+        round={data.round7}
+        busy={busy}
+        error={error}
+        onPrediction={(answer) =>
+          void send({ action: "round7Prediction", answer })
+        }
+      />
     );
   }
 
