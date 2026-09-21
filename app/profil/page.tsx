@@ -235,6 +235,14 @@ export default function ProfilePage() {
             if (mounted) {
               setPlatformStats(stats);
               if (stats.polowanie) setPolowanie(stats.polowanie);
+              setAvatar((currentAvatar) =>
+                isPartyPlayAvatarUnlocked(
+                  currentAvatar,
+                  stats.progression.level.level,
+                )
+                  ? currentAvatar
+                  : "avatar-01",
+              );
             }
           }
         } catch {
