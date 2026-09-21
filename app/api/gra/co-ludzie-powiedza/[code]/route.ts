@@ -5,11 +5,14 @@ import {
   getClpHostProgress,
   getClpPlayerAnswers,
   getClpRound1State,
+  getClpRound2State,
   getPlatformPlayer,
   lookupPlatformRoom,
   nextClpRound1Question,
+  nextClpRound2Question,
   submitClpAnswer,
   submitClpRound1Guess,
+  submitClpRound2Prediction,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -32,6 +35,45 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+
+  if (room.game_phase === "round_2") {
+    const round2 = await getClpRound2State(code);
+
+    if (!round2) {
+      return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
+    }
+
+    if (hostToken) {
+      return NextResponse.json({
+        role: "host",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        round2,
+      });
+    }
+
+    if (playerToken) {
+      const player = await getPlatformPlayer(code, playerToken);
+
+      if (!player) {
+        return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
+      }
+
+      return NextResponse.json({
+        role: "player",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        player,
+        round2,
+      });
+    }
+  }
 
   if (room.game_phase === "round_1") {
     const round1 = await getClpRound1State(code);
@@ -178,6 +220,33 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "round2Prediction") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const event = await submitClpRound2Prediction(
+        code,
+        playerToken,
+        String(body.answer ?? ""),
+      );
+
+      return NextResponse.json({ ok: true, event });
+    }
+
+    if (action === "round2Next") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
+      }
+
+      const phase = await nextClpRound2Question(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const raw = error instanceof Error ? error.message : "";
@@ -188,9 +257,15 @@ export async function POST(request: Request, context: RouteContext) {
         ? "Teraz odpowiada druga drużyna."
         : raw.includes("Question is not accepting answers")
           ? "To pytanie jest już zakończone."
-          : raw.includes("Invalid guess")
-            ? "Wpisz krótką odpowiedź."
-            : "Nie udało się wykonać akcji.";
+          : raw.includes("Prediction already locked")
+            ? "Wasza drużyna już zablokowała odpowiedź."
+            : raw.includes("Question closed")
+              ? "Typowanie jest już zakończone."
+              : raw.includes("Invalid prediction")
+                ? "Wybierz jedną z dostępnych odpowiedzi."
+                : raw.includes("Invalid guess")
+                  ? "Wpisz krótką odpowiedź."
+                  : "Nie udało się wykonać akcji.";
 
     return NextResponse.json({ error: message }, { status: 400 });
   }
