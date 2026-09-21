@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 
 type Player = {
   id: string;
@@ -45,6 +46,7 @@ export default function LobbyClient({ code }: { code: string }) {
   const [avatar, setAvatar] = useState("lion");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
+  const [accountSignedIn, setAccountSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,6 +76,44 @@ export default function LobbyClient({ code }: { code: string }) {
     const timer = window.setInterval(() => void loadLobby(), 1400);
     return () => window.clearInterval(timer);
   }, [loadLobby]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAccount = async () => {
+      const supabase = createPartyPlayAuthClient();
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (!mounted || !userData.user || userData.user.is_anonymous === true) {
+        return;
+      }
+
+      setAccountSignedIn(true);
+
+      const { data: profileData } = await supabase.rpc("get_my_partyplay_profile");
+      if (!mounted) return;
+
+      const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+      const profileName =
+        String(profile?.display_name ?? "").trim() ||
+        String(userData.user.user_metadata?.full_name ?? "").trim() ||
+        userData.user.email?.split("@")[0] ||
+        "";
+
+      const profileAvatar = String(profile?.avatar ?? "").trim();
+
+      if (profileName) setName(profileName.slice(0, 20));
+      if (AVATARS.some(([id]) => id === profileAvatar)) {
+        setAvatar(profileAvatar);
+      }
+    };
+
+    void loadAccount();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function send(body: Record<string, unknown>) {
     setBusy(true);
@@ -190,7 +230,14 @@ export default function LobbyClient({ code }: { code: string }) {
       ) : !me ? (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
-          <h2>Jak mamy Cię wyświetlać?</h2>
+          <h2>{accountSignedIn ? "Twój profil PartyPlay jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
+          {accountSignedIn ? (
+            <p>Dane zostały uzupełnione z Twojego konta. Możesz je zmienić tylko na potrzeby tej rozgrywki.</p>
+          ) : (
+            <p>
+              Możesz wejść jako gość albo <a href={`/login?next=/pokoj/${code}`} className="font-black text-violet-300">zalogować się do PartyPlay</a>.
+            </p>
+          )}
 
           <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
           <input
