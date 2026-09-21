@@ -782,6 +782,7 @@ function PlayerView({
   onOpen,
   onHide,
   onShow,
+  onSubmitReconstruction,
 }: {
   data: PlayerState;
   busy: boolean;
@@ -790,14 +791,35 @@ function PlayerView({
   onOpen: () => void;
   onHide: () => void;
   onShow: () => void;
+  onSubmitReconstruction: (payload: {
+    eventOrder: string[];
+    suspectPlayerId: string;
+    motiveKey: string;
+    coverupKey: string;
+  }) => Promise<boolean>;
 }) {
   const phase = data.room.phase;
   const role = data.roleCard;
   const firstOpen = role.dossierOpened;
+  const reconstructionStage =
+    phase === "rekonstrukcja" || phase === "rekonstrukcja_wynik";
   const publicStage =
     phase === "pierwsze_zeznania" ||
     isEvidencePhase(phase) ||
-    phase === "przesluchania_a";
+    phase === "przesluchania_a" ||
+    reconstructionStage;
+
+  if (reconstructionStage && !dossierVisible) {
+    return (
+      <PlayerReconstructionView
+        data={data}
+        busy={busy}
+        error={error}
+        onShowDossier={onShow}
+        onSubmit={onSubmitReconstruction}
+      />
+    );
+  }
 
   if (publicStage && !dossierVisible) {
     if (isEvidencePhase(phase) || phase === "przesluchania_a") {
@@ -881,6 +903,320 @@ function PlayerView({
       publicStage={publicStage}
       onHide={onHide}
     />
+  );
+}
+
+function PlayerReconstructionView({
+  data,
+  busy,
+  error,
+  onShowDossier,
+  onSubmit,
+}: {
+  data: PlayerState;
+  busy: boolean;
+  error: string;
+  onShowDossier: () => void;
+  onSubmit: (payload: {
+    eventOrder: string[];
+    suspectPlayerId: string;
+    motiveKey: string;
+    coverupKey: string;
+  }) => Promise<boolean>;
+}) {
+  const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const [suspectPlayerId, setSuspectPlayerId] = useState("");
+  const [motiveKey, setMotiveKey] = useState("");
+  const [coverupKey, setCoverupKey] = useState("");
+  const eventByKey = useMemo(
+    () => new Map(data.reconstructionEvents.map((item) => [item.key, item])),
+    [data.reconstructionEvents],
+  );
+
+  const resultPhase = data.room.phase === "rekonstrukcja_wynik";
+  const submitted = Boolean(data.reconstruction?.submitted);
+
+  function toggleEvent(key: string) {
+    setSelectedEvents((current) => {
+      if (current.includes(key)) {
+        return current.filter((item) => item !== key);
+      }
+      if (current.length >= 7) return current;
+      return [...current, key];
+    });
+  }
+
+  function moveEvent(index: number, direction: -1 | 1) {
+    setSelectedEvents((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  async function submit() {
+    if (
+      selectedEvents.length !== 7 ||
+      !suspectPlayerId ||
+      !motiveKey ||
+      !coverupKey
+    ) {
+      return;
+    }
+
+    await onSubmit({
+      eventOrder: selectedEvents,
+      suspectPlayerId,
+      motiveKey,
+      coverupKey,
+    });
+  }
+
+  if (submitted || resultPhase) {
+    const suspect = data.cast.find(
+      (item) => item.playerId === data.reconstruction?.suspect_player_id,
+    );
+    const motive = data.motiveOptions.find(
+      (item) => item.key === data.reconstruction?.motive_key,
+    );
+    const coverup = data.coverupOptions.find(
+      (item) => item.key === data.reconstruction?.coverup_key,
+    );
+
+    return (
+      <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+        <Backdrop />
+        <div className="relative mx-auto max-w-2xl px-5 py-8">
+          <TopBar code={data.room.code} label="REKONSTRUKCJA NOCY" />
+          <section className="mt-6 rounded-[2rem] border border-emerald-300/15 bg-[#0d120d]/95 p-6 text-center shadow-2xl sm:p-8">
+            <span className="text-[10px] font-black uppercase tracking-[.28em] text-emerald-300">
+              TEORIA ZAPISANA
+            </span>
+            <h1 className="mt-3 font-serif text-4xl font-black">
+              {resultPhase ? "Wspólna teoria jest już na ekranie." : "Czekamy na pozostałych."}
+            </h1>
+            <p className="mt-4 text-sm leading-7 text-orange-50/55">
+              Twoja rekonstrukcja pozostaje tajna do momentu, w którym prowadzący pokaże zbiorczy wynik.
+            </p>
+
+            {data.reconstruction && (
+              <div className="mt-6 grid gap-3 text-left">
+                <MiniTheory label="Podejrzany">
+                  {suspect
+                    ? `${suspect.characterName}, ${suspect.displayName}`
+                    : "zapisano"}
+                </MiniTheory>
+                <MiniTheory label="Motyw">
+                  {motive?.label ?? "zapisano"}
+                </MiniTheory>
+                <MiniTheory label="Upozorowanie">
+                  {coverup?.label ?? "zapisano"}
+                </MiniTheory>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={onShowDossier}
+              className="mt-6 rounded-xl border border-orange-100/10 bg-white/[.035] px-5 py-3 text-xs font-black text-orange-50/70"
+            >
+              OTWÓRZ MOJE AKTA
+            </button>
+          </section>
+          {error && <ErrorBox message={error} />}
+        </div>
+      </main>
+    );
+  }
+
+  const ready =
+    selectedEvents.length === 7 &&
+    Boolean(suspectPlayerId) &&
+    Boolean(motiveKey) &&
+    Boolean(coverupKey);
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+      <Backdrop />
+      <div className="relative mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <TopBar code={data.room.code} label="REKONSTRUKCJA NOCY" />
+
+        <section className="mt-6 rounded-[1.8rem] border border-red-400/15 bg-red-950/15 p-5 sm:p-6">
+          <span className="text-[10px] font-black uppercase tracking-[.26em] text-red-300">
+            ETAP 05
+          </span>
+          <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">
+            Odtwórz 18 najważniejszych minut.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-orange-50/52">
+            Spośród 9 wydarzeń wybierz dokładnie 7, które Twoim zdaniem naprawdę należą do przebiegu nocy. Dwa są fałszywymi tropami.
+          </p>
+        </section>
+
+        <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+              Twoja kolejność
+            </span>
+            <b className={selectedEvents.length === 7 ? "text-emerald-300" : "text-orange-100/40"}>
+              {selectedEvents.length}/7
+            </b>
+          </div>
+
+          {selectedEvents.length === 0 ? (
+            <p className="mt-4 text-sm text-orange-50/35">
+              Wybieraj wydarzenia poniżej. Kolejność wyboru możesz później zmienić.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {selectedEvents.map((key, index) => {
+                const event = eventByKey.get(key);
+                if (!event) return null;
+
+                return (
+                  <div
+                    key={key}
+                    className="grid grid-cols-[34px_1fr_auto] items-center gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3"
+                  >
+                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-red-950/40 text-sm font-black text-red-200">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <strong className="block text-sm">{event.title}</strong>
+                      <span className="mt-1 block text-[11px] leading-4 text-orange-50/35">
+                        {event.copy}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={() => moveEvent(index, -1)}
+                        className="h-7 w-8 rounded-md border border-orange-100/10 text-xs disabled:opacity-20"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === selectedEvents.length - 1}
+                        onClick={() => moveEvent(index, 1)}
+                        className="h-7 w-8 rounded-md border border-orange-100/10 text-xs disabled:opacity-20"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-5">
+          <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+            Wszystkie wydarzenia
+          </span>
+          <div className="mt-3 grid gap-3">
+            {data.reconstructionEvents.map((event) => {
+              const selectedIndex = selectedEvents.indexOf(event.key);
+              const selected = selectedIndex >= 0;
+              const blocked = !selected && selectedEvents.length >= 7;
+
+              return (
+                <button
+                  key={event.key}
+                  type="button"
+                  disabled={blocked}
+                  onClick={() => toggleEvent(event.key)}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    selected
+                      ? "border-red-400/35 bg-red-950/25"
+                      : "border-orange-100/10 bg-white/[.025]"
+                  } disabled:opacity-35`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <strong className="text-sm">{event.title}</strong>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black ${
+                      selected
+                        ? "bg-red-500/15 text-red-200"
+                        : "bg-white/[.04] text-orange-50/30"
+                    }`}>
+                      {selected ? `#${selectedIndex + 1}` : "WYBIERZ"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-orange-50/40">{event.copy}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <ChoiceSection label="Kto jest najbardziej podejrzany?">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {data.cast.map((member) => (
+              <button
+                key={member.playerId}
+                type="button"
+                onClick={() => setSuspectPlayerId(member.playerId)}
+                className={`rounded-xl border p-3 text-left ${
+                  suspectPlayerId === member.playerId
+                    ? "border-red-400/35 bg-red-950/25"
+                    : "border-orange-100/10 bg-white/[.025]"
+                }`}
+              >
+                <strong className="block text-sm">{member.characterName}</strong>
+                <span className="mt-1 block text-[11px] text-orange-50/35">
+                  {member.characterLabel} · {member.displayName}
+                </span>
+              </button>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        <ChoiceSection label="Jaki był główny motyw?">
+          <div className="grid gap-2">
+            {data.motiveOptions.map((option) => (
+              <ChoiceButton
+                key={option.key}
+                selected={motiveKey === option.key}
+                onClick={() => setMotiveKey(option.key)}
+              >
+                {option.label}
+              </ChoiceButton>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        <ChoiceSection label="Co miało najbardziej zafałszować obraz nocy?">
+          <div className="grid gap-2">
+            {data.coverupOptions.map((option) => (
+              <ChoiceButton
+                key={option.key}
+                selected={coverupKey === option.key}
+                onClick={() => setCoverupKey(option.key)}
+              >
+                {option.label}
+              </ChoiceButton>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        {error && <ErrorBox message={error} />}
+
+        <div className="sticky bottom-3 mt-6 rounded-2xl border border-orange-100/10 bg-[#100806]/95 p-3 shadow-2xl backdrop-blur-xl">
+          <button
+            type="button"
+            disabled={!ready || busy}
+            onClick={() => void submit()}
+            className="w-full rounded-xl bg-gradient-to-r from-red-700 to-orange-600 px-5 py-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            {busy ? "ZAPISUJĘ…" : "ZATWIERDŹ REKONSTRUKCJĘ"}
+          </button>
+        </div>
+      </div>
+    </main>
   );
 }
 
