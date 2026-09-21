@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   ZH_ALPHABET,
   ZH_VOWELS,
@@ -39,20 +40,6 @@ type PlayerState = {
 
 type GameState = HostState | PlayerState;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 const DIFFICULTY: Record<number, string> = {
   1: "ŁATWE",
@@ -171,8 +158,8 @@ function EventBanner({ event, compact = false }: { event: ZhLastEvent; compact?:
 
 function PlayerAvatar({ player, small = false }: { player: { avatar: string; displayName?: string; display_name?: string }; small?: boolean }) {
   return (
-    <span className={`grid shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] ${small ? "h-10 w-10 text-xl" : "h-12 w-12 text-2xl"}`}>
-      {AVATARS[player.avatar] ?? "🎮"}
+    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-white/[.04] ${small ? "h-10 w-10" : "h-12 w-12"}`}>
+      <PartyPlayAvatar id={player.avatar} size={small ? 38 : 46} />
     </span>
   );
 }
