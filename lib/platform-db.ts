@@ -83,6 +83,26 @@ export async function joinPlatformRoom(code: string, displayName: string, avatar
   return player as JoinedPlayer;
 }
 
+export async function joinPlatformRoomAccount(
+  code: string,
+  displayName: string,
+  avatar: string,
+  partyPlayUserId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("join_platform_room_account", {
+    p_code: code,
+    p_display_name: displayName,
+    p_avatar: avatar,
+    p_partyplay_user_id: partyPlayUserId,
+  });
+
+  if (error) throw new Error(error.message);
+  const player = Array.isArray(data) ? data[0] : data;
+  if (!player?.player_token) throw new Error("Nie udało się dołączyć do pokoju.");
+  return player as JoinedPlayer;
+}
+
 export async function listPlatformLobby(code: string) {
   const supabase = getClient();
   const { data, error } = await supabase.rpc("list_platform_lobby", {
