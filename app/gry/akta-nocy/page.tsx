@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
+import { createRoom } from "../../room-actions";
 
 export const metadata: Metadata = {
   title: "Akta Nocy — PartyPlay",
@@ -69,12 +70,15 @@ export default function AktaNocyPage() {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="#sprawa-001"
-                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_18px_55px_rgba(153,27,27,.22)] transition hover:brightness-110"
-              >
-                Otwórz sprawę #001
-              </a>
+              <form action={createRoom}>
+                <input type="hidden" name="gameSlug" value="akta-nocy" />
+                <button
+                  type="submit"
+                  className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_18px_55px_rgba(153,27,27,.22)] transition hover:brightness-110 sm:w-auto"
+                >
+                  Utwórz pokój · sprawa #001
+                </button>
+              </form>
               <a
                 href="#przebieg"
                 className="inline-flex items-center justify-center rounded-2xl border border-orange-100/12 bg-white/[.035] px-6 py-4 text-sm font-black text-orange-50/80 transition hover:bg-white/[.07]"
@@ -229,15 +233,15 @@ export default function AktaNocyPage() {
         <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
           <div className="rounded-[2rem] border border-orange-200/12 bg-[linear-gradient(110deg,rgba(127,29,29,.24),rgba(124,45,18,.16),rgba(0,0,0,.1))] p-7 sm:p-10">
             <p className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
-              Etap 1
+              Etap 2
             </p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-.045em] sm:text-4xl">
-              Fundament gry i pierwsza sprawa są już zdefiniowane.
+              Lobby bez drużyn i wejście do sprawy są gotowe.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/50">
-              Kolejny krok to zbudowanie lobby bez drużyn, systemu przydziału
-              postaci i prywatnych kart roli. Dopiero potem podpinamy dowody,
-              przesłuchania i finałowe oskarżenie.
+              Pokój obsługuje 5–12 graczy bez podziału na drużyny. Kolejny krok
+              to trwały przydział postaci i prywatne karty roli, a później
+              paczki dowodowe, przesłuchania i finałowe oskarżenie.
             </p>
           </div>
         </section>
