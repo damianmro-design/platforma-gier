@@ -18,6 +18,13 @@ export type PartyPlayProgressInput = {
   polowanieWins: number;
   polowanieBadges: number;
   platformGames: PartyPlayGameProgress[];
+  podPrzykrywka?: {
+    oszustWins: number;
+    correctFinalVotes: number;
+    perfectCoverWins: number;
+    innocentFinalDefenderWins: number;
+    interrogatedWins: number;
+  };
 };
 
 export type PartyPlayLevel = {
@@ -216,6 +223,77 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
       target: 3,
     }),
   ];
+
+  const pp = input.podPrzykrywka ?? {
+    oszustWins: 0,
+    correctFinalVotes: 0,
+    perfectCoverWins: 0,
+    innocentFinalDefenderWins: 0,
+    interrogatedWins: 0,
+  };
+
+  badges.push(
+    makeBadge({
+      code: "game:pod-przykrywka:detective",
+      title: "Dobry trop",
+      description: "Poprawnie wskaż Oszusta w finałowym głosowaniu 3 razy.",
+      icon: "🔍",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.correctFinalVotes),
+      target: 3,
+    }),
+    makeBadge({
+      code: "game:pod-przykrywka:master_detective",
+      title: "Śledczy",
+      description: "Poprawnie wskaż Oszusta w finałowym głosowaniu 10 razy.",
+      icon: "🕵️",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.correctFinalVotes),
+      target: 10,
+    }),
+    makeBadge({
+      code: "game:pod-przykrywka:perfect_cover",
+      title: "Idealna przykrywka",
+      description: "Wygraj jako Oszust, nie otrzymując ani jednego głosu podejrzeń w całej grze.",
+      icon: "🕶️",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.perfectCoverWins),
+      target: 1,
+    }),
+    makeBadge({
+      code: "game:pod-przykrywka:oszust_3",
+      title: "Nie do rozszyfrowania",
+      description: "Wygraj 3 razy jako Oszust.",
+      icon: "🎭",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.oszustWins),
+      target: 3,
+    }),
+    makeBadge({
+      code: "game:pod-przykrywka:false_alarm",
+      title: "Fałszywy alarm",
+      description: "Jako Agent traf do finałowej dwójki podejrzanych i mimo to wygraj grę.",
+      icon: "🚨",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.innocentFinalDefenderWins),
+      target: 1,
+    }),
+    makeBadge({
+      code: "game:pod-przykrywka:under_pressure",
+      title: "Pod presją",
+      description: "Wygraj grę po tym, jak trafisz na przesłuchanie.",
+      icon: "🎙️",
+      scope: "game",
+      gameSlug: "pod-przykrywka",
+      current: safeNumber(pp.interrogatedWins),
+      target: 1,
+    }),
+  );
 
   for (const meta of PARTYPLAY_GAMES.filter((game) => game.connectedToProgress)) {
     const game = gameProgress.get(meta.slug) ?? {
