@@ -23,6 +23,9 @@ export type PpMission = {
   briefing: string;
   prompt: string;
   placeholder: string;
+  responseMode: "text" | "choice";
+  options: string[];
+  discussionPrompts: string[];
 };
 
 export type PpSubmission = {
