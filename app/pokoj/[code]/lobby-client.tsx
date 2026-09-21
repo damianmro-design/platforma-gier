@@ -18,6 +18,7 @@ type LobbyState = {
   };
   players: Player[];
   currentPlayerId: string | null;
+  recoveryCode: string | null;
   isHost: boolean;
 };
 
@@ -42,6 +43,8 @@ export default function LobbyClient({ code }: { code: string }) {
   const [data, setData] = useState<LobbyState | null>(null);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("lion");
+  const [recoverName, setRecoverName] = useState("");
+  const [recoverCode, setRecoverCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -109,6 +112,20 @@ export default function LobbyClient({ code }: { code: string }) {
     await send({ action: "join", name, avatar });
   }
 
+  async function recover(event: FormEvent) {
+    event.preventDefault();
+    if (!recoverName.trim() || recoverCode.trim().length !== 6) {
+      setError("Wpisz imię i 6-znakowy kod powrotu.");
+      return;
+    }
+
+    await send({
+      action: "recover",
+      name: recoverName,
+      recoveryCode: recoverCode,
+    });
+  }
+
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
@@ -132,14 +149,44 @@ export default function LobbyClient({ code }: { code: string }) {
   return (
     <div className="lobby-live">
       {activeWithoutSession ? (
-        <section className="player-join-panel room-already-started">
+        <form className="player-join-panel room-already-started" onSubmit={recover}>
           <span className="lobby-label">ROZGRYWKA JUŻ TRWA</span>
-          <h2>Do tego pokoju nie można już dołączyć jako nowy gracz.</h2>
+          <h2>Nowi gracze nie mogą już dołączyć.</h2>
           <p>
-            Jeśli grałeś wcześniej na tym urządzeniu, wróć do tej samej
-            przeglądarki. Nie twórz nowej postaci w rozpoczętej rozgrywce.
+            Jeśli wcześniej brałeś udział w tej grze, odzyskaj swoją postać
+            za pomocą imienia i kodu powrotu pokazanego w lobby.
           </p>
-        </section>
+
+          <label className="player-name-label" htmlFor="recoverName">Twoje imię</label>
+          <input
+            id="recoverName"
+            className="player-name-input"
+            value={recoverName}
+            onChange={(event) => setRecoverName(event.target.value)}
+            maxLength={20}
+            autoComplete="off"
+            placeholder="np. Damian"
+          />
+
+          <label className="player-name-label" htmlFor="recoverCode">Kod powrotu</label>
+          <input
+            id="recoverCode"
+            className="player-name-input"
+            value={recoverCode}
+            onChange={(event) =>
+              setRecoverCode(
+                event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6),
+              )
+            }
+            maxLength={6}
+            autoComplete="off"
+            placeholder="ABC234"
+          />
+
+          <button className="join-player-button" type="submit" disabled={busy}>
+            {busy ? "Odzyskiwanie…" : "Odzyskaj swoją postać"}
+          </button>
+        </form>
       ) : !me ? (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
@@ -182,6 +229,12 @@ export default function LobbyClient({ code }: { code: string }) {
             <span>GRASZ JAKO</span>
             <strong>{me.display_name}</strong>
           </div>
+          {data.recoveryCode && (
+            <div className="recovery-code">
+              <small>KOD POWROTU</small>
+              <strong>{data.recoveryCode}</strong>
+            </div>
+          )}
           <button
             type="button"
             className={me.ready ? "ready-button ready" : "ready-button"}
