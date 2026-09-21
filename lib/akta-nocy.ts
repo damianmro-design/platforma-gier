@@ -371,3 +371,236 @@ export function getAktaNocyRoles(playerCount: number) {
 export function getAktaNocyRoleByKey(roleKey: string) {
   return APARTAMENT_214_ROLES.find((role) => role.id === roleKey) ?? null;
 }
+
+export type AktaNocyEvidence = {
+  id: string;
+  no: string;
+  title: string;
+  source: string;
+  time?: string;
+  summary: string;
+  details: string[];
+  question: string;
+};
+
+export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
+  {
+    id: "monitoring-gap",
+    no: "A-01",
+    title: "Brak nagrania z korytarza",
+    source: "Raport systemu monitoringu · kamera C-02",
+    time: "22:48:13–22:56:07",
+    summary:
+      "Jedyna kamera obejmująca korytarz prowadzący do apartamentu 214 nie ma zapisu przez 7 minut i 54 sekundy. Pozostałe kamery hotelowe działały normalnie.",
+    details: [
+      "Brak dotyczy wyłącznie kamery C-02 na 2 piętrze.",
+      "Ostatnia poprawna klatka przed luką ma znacznik 22:48:12.",
+      "Nagrywanie wraca o 22:56:08 bez restartu całego systemu.",
+    ],
+    question:
+      "Awaria była przypadkowa, celowa czy ktoś po prostu wykorzystał lukę, o której wcześniej nie wiedział?",
+  },
+  {
+    id: "door-log",
+    no: "A-02",
+    title: "Dziennik zamka apartamentu 214",
+    source: "System kontroli dostępu · drzwi 214",
+    time: "22:47–23:05",
+    summary:
+      "System zarejestrował wejście do apartamentu tuż przed początkiem luki monitoringu oraz otwarcie drzwi od środka kilka minut później.",
+    details: [
+      "22:47:31, zaakceptowano kartę przypisaną do apartamentu 214.",
+      "22:47:36, drzwi otwarte. 22:47:40, drzwi zamknięte.",
+      "22:54:09, drzwi otwarte od środka bez użycia karty.",
+      "22:54:14, drzwi ponownie zamknięte.",
+      "23:05:41, użyto karty głównej hotelu.",
+    ],
+    question:
+      "Kto mógł mieć dostęp do karty 214 i kto opuszczał pokój o 22:54?",
+  },
+  {
+    id: "late-message",
+    no: "A-03",
+    title: "Wiadomość wysłana o 23:02",
+    source: "Konto Marka Radeckiego · wiadomość do Oskara Dębskiego",
+    time: "23:02",
+    summary:
+      "Na koncie Marka znajduje się wiadomość wysłana już po okresie, w którym część zeznań umieszcza kluczowe wydarzenia.",
+    details: [
+      "Treść: „Nie publikuj nic. Muszę to sprawdzić jeszcze raz. Odezwę się rano.”",
+      "Wiadomość została poprawnie wysłana i dostarczona.",
+      "Na tym etapie nie wiadomo jeszcze, z którego urządzenia została wysłana.",
+    ],
+    question:
+      "Czy wiadomość dowodzi, że Marek żył o 23:02, czy tylko że ktoś miał dostęp do jego konta?",
+  },
+  {
+    id: "missing-drive",
+    no: "A-04",
+    title: "Puste etui po pendrivie",
+    source: "Inwentaryzacja miejsca zdarzenia · biurko w apartamencie 214",
+    summary:
+      "Na biurku znaleziono otwarte, czarne etui na nośnik USB. Samego pendrive'a nie było ani w etui, ani w torbie Marka.",
+    details: [
+      "Laptop Marka pozostawał otwarty na biurku.",
+      "Telefon znajdował się w pokoju.",
+      "Czarne etui pasuje do opisu nośnika, na którym Marek trzymał najbardziej wrażliwe materiały.",
+      "Nie znaleziono śladów wymuszonego otwarcia torby.",
+    ],
+    question:
+      "Kto wiedział o pendrivie i komu najbardziej zależało, żeby zniknął?",
+  },
+];
+
+export type AktaNocyInterrogation = {
+  roleKey: string;
+  headline: string;
+  prompts: string[];
+  pressurePoint: string;
+};
+
+export const AKTA_NOCY_INTERROGATIONS_A: AktaNocyInterrogation[] = [
+  {
+    roleKey: "manager",
+    headline: "Zamek i bezpieczeństwo hotelu",
+    prompts: [
+      "Czy system zamka w 214 był tej nocy w pełni wiarygodny?",
+      "Czy przed zdarzeniem wiedziałaś o jakiejkolwiek usterce w tym apartamencie?",
+      "Kto poza Markiem mógł legalnie dostać się do 214?",
+    ],
+    pressurePoint:
+      "Jeśli unika odpowiedzi o usterkach, przypomnij, że log zamka jest jednym z kluczowych dowodów.",
+  },
+  {
+    roleKey: "technician",
+    headline: "Luka monitoringu",
+    prompts: [
+      "Dlaczego tylko kamera C-02 przestała zapisywać obraz?",
+      "Czy ktoś mógł ręcznie usunąć fragment bez wyłączania całego systemu?",
+      "Gdzie dokładnie byłeś między 22:48 a 22:56?",
+    ],
+    pressurePoint:
+      "Dopytaj, czy luka mogła powstać bez ingerencji człowieka.",
+  },
+  {
+    roleKey: "partner",
+    headline: "Zaginiony pendrive",
+    prompts: [
+      "Czy wiedziałaś, że Marek nosił ważne materiały na czarnym pendrivie?",
+      "O co dokładnie pokłóciliście się przed 22:35?",
+      "Czy po kłótni próbowałaś wrócić do jego rzeczy lub pokoju?",
+    ],
+    pressurePoint:
+      "Jeśli zaprzecza znajomości pendrive'a, wróć do pustego etui znalezionego na biurku.",
+  },
+  {
+    roleKey: "reporter",
+    headline: "Najważniejsze 8 minut",
+    prompts: [
+      "Gdzie byłeś dokładnie między 22:47 a 22:56?",
+      "Czy wchodziłeś na 2 piętro albo do strefy VIP?",
+      "Dlaczego o 22:58 wysłałeś nerwową wiadomość ze swojego telefonu?",
+    ],
+    pressurePoint:
+      "Poproś o możliwie dokładną minutową oś czasu, nie tylko ogólne alibi.",
+  },
+  {
+    roleKey: "investor",
+    headline: "Motyw finansowy",
+    prompts: [
+      "Czego dotyczyła Twoja rozmowa z Markiem o 22:43?",
+      "Czy próbowałeś zatrzymać jego publikację?",
+      "Kto może potwierdzić, że po 22:47 przebywałeś w lobby?",
+    ],
+    pressurePoint:
+      "Oddziel motyw od możliwości popełnienia zbrodni. Pytaj o oba elementy osobno.",
+  },
+  {
+    roleKey: "waitress",
+    headline: "Korytarz 2 piętra",
+    prompts: [
+      "Kogo widziałaś na 2 piętrze między 22:48 a 22:56?",
+      "Czy ktoś wyglądał, jakby się spieszył albo próbował nie rzucać w oczy?",
+      "Dlaczego wcześniej nie podałaś wszystkich szczegółów ochronie?",
+    ],
+    pressurePoint:
+      "Daj jej możliwość ujawnienia obserwacji bez oskarżania jej o udział w zbrodni.",
+  },
+  {
+    roleKey: "security",
+    headline: "Kontrola strefy VIP",
+    prompts: [
+      "Czy przez cały czas byłeś na posterunku przy wejściu VIP?",
+      "Kto miał identyfikator pozwalający wejść bez dodatkowej kontroli?",
+      "Czy między 22:46 a 22:53 ktoś mógł przejść niezauważony?",
+    ],
+    pressurePoint:
+      "Pytaj o realne możliwości wejścia, a nie tylko o procedury zapisane w regulaminie.",
+  },
+  {
+    roleKey: "lawyer",
+    headline: "Próba zatrzymania publikacji",
+    prompts: [
+      "Dlaczego kontaktowałaś się z Markiem tuż przed zdarzeniem?",
+      "Czy materiał o Igorze był jedyną publikacją, której się obawialiście?",
+      "Co Marek miał na myśli, mówiąc o problemie „we własnym środowisku”?",
+    ],
+    pressurePoint:
+      "Sprawdź, czy motyw sponsora nie jest zbyt oczywistym tropem.",
+  },
+  {
+    roleKey: "photographer",
+    headline: "Zdjęcia z czasu luki",
+    prompts: [
+      "Czy robiłeś zdjęcia w pobliżu 2 piętra podczas luki monitoringu?",
+      "Czy na którymś zdjęciu widać odbicie korytarza albo przechodzące osoby?",
+      "Dlaczego nie przekazałeś wszystkich zdjęć od razu?",
+    ],
+    pressurePoint:
+      "Poproś o dokładny znacznik czasu zdjęć.",
+  },
+  {
+    roleKey: "doctor",
+    headline: "Czas śmierci",
+    prompts: [
+      "Czy wiadomość z 23:02 pasuje do Twojej pierwszej oceny stanu Marka?",
+      "Co możesz powiedzieć o czasie śmierci bez zgadywania dokładnej minuty?",
+      "Czy miejsce zdarzenia wyglądało naturalnie czy coś Cię zaniepokoiło?",
+    ],
+    pressurePoint:
+      "Nie pozwól, by grupa traktowała godzinę wysłania wiadomości jako automatyczny czas śmierci.",
+  },
+  {
+    roleKey: "assistant",
+    headline: "Urządzenia i pliki Marka",
+    prompts: [
+      "Czy Marek mógł wysyłać wiadomości z więcej niż jednego urządzenia?",
+      "Jak wyglądał jego czarny pendrive i co zwykle na nim przechowywał?",
+      "Czy w ostatnich plikach roboczych pojawiało się nazwisko lub pseudonim kogoś z gali?",
+    ],
+    pressurePoint:
+      "Dopytaj o laptop i synchronizację wiadomości, ale nie zakładaj jeszcze, z którego urządzenia wysłano wiadomość.",
+  },
+  {
+    roleKey: "guest",
+    headline: "Nagranie zza kulis",
+    prompts: [
+      "Czy nagrywałaś coś na 2 piętrze około 22:51?",
+      "Czy w tle nagrania słychać rozmowę lub charakterystyczne zdanie?",
+      "Dlaczego nie wspomniałaś wcześniej, że nagrywałaś w tej strefie?",
+    ],
+    pressurePoint:
+      "Skup się na dźwięku i godzinie nagrania, nie na naruszeniu zasad gali.",
+  },
+];
+
+export function getAktaNocyEvidenceCountFromPhase(phase: string | null | undefined) {
+  if (!phase?.startsWith("dowody_a_")) return phase === "przesluchania_a" ? 4 : 0;
+  const value = Number(phase.replace("dowody_a_", ""));
+  return Number.isFinite(value) ? Math.max(0, Math.min(4, value)) : 0;
+}
+
+export function getAktaNocyInterrogationByRole(roleKey: string) {
+  return AKTA_NOCY_INTERROGATIONS_A.find((item) => item.roleKey === roleKey) ?? null;
+}
+
