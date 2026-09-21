@@ -149,7 +149,15 @@ export default function LobbyClient({ code }: { code: string }) {
       return;
     }
 
-    await send({ action: "join", name, avatar });
+    const supabase = createPartyPlayAuthClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    await send({
+      action: "join",
+      name,
+      avatar,
+      partyPlayAccessToken: sessionData.session?.access_token ?? null,
+    });
   }
 
   async function recover(event: FormEvent) {
@@ -266,7 +274,11 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
 
           <button className="join-player-button" type="submit" disabled={busy}>
-            {busy ? "Dołączanie…" : "Dołącz do pokoju"}
+            {busy
+              ? "Dołączanie…"
+              : accountSignedIn
+                ? "Dołącz jako konto PartyPlay"
+                : "Dołącz jako gość"}
           </button>
         </form>
       ) : (
