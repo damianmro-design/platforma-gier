@@ -145,7 +145,10 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-5 text-center text-xs leading-5 text-zinc-600">
-            Na tym etapie podpinamy istniejące konta. Rejestrację nowych kont dodamy jako kolejny krok.
+            Nie masz jeszcze konta?{" "}
+            <Link href="/rejestracja" className="font-black text-violet-300">
+              Utwórz konto PartyPlay
+            </Link>
           </p>
         </div>
       </section>
