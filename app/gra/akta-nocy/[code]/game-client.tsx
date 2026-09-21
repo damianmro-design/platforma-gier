@@ -1572,6 +1572,81 @@ function DossierSection({
   );
 }
 
+function TheoryCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[1.5rem] border border-orange-100/10 bg-[#100806]/90 p-5">
+      <span className="text-[9px] font-black uppercase tracking-[.2em] text-orange-300/50">
+        {label}
+      </span>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
+function MiniTheory({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-orange-100/8 bg-white/[.025] p-3">
+      <span className="text-[9px] font-black uppercase tracking-[.18em] text-orange-300/45">
+        {label}
+      </span>
+      <strong className="mt-1 block text-sm text-orange-50/78">{children}</strong>
+    </div>
+  );
+}
+
+function ChoiceSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#100806]/90 p-5">
+      <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+        {label}
+      </span>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
+function ChoiceButton({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-xl border p-3 text-left text-sm font-bold transition ${
+        selected
+          ? "border-red-400/35 bg-red-950/25 text-orange-50"
+          : "border-orange-100/10 bg-white/[.025] text-orange-50/60"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 function PrimaryButton({
   disabled,
   onClick,
