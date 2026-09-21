@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   PpGameState,
   PpPlayer,
@@ -67,7 +68,7 @@ function Shell({
 }: {
   room: RoomInfo;
   game: PpGameState;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <main className="min-h-screen overflow-hidden bg-[#041019] text-white">
