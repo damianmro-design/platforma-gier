@@ -189,7 +189,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (hostToken) {
     const progress = await getAktaNocyHostProgress(code, hostToken);
-    const castRows = await getAktaNocyPublicCast(code);
+    const castRows = await getAktaNocyPublicCast(code, hostToken);
     const cast = publicCastForRows(castRows);
 
     let reconstructionRows: Awaited<
@@ -266,7 +266,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (playerToken) {
     const assignment = await getAktaNocyPlayerAssignment(code, playerToken);
-    const castRows = await getAktaNocyPublicCast(code);
+    const castRows = await getAktaNocyPublicCast(code, playerToken);
     const cast = publicCastForRows(castRows);
     const reconstruction =
       room.game_phase === "rekonstrukcja" ||
