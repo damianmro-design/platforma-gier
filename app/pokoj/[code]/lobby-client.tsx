@@ -66,6 +66,11 @@ export default function LobbyClient({ code }: { code: string }) {
           window.location.assign(`/gra/zakrecone-haslo/${code}`);
           return;
         }
+
+        if (next.room.gameSlug === "pod-przykrywka") {
+          window.location.assign(`/gra/pod-przykrywka/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -179,15 +184,17 @@ export default function LobbyClient({ code }: { code: string }) {
 
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
   const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
-  const minPlayers = isWordGame ? 3 : 4;
+  const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
+  const isIndividualGame = isWordGame || isUndercoverGame;
+  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : 4;
   const maxPlayers = isWordGame ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
-  const waiting = isWordGame
+  const waiting = isIndividualGame
     ? data?.players ?? []
     : data?.players.filter((player) => !player.team) ?? [];
   const allReady = Boolean(data?.players.length && data.players.every((player) => player.ready));
-  const allAssigned = isWordGame
+  const allAssigned = isIndividualGame
     ? true
     : Boolean(data?.players.length && data.players.every((player) => player.team));
   const canStart = Boolean(
@@ -340,7 +347,7 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
         )}
 
-        {!isWordGame && allAssigned && data.players.length > 0 && (
+        {!isIndividualGame && allAssigned && data.players.length > 0 && (
           <div className="teams-layout">
             <Team title="Drużyna A" players={teamA} currentPlayerId={data.currentPlayerId} />
             <div className="versus">VS</div>
@@ -356,7 +363,7 @@ export default function LobbyClient({ code }: { code: string }) {
             <h3>Ty kontrolujesz start</h3>
           </div>
           <div className="host-buttons">
-            {!isWordGame && (
+            {!isIndividualGame && (
               <button
                 type="button"
                 className="shuffle-button"
@@ -379,7 +386,9 @@ export default function LobbyClient({ code }: { code: string }) {
             <p className="start-hint">
               {isWordGame
                 ? "Do startu: 3–12 osób i wszyscy oznaczeni jako gotowi."
-                : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                : isUndercoverGame
+                  ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
+                  : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
