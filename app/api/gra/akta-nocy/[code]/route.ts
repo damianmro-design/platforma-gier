@@ -2,6 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   advanceAktaNocyPhase,
+  getAktaNocyAccusationPlayer,
+  getAktaNocyAccusationProgress,
+  getAktaNocyAccusationResults,
   getAktaNocyHostInterrogations,
   getAktaNocyHostProgress,
   getAktaNocyPlayerAssignment,
@@ -12,6 +15,7 @@ import {
   openAktaNocyDossier,
   revealAktaNocyEvidenceA,
   revealAktaNocyEvidenceB,
+  submitAktaNocyAccusation,
   submitAktaNocyReconstruction,
 } from "@/lib/platform-db";
 import {
@@ -25,6 +29,7 @@ import {
   getAktaNocyInterrogationByRole,
   getAktaNocyRoleByKey,
 } from "@/lib/akta-nocy";
+import { AKTA_NOCY_SOLUTION } from "@/lib/akta-nocy-solution";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -35,7 +40,12 @@ function cleanCode(value: string) {
 }
 
 function publicEvidenceForPhase(phase: string | null | undefined) {
-  if (phase === "rekonstrukcja" || phase === "rekonstrukcja_wynik") {
+  if (
+    phase === "rekonstrukcja" ||
+    phase === "rekonstrukcja_wynik" ||
+    phase === "akt_oskarzenia" ||
+    phase?.startsWith("ujawnienie_")
+  ) {
     return [...AKTA_NOCY_EVIDENCE_A, ...AKTA_NOCY_EVIDENCE_B];
   }
 
@@ -163,6 +173,82 @@ function buildReconstructionSummary(
     motiveRanking,
     coverupRanking,
     consensusTimeline,
+  };
+}
+
+
+function revealPayloadForPhase(
+  phase: string | null | undefined,
+  cast: ReturnType<typeof publicCastForRows>,
+) {
+  if (!phase?.startsWith("ujawnienie_")) return null;
+
+  const culprit = cast.find(
+    (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+  ) ?? null;
+
+  if (phase === "ujawnienie_1") {
+    return { step: 1, content: AKTA_NOCY_SOLUTION.reveal.step1, culprit: null };
+  }
+
+  if (phase === "ujawnienie_2") {
+    return { step: 2, content: AKTA_NOCY_SOLUTION.reveal.step2, culprit: null };
+  }
+
+  if (phase === "ujawnienie_3") {
+    return { step: 3, content: AKTA_NOCY_SOLUTION.reveal.step3, culprit };
+  }
+
+  return { step: 4, content: AKTA_NOCY_SOLUTION.reveal.step4, culprit };
+}
+
+function buildAccusationSummary(
+  rows: Awaited<ReturnType<typeof getAktaNocyAccusationResults>>,
+  cast: ReturnType<typeof publicCastForRows>,
+) {
+  const castById = new Map(cast.map((item) => [item.playerId, item]));
+  const culprit = cast.find(
+    (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+  ) ?? null;
+  const evidenceById = new Map(
+    [...AKTA_NOCY_EVIDENCE_A, ...AKTA_NOCY_EVIDENCE_B].map((item) => [
+      item.id,
+      item,
+    ]),
+  );
+  const motiveByKey = new Map(
+    AKTA_NOCY_MOTIVE_OPTIONS.map((item) => [item.key, item.label]),
+  );
+
+  const results = rows.map((row) => {
+    const suspect = castById.get(row.suspect_player_id) ?? null;
+    const suspectCorrect = Boolean(
+      culprit && row.suspect_player_id === culprit.playerId,
+    );
+    const motiveCorrect = row.motive_key === AKTA_NOCY_SOLUTION.motiveKey;
+
+    return {
+      playerId: row.player_id,
+      displayName: row.display_name,
+      avatar: row.avatar,
+      suspect,
+      motiveKey: row.motive_key,
+      motiveLabel: motiveByKey.get(row.motive_key) ?? row.motive_key,
+      evidenceId: row.evidence_id,
+      evidenceNo: evidenceById.get(row.evidence_id)?.no ?? "",
+      evidenceTitle: evidenceById.get(row.evidence_id)?.title ?? row.evidence_id,
+      suspectCorrect,
+      motiveCorrect,
+      fullyCorrect: suspectCorrect && motiveCorrect,
+    };
+  });
+
+  return {
+    total: results.length,
+    correctSuspect: results.filter((item) => item.suspectCorrect).length,
+    correctMotive: results.filter((item) => item.motiveCorrect).length,
+    fullyCorrect: results.filter((item) => item.fullyCorrect).length,
+    results,
   };
 }
 
