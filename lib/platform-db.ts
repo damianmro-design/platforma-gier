@@ -1195,7 +1195,7 @@ export async function getPartyPlayRankingAggregates(accessToken: string) {
     (row: Record<string, unknown>) => ({
       userId: String(row.userId ?? ""),
       displayName: String(row.displayName ?? "Gracz"),
-      avatar: String(row.avatar ?? "lion"),
+      avatar: String(row.avatar ?? "avatar-01"),
       games: (Array.isArray(row.games) ? row.games : []).map(
         (game: Record<string, unknown>) => ({
           gameSlug: String(game.gameSlug ?? ""),
