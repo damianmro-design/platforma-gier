@@ -6,13 +6,16 @@ import {
   getClpPlayerAnswers,
   getClpRound1State,
   getClpRound2State,
+  getClpRound3State,
   getPlatformPlayer,
   lookupPlatformRoom,
   nextClpRound1Question,
   nextClpRound2Question,
+  nextClpRound3Question,
   submitClpAnswer,
   submitClpRound1Guess,
   submitClpRound2Prediction,
+  submitClpRound3Ranking,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -35,6 +38,45 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+
+  if (room.game_phase === "round_3") {
+    const round3 = await getClpRound3State(code);
+
+    if (!round3) {
+      return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
+    }
+
+    if (hostToken) {
+      return NextResponse.json({
+        role: "host",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        round3,
+      });
+    }
+
+    if (playerToken) {
+      const player = await getPlatformPlayer(code, playerToken);
+
+      if (!player) {
+        return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
+      }
+
+      return NextResponse.json({
+        role: "player",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        player,
+        round3,
+      });
+    }
+  }
 
   if (room.game_phase === "round_2") {
     const round2 = await getClpRound2State(code);
@@ -247,6 +289,32 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "round3Ranking") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const ranking = Array.isArray(body.ranking)
+        ? body.ranking.map((item) => String(item))
+        : [];
+
+      const event = await submitClpRound3Ranking(code, playerToken, ranking);
+      return NextResponse.json({ ok: true, event });
+    }
+
+    if (action === "round3Next") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
+      }
+
+      const phase = await nextClpRound3Question(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const raw = error instanceof Error ? error.message : "";
@@ -263,9 +331,13 @@ export async function POST(request: Request, context: RouteContext) {
               ? "Typowanie jest już zakończone."
               : raw.includes("Invalid prediction")
                 ? "Wybierz jedną z dostępnych odpowiedzi."
-                : raw.includes("Invalid guess")
-                  ? "Wpisz krótką odpowiedź."
-                  : "Nie udało się wykonać akcji.";
+                : raw.includes("Ranking already locked")
+                  ? "Wasza drużyna już zatwierdziła ranking."
+                  : raw.includes("Invalid ranking")
+                    ? "Ułóż wszystkie 5 odpowiedzi bez powtórzeń."
+                    : raw.includes("Invalid guess")
+                      ? "Wpisz krótką odpowiedź."
+                      : "Nie udało się wykonać akcji.";
 
     return NextResponse.json({ error: message }, { status: 400 });
   }
