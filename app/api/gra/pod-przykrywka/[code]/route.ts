@@ -2,9 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   advancePpPhase,
+  extendPpPhaseTimer,
   getPlatformPlayer,
   getPpState,
   lookupPlatformRoom,
+  skipPpPlayer,
   submitPpAnswer,
   submitPpVote,
 } from "@/lib/platform-db";
@@ -25,6 +27,9 @@ function messageFor(error: unknown) {
   if (raw.includes("Invalid answer")) return "Odpowiedź musi mieć od 1 do 120 znaków.";
   if (raw.includes("Not answer phase")) return "Teraz nie można już zmienić odpowiedzi.";
   if (raw.includes("Not vote phase")) return "Teraz nie trwa głosowanie.";
+  if (raw.includes("Player still online")) return "Ten gracz jest nadal połączony z grą.";
+  if (raw.includes("Cannot skip now")) return "W tej fazie nie można pominąć gracza.";
+  if (raw.includes("Timer not extendable")) return "W tej fazie nie można przedłużyć czasu.";
   return "Nie udało się wykonać tej akcji.";
 }
 
@@ -91,6 +96,27 @@ export async function POST(request: Request, context: RouteContext) {
       }
       const phase = await advancePpPhase(code, hostToken);
       return NextResponse.json({ ok: true, phase });
+    }
+
+    if (action === "extend_timer") {
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może przedłużać czas." }, { status: 403 });
+      }
+      const seconds = Math.min(Math.max(Number(body.seconds ?? 60) || 60, 15), 180);
+      const bonusSeconds = await extendPpPhaseTimer(code, hostToken, seconds);
+      return NextResponse.json({ ok: true, bonusSeconds });
+    }
+
+    if (action === "skip_player") {
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może pominąć nieaktywnego gracza." }, { status: 403 });
+      }
+      const playerId = String(body.playerId ?? "").trim();
+      if (!playerId) {
+        return NextResponse.json({ error: "Nieprawidłowy gracz." }, { status: 400 });
+      }
+      await skipPpPlayer(code, hostToken, playerId);
+      return NextResponse.json({ ok: true });
     }
 
     if (!playerToken) {
