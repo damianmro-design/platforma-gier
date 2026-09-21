@@ -3,7 +3,7 @@ import { joinRoom } from "./room-actions";
 import AccountMenu from "./account-menu";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
-type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word";
+type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
 
 type GameCardProps = {
   title: string;
@@ -174,14 +174,65 @@ function GameArt({ type }: { type: Art }) {
     );
   }
 
+  if (type === "word") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_30%,rgba(167,139,250,.4),transparent_32%),linear-gradient(145deg,#190b35,#43157a_58%,#111827)]">
+        <div className="absolute left-8 top-10 rotate-[-12deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">PIZZA</div>
+        <div className="absolute right-8 top-14 rotate-[9deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">FILM</div>
+        <div className="absolute bottom-9 left-1/2 -translate-x-1/2 rotate-[2deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">?</div>
+        <p className="text-center text-4xl font-black tracking-[-.06em] text-white drop-shadow-xl">
+          ZAKRĘCONE<br /><span className="text-violet-200">HASŁO</span>
+        </p>
+      </div>
+    );
+  }
+
+  if (type === "duo") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_25%_30%,rgba(244,114,182,.34),transparent_28%),radial-gradient(circle_at_75%_65%,rgba(34,211,238,.28),transparent_30%),linear-gradient(145deg,#250b2f,#4c155b_48%,#083344)]">
+        <div className="absolute left-[16%] top-[24%] h-24 w-24 rounded-full border-2 border-pink-200/40 bg-pink-400/10 blur-[.2px]" />
+        <div className="absolute right-[15%] bottom-[20%] h-24 w-24 rounded-full border-2 border-cyan-200/40 bg-cyan-400/10 blur-[.2px]" />
+        <div className="absolute left-1/2 top-1/2 h-20 w-[2px] -translate-x-1/2 -translate-y-1/2 rotate-[32deg] bg-gradient-to-b from-pink-300 via-white to-cyan-300 opacity-70" />
+        <div className="relative z-10 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[.34em] text-pink-200/70">DLA DWOJGA</p>
+          <p className="mt-2 text-5xl font-black tracking-[-.08em] text-white">TYLKO</p>
+          <p className="-mt-2 text-5xl font-black tracking-[-.08em] text-cyan-200">MY</p>
+          <div className="mt-4 flex justify-center gap-2 text-[10px] font-black">
+            <span className="rounded-full border border-pink-200/20 bg-pink-300/10 px-3 py-1 text-pink-100">JA</span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white">?</span>
+            <span className="rounded-full border border-cyan-200/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">TY</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "cipher") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,.30),transparent_28%),linear-gradient(145deg,#04111a,#071f2c_55%,#111827)]">
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(103,232,249,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,.18)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="absolute left-8 top-8 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 font-mono text-xs font-black tracking-[.25em] text-cyan-200">7 4 ? 2</div>
+        <div className="absolute right-7 bottom-8 rotate-[6deg] rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 font-mono text-[10px] font-black text-emerald-200">ACCESS?</div>
+        <div className="relative z-10 rounded-[1.8rem] border border-cyan-300/20 bg-black/40 px-8 py-6 text-center shadow-[0_0_55px_rgba(34,211,238,.12)] backdrop-blur-sm">
+          <p className="font-mono text-[10px] font-black uppercase tracking-[.35em] text-cyan-300/70">MISSION CODE</p>
+          <p className="mt-2 text-5xl font-black tracking-[.12em] text-white">SZYFR</p>
+          <p className="mt-3 font-mono text-xs font-bold tracking-[.28em] text-cyan-100/70">••• 4 8 2 •••</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_30%,rgba(167,139,250,.4),transparent_32%),linear-gradient(145deg,#190b35,#43157a_58%,#111827)]">
-      <div className="absolute left-8 top-10 rotate-[-12deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">PIZZA</div>
-      <div className="absolute right-8 top-14 rotate-[9deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">FILM</div>
-      <div className="absolute bottom-9 left-1/2 -translate-x-1/2 rotate-[2deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">?</div>
-      <p className="text-center text-4xl font-black tracking-[-.06em] text-white drop-shadow-xl">
-        ZAKRĘCONE<br /><span className="text-violet-200">HASŁO</span>
-      </p>
+    <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_18%,rgba(251,191,36,.30),transparent_24%),linear-gradient(145deg,#241506,#5a2c08_52%,#28130b)]">
+      <div className="absolute left-5 top-8 rotate-[-8deg] rounded-xl border border-amber-200/25 bg-amber-300/10 px-4 py-2 text-xs font-black text-amber-100">1 000</div>
+      <div className="absolute right-6 top-10 rotate-[7deg] rounded-xl border border-orange-200/25 bg-orange-300/10 px-4 py-2 text-xs font-black text-orange-100">5 000</div>
+      <div className="absolute bottom-7 left-8 rounded-full border border-red-300/25 bg-red-400/15 px-4 py-2 text-[10px] font-black text-red-100">ALL IN</div>
+      <div className="relative z-10 text-center">
+        <p className="text-[10px] font-black uppercase tracking-[.32em] text-amber-200/70">LICYTACJA</p>
+        <p className="mt-2 text-5xl font-black tracking-[-.07em] text-white">VA</p>
+        <p className="-mt-2 text-5xl font-black tracking-[-.07em] text-amber-300">BANQUE</p>
+        <div className="mx-auto mt-4 h-1.5 w-28 rounded-full bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 shadow-[0_0_20px_rgba(251,146,60,.5)]" />
+      </div>
     </div>
   );
 }
@@ -471,6 +522,42 @@ export default function Home() {
               art="word"
               href="/gry/zakrecone-haslo"
               status="new"
+            />
+
+            <GameCard
+              title="TYLKO MY"
+              eyebrow="Gra dla 2 osób"
+              description="Sprawdźcie, jak dobrze się znacie. Przewidujcie swoje wybory, szukajcie zgodności i polujcie na momenty telepatii."
+              players="2 graczy"
+              time="20–30 min"
+              tags={["dla dwojga", "relacyjna", "telepatia"]}
+              accent="pink"
+              art="duo"
+              status="soon"
+            />
+
+            <GameCard
+              title="SZYFR"
+              eyebrow="Kooperacyjna misja"
+              description="Każdy widzi inne informacje. Rozmawiajcie, łączcie tropy i rozwiązujcie kody, zanim skończy się czas."
+              players="2–6 graczy"
+              time="30–45 min"
+              tags={["kooperacyjna", "escape room", "komunikacja"]}
+              accent="cyan"
+              art="cipher"
+              status="soon"
+            />
+
+            <GameCard
+              title="VA BANQUE"
+              eyebrow="Licytacja i ryzyko"
+              description="Licytuj kategorię, przejmuj pytania i decyduj, ile jesteś gotów postawić. Wiedza to dopiero połowa gry."
+              players="2–8 graczy"
+              time="30–45 min"
+              tags={["licytacja", "quiz", "ryzyko"]}
+              accent="gold"
+              art="auction"
+              status="soon"
             />
           </div>
         </section>
