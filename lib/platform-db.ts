@@ -1009,7 +1009,7 @@ export async function getMyPartyPlayPlatformStats(
   });
 
   const { data, error } = await supabase.rpc("get_my_partyplay_platform_stats", {
-    p_history_limit: Math.min(Math.max(options?.historyLimit ?? 10, 1), 50),
+    p_history_limit: Math.min(Math.max(options?.historyLimit ?? 10, 1), 200),
     p_history_offset: Math.max(options?.historyOffset ?? 0, 0),
     p_game_slug: options?.gameSlug?.trim() || null,
   });
@@ -1160,7 +1160,7 @@ export async function nextZhRound(code: string, hostToken: string) {
 
 
 export type PartyPlayRankingAggregate = {
-  userId: string;
+  rankingKey: string;
   displayName: string;
   avatar: string;
   games: PartyPlayGameSummary[];
@@ -1193,7 +1193,7 @@ export async function getPartyPlayRankingAggregates(accessToken: string) {
 
   return (Array.isArray(data) ? data : []).map(
     (row: Record<string, unknown>) => ({
-      userId: String(row.userId ?? ""),
+      rankingKey: String(row.rankingKey ?? ""),
       displayName: String(row.displayName ?? "Gracz"),
       avatar: String(row.avatar ?? "avatar-01"),
       games: (Array.isArray(row.games) ? row.games : []).map(
