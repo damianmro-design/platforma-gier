@@ -12,6 +12,8 @@ export type PpPhase =
   | "final_defense_one"
   | "final_defense_two"
   | "final_vote"
+  | "final_locked"
+  | "final_accused"
   | "result";
 
 export type PpRole = "agent" | "saboteur";
@@ -22,6 +24,9 @@ export type PpPlayer = {
   avatar: string;
   submitted: boolean;
   voted: boolean;
+  online: boolean;
+  lastSeenAt: string;
+  skipped: boolean;
 };
 
 export type PpMission = {
@@ -81,6 +86,10 @@ export type PpTwist = {
   finalDefenderTwoAvatar: string | null;
   activeFinalDefenderId: string | null;
   isCurrentPlayerFinalDefender: boolean;
+  finalTie: boolean;
+  finalAccusedPlayerId: string | null;
+  finalAccusedPlayerName: string | null;
+  finalAccusedPlayerAvatar: string | null;
 };
 
 export type PpResult = {
@@ -95,11 +104,13 @@ export type PpResult = {
 export type PpGameState = {
   phase: PpPhase;
   phaseStartedAt: string;
+  phaseTimeBonusSeconds: number;
   missionIndex: number;
   missionCount: number;
   playerCount: number;
   submittedCount: number;
   votedCount: number;
+  skippedCount: number;
   players: PpPlayer[];
   mission: PpMission | null;
   currentPlayer: PpCurrentPlayer | null;
