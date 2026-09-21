@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClpRound5State } from "@/lib/platform-db";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -9,20 +10,6 @@ type Player = {
   team: "A" | "B" | null;
 };
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 export function HostRound5({
   code,
@@ -208,7 +195,7 @@ export function PlayerRound5({
             />
           ) : (
             <div className="clp-r5-wait-card">
-              <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+              <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
               <strong>
                 {predictor
                   ? predictor.display_name + " zatwierdza typ Waszej drużyny"
@@ -228,7 +215,7 @@ export function PlayerRound5({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+          <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
           <strong>{player.display_name}</strong>
           <small>DRUŻYNA {team}</small>
         </footer>
@@ -259,7 +246,7 @@ function PlayerGrid({
             disabled={busy}
             onClick={() => onPick(candidate.id)}
           >
-            <span>{AVATARS[candidate.avatar] ?? "🎮"}</span>
+            <span><PartyPlayAvatar id={candidate.avatar} size={38} /></span>
             <strong>{candidate.display_name}</strong>
             <small>DRUŻYNA {candidate.team}</small>
           </button>
@@ -280,7 +267,7 @@ function PredictorCard({
 }) {
   return (
     <article className={"clp-r5-predictor team-" + team.toLowerCase()}>
-      <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+      <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
       <div>
         <small>DRUŻYNA {team}</small>
         <strong>{predictor?.display_name ?? "—"}</strong>
@@ -304,7 +291,7 @@ function Distribution({
       {round.distribution.map((item) => (
         <article key={item.id} className={item.rank === 1 ? "winner" : ""}>
           <div>
-            <span>{AVATARS[item.avatar] ?? "🎮"}</span>
+            <span><PartyPlayAvatar id={item.avatar} size={38} /></span>
             <strong>{item.display_name}</strong>
             <b>{item.count}</b>
           </div>
