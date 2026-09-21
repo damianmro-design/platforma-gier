@@ -146,6 +146,11 @@ export function PlayerRound7({
         <div className="clp-r7-phone-question">
           <span>{reveal ? "WYNIK" : "DRUŻYNA " + team}</span>
           <h1>{round.prompt}</h1>
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Wybierzcie popularniejszą z 2 odpowiedzi. Poprawny typ daje 50 pkt.
+            </p>
+          )}
         </div>
 
         {reveal ? (
