@@ -107,6 +107,7 @@ begin
   if char_length(clean_name) < 1 or char_length(clean_name) > 20 then raise exception 'Invalid name'; end if;
 
   if p_avatar not in (
+    'avatar-01','avatar-02','avatar-03','avatar-04','avatar-05','avatar-06',
     'lion','fox','panda','tiger','koala','owl',
     'frog','penguin','bear','rabbit','monkey','cat'
   ) then raise exception 'Invalid avatar'; end if;
