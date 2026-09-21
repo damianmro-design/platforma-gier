@@ -14,7 +14,7 @@ const flow = [
   ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Szukacie niespójności i bronicie swoich decyzji."],
   ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
   ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
-  ["06", "Finałowe wskazanie", "Po 5 misjach głosujecie ostatni raz. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
+  ["06", "Obrona i finał", "Po 5 misjach 2 najbardziej podejrzane osoby mają po 30 sekund obrony. Potem każdy głosuje na dowolnego gracza. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
 ];
 
 export default function PodPrzykrywkaPage() {
@@ -134,8 +134,8 @@ export default function PodPrzykrywkaPage() {
         </article>
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🎯</span>
-          <h3 className="mt-4 text-xl font-black">Jeden finał</h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">Grupa wygrywa tylko wtedy, gdy Oszust zostanie jednoznacznie najczęściej wskazaną osobą w finale. Remis oznacza ucieczkę.</p>
+          <h3 className="mt-4 text-xl font-black">Finał z obroną</h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">2 najbardziej podejrzane osoby dostają ostatnią szansę przekonania grupy. Dopiero potem otwiera się tajne finałowe głosowanie.</p>
         </article>
       </section>
     </main>
