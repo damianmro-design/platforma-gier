@@ -11,9 +11,10 @@ import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
-import type { ClpRound1State, ClpRound2State, ClpRound3State } from "@/lib/platform-db";
+import type { ClpRound1State, ClpRound2State, ClpRound3State, ClpRound4State } from "@/lib/platform-db";
 import { HostRound2, PlayerRound2 } from "./round2";
 import { HostRound3, PlayerRound3 } from "./round3";
+import { HostRound4, PlayerRound4 } from "./round4";
 
 type RoomState = {
   code: string;
@@ -89,6 +90,19 @@ type PlayerRound3State = {
   round3: ClpRound3State;
 };
 
+type HostRound4State = {
+  role: "host";
+  room: RoomState;
+  round4: ClpRound4State;
+};
+
+type PlayerRound4State = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  round4: ClpRound4State;
+};
+
 type GameState =
   | HostWarmupState
   | PlayerWarmupState
@@ -97,7 +111,9 @@ type GameState =
   | HostRound2State
   | PlayerRound2State
   | HostRound3State
-  | PlayerRound3State;
+  | PlayerRound3State
+  | HostRound4State
+  | PlayerRound4State;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -178,18 +194,44 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "round_4") {
+  if (data.room.phase === "round_5") {
     return (
       <main className="clp-game-shell">
         <section className="clp-transition-card">
-          <span>RUNDA 3 ZAKOŃCZONA ✓</span>
-          <h1>TOP 5 zamknięte.</h1>
+          <span>RUNDA 4 ZAKOŃCZONA ✓</span>
+          <h1>Mniejszość znaleziona.</h1>
           <p>
-            Punkty są zapisane. Następnym etapem będzie kolejna mechanika
-            teleturnieju.
+            Punkty są zapisane. Następny etap to „Jeden z Was”, czyli przewidywanie
+            odpowiedzi dotyczących konkretnych osób z Waszej ekipy.
           </p>
         </section>
       </main>
+    );
+  }
+
+  if (data.room.phase === "round_4" && "round4" in data) {
+    if (data.role === "host") {
+      return (
+        <HostRound4
+          code={data.room.code}
+          round={data.round4}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "round4Next" })}
+        />
+      );
+    }
+
+    return (
+      <PlayerRound4
+        player={data.player}
+        round={data.round4}
+        busy={busy}
+        error={error}
+        onPrediction={(answer) =>
+          void send({ action: "round4Prediction", answer })
+        }
+      />
     );
   }
 
