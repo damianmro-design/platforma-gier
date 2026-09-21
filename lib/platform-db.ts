@@ -1213,3 +1213,35 @@ export async function advancePpPhase(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return String(data ?? "");
 }
+
+export async function extendPpPhaseTimer(
+  code: string,
+  hostToken: string,
+  seconds = 60,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("extend_pp_phase_timer", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_seconds: seconds,
+  });
+
+  if (error) throw new Error(error.message);
+  return Number(data ?? 0);
+}
+
+export async function skipPpPlayer(
+  code: string,
+  hostToken: string,
+  playerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("skip_pp_player", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_player_id: playerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
