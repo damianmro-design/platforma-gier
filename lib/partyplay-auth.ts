@@ -195,7 +195,7 @@ export async function getPartyPlayRankingIdentitySourceFromAccessToken(
   return (data ?? []).map((row: Record<string, unknown>) => ({
     auth_user_id: String(row.auth_user_id ?? ""),
     display_name: String(row.display_name ?? "Gracz"),
-    avatar: String(row.avatar ?? "lion"),
+    avatar: String(row.avatar ?? "avatar-01"),
     profile_avatar_set: Boolean(row.profile_avatar_set),
     polowanie_games: Number(row.polowanie_games ?? 0),
     polowanie_wins: Number(row.polowanie_wins ?? 0),
