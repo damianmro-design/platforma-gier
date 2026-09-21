@@ -5,6 +5,7 @@ import {
 } from "@/lib/partyplay-auth";
 import { getPartyPlayRankingAggregates } from "@/lib/platform-db";
 import { calculatePartyPlayProgress } from "@/lib/partyplay-progress";
+import { isPartyPlayAvatarUnlocked } from "@/lib/partyplay-avatars";
 
 function bearerToken(request: Request) {
   const header = request.headers.get("authorization") ?? "";
@@ -70,9 +71,15 @@ export async function GET(request: Request) {
             ? identityName
             : aggregateName || identityName || "Gracz";
 
-        const avatar = identity.profile_avatar_set
+        const requestedAvatar = identity.profile_avatar_set
           ? identity.avatar
           : aggregate?.avatar || identity.avatar || "avatar-01";
+        const avatar = isPartyPlayAvatarUnlocked(
+          requestedAvatar,
+          progression.level.level,
+        )
+          ? requestedAvatar
+          : "avatar-01";
 
         return {
           rankingKey: identity.ranking_key,
