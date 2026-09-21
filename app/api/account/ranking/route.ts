@@ -13,7 +13,8 @@ function bearerToken(request: Request) {
 }
 
 type RankingDraft = {
-  userId: string;
+  rankingKey: string;
+  isCurrentUser: boolean;
   displayName: string;
   avatar: string;
   xp: number;
@@ -43,12 +44,12 @@ export async function GET(request: Request) {
     ]);
 
     const aggregateByUser = new Map(
-      aggregates.map((item) => [item.userId, item]),
+      aggregates.map((item) => [item.rankingKey, item]),
     );
 
     const ranking: RankingDraft[] = identities
       .map((identity) => {
-        const aggregate = aggregateByUser.get(identity.auth_user_id);
+        const aggregate = aggregateByUser.get(identity.ranking_key);
         const platformGames = aggregate?.games ?? [];
 
         const progression = calculatePartyPlayProgress({
@@ -74,7 +75,8 @@ export async function GET(request: Request) {
           : aggregate?.avatar || identity.avatar || "avatar-01";
 
         return {
-          userId: identity.auth_user_id,
+          rankingKey: identity.ranking_key,
+          isCurrentUser: identity.is_current_user,
           displayName,
           avatar,
           xp: progression.xp,
@@ -110,7 +112,7 @@ export async function GET(request: Request) {
       wins: item.totalWins,
       distinctGamesPlayed: item.distinctGamesPlayed,
       badges: item.totalBadges,
-      isCurrentUser: item.userId === currentUser.id,
+      isCurrentUser: item.isCurrentUser,
     }));
 
     const top = ranked.slice(0, 50);
