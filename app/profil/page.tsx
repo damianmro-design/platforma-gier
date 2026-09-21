@@ -84,6 +84,18 @@ type GlobalBadge = {
 
 type PartyPlayProgression = {
   xp: number;
+  xpBreakdown: {
+    games: number;
+    wins: number;
+    polowanieBadges: number;
+    partyPlayBadges: number;
+  };
+  xpRules: {
+    gameCompleted: number;
+    win: number;
+    polowanieBadge: number;
+    partyPlayBadge: number;
+  };
   level: {
     level: number;
     title: string;
@@ -97,6 +109,7 @@ type PartyPlayProgression = {
   distinctGamesPlayed: number;
   distinctGamesWon: number;
   polowanieBadges: number;
+  partyPlayBadgesEarned: number;
   globalBadgesEarned: number;
   badges: GlobalBadge[];
 };
@@ -394,6 +407,24 @@ export default function ProfilePage() {
                 XP zdobywasz za ukończone gry, zwycięstwa i odznaki. Wynik punktowy
                 konkretnej gry nie wpływa bezpośrednio na poziom.
               </p>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="rounded-xl border border-white/8 bg-black/15 p-3">
+                  <small className="text-[8px] font-black text-zinc-600">XP ZA GRY</small>
+                  <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.games}</strong>
+                </div>
+                <div className="rounded-xl border border-white/8 bg-black/15 p-3">
+                  <small className="text-[8px] font-black text-zinc-600">XP ZA WYGRANE</small>
+                  <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.wins}</strong>
+                </div>
+                <div className="rounded-xl border border-white/8 bg-black/15 p-3">
+                  <small className="text-[8px] font-black text-zinc-600">ODZNAKI PARTYPLAY</small>
+                  <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.partyPlayBadges}</strong>
+                </div>
+                <div className="rounded-xl border border-white/8 bg-black/15 p-3">
+                  <small className="text-[8px] font-black text-zinc-600">ODZNAKI POLOWANIA</small>
+                  <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.polowanieBadges}</strong>
+                </div>
+              </div>
             </div>
           )}
 
@@ -587,77 +618,88 @@ export default function ProfilePage() {
                   ODZNAKI PARTYPLAY
                 </span>
                 <h2 className="mt-1 text-xl font-black">
-                  {platformStats.progression.globalBadgesEarned}/{platformStats.progression.badges.length} zdobytych
+                  {platformStats.progression.partyPlayBadgesEarned}/{platformStats.progression.badges.length} zdobytych
                 </h2>
               </div>
-              <span className="text-[10px] text-zinc-600">
-                +25 XP za każdą
-              </span>
+              <Link
+                href="/profil/odznaki"
+                className="rounded-xl border border-violet-300/20 bg-violet-300/[.06] px-3 py-2 text-[10px] font-black text-violet-200 transition hover:bg-violet-300/[.10]"
+              >
+                Wszystkie odznaki →
+              </Link>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {platformStats.progression.badges.map((badge) => {
-                const percent = Math.max(
-                  0,
-                  Math.min(
-                    100,
-                    Math.round((badge.progressCurrent / Math.max(1, badge.progressTarget)) * 100),
-                  ),
-                );
+              {[...platformStats.progression.badges]
+                .sort((a, b) => Number(b.earned) - Number(a.earned))
+                .slice(0, 6)
+                .map((badge) => {
+                  const percent = Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      Math.round((badge.progressCurrent / Math.max(1, badge.progressTarget)) * 100),
+                    ),
+                  );
 
-                return (
-                  <article
-                    key={badge.code}
-                    className={`rounded-2xl border p-4 ${
-                      badge.earned
-                        ? "border-emerald-300/20 bg-emerald-300/[.05]"
-                        : "border-white/8 bg-black/15"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className={`text-3xl ${badge.earned ? "" : "grayscale opacity-35"}`}>
-                        {badge.icon}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <strong className="block text-sm font-black">{badge.title}</strong>
-                        <p className="mt-1 text-[10px] leading-4 text-zinc-500">
-                          {badge.description}
-                        </p>
+                  return (
+                    <article
+                      key={badge.code}
+                      className={`rounded-2xl border p-4 ${
+                        badge.earned
+                          ? "border-emerald-300/20 bg-emerald-300/[.05]"
+                          : "border-white/8 bg-black/15"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className={`text-3xl ${badge.earned ? "" : "grayscale opacity-35"}`}>
+                          {badge.icon}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <strong className="block text-sm font-black">{badge.title}</strong>
+                          <p className="mt-1 text-[10px] leading-4 text-zinc-500">
+                            {badge.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/35">
-                      <div
-                        className={`h-full rounded-full ${
-                          badge.earned
-                            ? "bg-emerald-300"
-                            : "bg-gradient-to-r from-violet-500 to-cyan-400"
-                        }`}
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[.12em]">
-                      <span className={badge.earned ? "text-emerald-300" : "text-zinc-600"}>
-                        {badge.earned ? "ZDOBYTA" : "POSTĘP"}
-                      </span>
-                      <span className="text-zinc-600">
-                        {badge.progressCurrent}/{badge.progressTarget}
-                      </span>
-                    </div>
-                  </article>
-                );
-              })}
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/35">
+                        <div
+                          className={`h-full rounded-full ${
+                            badge.earned
+                              ? "bg-emerald-300"
+                              : "bg-gradient-to-r from-violet-500 to-cyan-400"
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </article>
+                  );
+                })}
             </div>
           </section>
         )}
 
         <section className="mt-5 rounded-3xl border border-white/8 bg-white/[.025] p-5">
-          <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
-            OSTATNIE ROZGRYWKI
-          </span>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
+                OSTATNIE ROZGRYWKI
+              </span>
+              <h2 className="mt-1 text-xl font-black">
+                Historia PartyPlay
+              </h2>
+            </div>
+            <Link
+              href="/profil/historia"
+              className="rounded-xl border border-violet-300/20 bg-violet-300/[.06] px-3 py-2 text-[10px] font-black text-violet-200 transition hover:bg-violet-300/[.10]"
+            >
+              Pełna historia →
+            </Link>
+          </div>
+
           <div className="mt-4 space-y-2">
             {(platformStats?.history ?? []).length ? (
-              platformStats!.history.map((item, index) => (
+              platformStats!.history.slice(0, 5).map((item, index) => (
                 <div
                   key={`${item.game_slug}-${item.completed_at}-${index}`}
                   className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/8 bg-black/15 p-3"
@@ -684,16 +726,15 @@ export default function ProfilePage() {
                     </strong>
                     {item.final_score != null && (
                       <span className="text-[10px] text-zinc-600">
-                        {item.final_score} pkt
+                        {item.final_score} {item.game_slug === "polowanie-na-milionera" ? "Punktów Łowcy" : "pkt"}
                       </span>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-xs leading-5 text-zinc-500">
-                Historia nowych gier zacznie zapisywać się automatycznie po
-                uruchomieniu wspólnego konta.
+              <p className="rounded-2xl border border-white/8 bg-black/15 p-4 text-xs leading-5 text-zinc-500">
+                Historia zacznie zapełniać się po zakończonych rozgrywkach na zalogowanym koncie.
               </p>
             )}
           </div>
