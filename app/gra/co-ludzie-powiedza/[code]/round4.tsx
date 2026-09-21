@@ -63,6 +63,16 @@ export function HostRound4({
 
         <h1>{round.prompt}</h1>
 
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Szukacie najmniej popularnej odpowiedzi. Trafienie mniejszości daje 60 pkt,
+              a 2. najmniej popularnej odpowiedzi 20 pkt.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r4-predictors">
           <PredictorCard
             team="A"
