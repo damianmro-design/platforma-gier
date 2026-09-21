@@ -19,6 +19,7 @@ import { HostRound5, PlayerRound5 } from "./round5";
 import { HostRound6, PlayerRound6 } from "./round6";
 import { HostRound7, PlayerRound7 } from "./round7";
 import { HostFinal, PlayerFinal } from "./final";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type RoomState = {
   code: string;
@@ -179,20 +180,6 @@ type GameState =
   | HostFinalState
   | PlayerFinalState;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 export default function GameClient({ code }: { code: string }) {
   const [data, setData] = useState<GameState | null>(null);
@@ -558,7 +545,9 @@ function HostRound1({
 
           {round.answerer && !between && (
             <div className="clp-answerer">
-              <span>{AVATARS[round.answerer.avatar] ?? "🎮"}</span>
+              <span>
+                <PartyPlayAvatar id={round.answerer.avatar} size={42} />
+              </span>
               <div>
                 <small>TERAZ ODPOWIADA</small>
                 <strong>{round.answerer.display_name}</strong>
@@ -695,7 +684,9 @@ function PlayerRound1({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
+          <span>
+            <PartyPlayAvatar id={data.player.avatar} size={38} />
+          </span>
           <strong>{data.player.display_name}</strong>
           <small>DRUŻYNA {data.player.team}</small>
         </footer>
@@ -860,7 +851,7 @@ function HostWarmup({
                 }
               >
                 <span className="clp-progress-avatar">
-                  {AVATARS[player.avatar] ?? "🎮"}
+                  <PartyPlayAvatar id={player.avatar} size={42} />
                 </span>
                 <div>
                   <strong>{player.display_name}</strong>
