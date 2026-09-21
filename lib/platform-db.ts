@@ -209,3 +209,83 @@ export async function advanceClpPhase(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as string | null;
 }
+
+
+export type ClpRound1BoardItem = {
+  key: string;
+  label: string | null;
+  points: number | null;
+  revealed: boolean;
+  position: number;
+};
+
+export type ClpRound1Player = {
+  id: string;
+  display_name: string;
+  avatar: string;
+  team: "A" | "B";
+};
+
+export type ClpRound1State = {
+  questionIndex: number;
+  questionCount: number;
+  questionKey: string;
+  prompt: string;
+  board: ClpRound1BoardItem[];
+  activeTeam: "A" | "B";
+  mode: "play" | "steal" | "between";
+  strikes: number;
+  scoreA: number;
+  scoreB: number;
+  questionBank: number;
+  answerer: ClpRound1Player | null;
+  players: ClpRound1Player[];
+  lastEvent: {
+    type?: string;
+    team?: "A" | "B";
+    playerId?: string;
+    playerName?: string;
+    guess?: string;
+    answerKey?: string;
+    answerLabel?: string;
+    points?: number;
+    bonus?: number;
+  } | null;
+};
+
+export async function getClpRound1State(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_round1_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ClpRound1State | null;
+}
+
+export async function submitClpRound1Guess(
+  code: string,
+  playerToken: string,
+  guess: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_round1_guess", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_guess: guess,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpRound1State["lastEvent"];
+}
+
+export async function nextClpRound1Question(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_clp_round1_question", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
