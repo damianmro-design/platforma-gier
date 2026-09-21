@@ -181,7 +181,7 @@ export const APARTAMENT_214_ROLES: AktaNocyRole[] = [
     ],
     core: true,
     isCulprit: true,
-    culpritBriefing: "TO TY DOPROWADZIŁEŚ DO ŚMIERCI MARKA. Konfrontacja wymknęła się spod kontroli. Po zdarzeniu próbowałeś przesunąć domniemany czas śmierci, korzystając z urządzenia Marka, i zabrałeś pendrive z materiałem na swój temat. Nie planowałeś wcześniej luki w monitoringu i nie wiesz, dlaczego nagranie zniknęło. Możesz kłamać, przemilczać fakty i kierować podejrzenia na innych, ale nie wymyślaj informacji, których nie ma w Twoich aktach.",
+    culpritBriefing: "TO TY DOPROWADZIŁEŚ DO ŚMIERCI MARKA. Konfrontacja wymknęła się spod kontroli. O 22:53 na odblokowanym laptopie Marka ustawiłeś wiadomość do Oskara tak, by wysłała się automatycznie o 23:02 i przesunęła domniemany czas śmierci. Zabrałeś też pendrive z materiałem na swój temat. Nie planowałeś wcześniej luki w monitoringu i nie wiesz, dlaczego nagranie zniknęło. Możesz kłamać, przemilczać fakty i kierować podejrzenia na innych, ale nie wymyślaj informacji, których nie ma w Twoich aktach.",
   },
   {
     id: "investor",
