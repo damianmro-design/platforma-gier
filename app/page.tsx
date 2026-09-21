@@ -413,10 +413,10 @@ export default function Home() {
 
             <GameCard
               title="CO LUDZIE POWIEDZĄ"
-              eyebrow="Nowy teleturniej"
-              description="Przewiduj najpopularniejsze odpowiedzi i sprawdź, czy naprawdę znasz swoją ekipę."
+              eyebrow="Grywalna beta"
+              description="Przewiduj najpopularniejsze odpowiedzi i sprawdź, czy naprawdę znasz swoją ekipę. Najlepiej działa przy 6–10 osobach."
               players="4–14 graczy"
-              time="25–40 min"
+              time="45–75 min"
               tags={["ankiety", "drużynowa", "bez eliminacji"]}
               accent="yellow"
               art="people"
