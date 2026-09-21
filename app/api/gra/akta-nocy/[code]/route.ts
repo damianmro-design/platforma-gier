@@ -8,9 +8,12 @@ import {
   lookupPlatformRoom,
   openAktaNocyDossier,
   revealAktaNocyEvidenceA,
+  revealAktaNocyEvidenceB,
 } from "@/lib/platform-db";
 import {
   AKTA_NOCY_EVIDENCE_A,
+  AKTA_NOCY_EVIDENCE_B,
+  getAktaNocyEvidenceBCountFromPhase,
   getAktaNocyEvidenceCountFromPhase,
   getAktaNocyInterrogationByRole,
   getAktaNocyRoleByKey,
@@ -25,8 +28,16 @@ function cleanCode(value: string) {
 }
 
 function publicEvidenceForPhase(phase: string | null | undefined) {
-  const count = getAktaNocyEvidenceCountFromPhase(phase);
-  return AKTA_NOCY_EVIDENCE_A.slice(0, count);
+  if (phase?.startsWith("dowody_b_")) {
+    const countB = getAktaNocyEvidenceBCountFromPhase(phase);
+    return [
+      ...AKTA_NOCY_EVIDENCE_A,
+      ...AKTA_NOCY_EVIDENCE_B.slice(0, countB),
+    ];
+  }
+
+  const countA = getAktaNocyEvidenceCountFromPhase(phase);
+  return AKTA_NOCY_EVIDENCE_A.slice(0, countA);
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -188,6 +199,20 @@ export async function POST(request: Request, context: RouteContext) {
       }
 
       const phase = await revealAktaNocyEvidenceA(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
+    if (action === "revealEvidenceB") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json(
+          { error: "Tylko prowadzący może ujawniać dowody." },
+          { status: 403 },
+        );
+      }
+
+      const phase = await revealAktaNocyEvidenceB(code, hostToken);
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
