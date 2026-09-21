@@ -602,7 +602,13 @@ function PlayerGame({
             </div>
           ) : !isMyTurn ? (
             <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] p-5 text-center">
-              <span className="text-3xl">{active ? AVATARS[active.avatar] ?? "🎮" : "⏳"}</span>
+              <span className="inline-flex justify-center">
+                {active ? (
+                  <PartyPlayAvatar id={active.avatar} size={48} />
+                ) : (
+                  <span className="text-3xl">⏳</span>
+                )}
+              </span>
               <strong className="mt-2 block text-lg font-black">
                 {active ? `Teraz gra ${active.displayName}` : "Czekamy na ruch"}
               </strong>
