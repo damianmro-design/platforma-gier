@@ -116,22 +116,25 @@ function Shell({
 function PhaseTimer({
   startedAt,
   seconds,
+  bonusSeconds = 0,
 }: {
   startedAt: string;
   seconds: number;
+  bonusSeconds?: number;
 }) {
-  const [left, setLeft] = useState(seconds);
+  const totalSeconds = seconds + bonusSeconds;
+  const [left, setLeft] = useState(totalSeconds);
 
   useEffect(() => {
     function tick() {
       const elapsed = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
-      setLeft(Math.max(0, seconds - elapsed));
+      setLeft(Math.max(0, totalSeconds - elapsed));
     }
 
     tick();
     const timer = window.setInterval(tick, 250);
     return () => window.clearInterval(timer);
-  }, [startedAt, seconds]);
+  }, [startedAt, totalSeconds]);
 
   const minutes = Math.floor(left / 60);
   const secs = left % 60;
@@ -156,21 +159,66 @@ function ProgressBar({ value, max }: { value: number; max: number }) {
   );
 }
 
-function PlayerGrid({ players, mode }: { players: PpPlayer[]; mode: "submitted" | "voted" }) {
+function PlayerGrid({
+  players,
+  mode,
+  busy = false,
+  onSkip,
+}: {
+  players: PpPlayer[];
+  mode: "submitted" | "voted";
+  busy?: boolean;
+  onSkip?: (playerId: string) => void;
+}) {
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {players.map((player) => {
-        const done = mode === "submitted" ? player.submitted : player.voted;
+        const completed = mode === "submitted" ? player.submitted : player.voted;
+        const done = completed || player.skipped;
         return (
-          <article key={player.id} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[.025] p-3">
-            <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[.04] text-xl">{avatar(player.avatar)}</span>
-            <strong className="min-w-0 flex-1 truncate text-sm font-black">{player.displayName}</strong>
-            <span className={done ? "text-xs font-black text-emerald-300" : "text-xs font-bold text-zinc-600"}>
-              {done ? "✓ GOTOWE" : "czeka"}
-            </span>
+          <article key={player.id} className="rounded-2xl border border-white/8 bg-white/[.025] p-3">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[.04] text-xl">{avatar(player.avatar)}</span>
+              <div className="min-w-0 flex-1">
+                <strong className="block truncate text-sm font-black">{player.displayName}</strong>
+                <span className={player.online ? "text-[9px] font-black text-emerald-300" : "text-[9px] font-black text-zinc-600"}>
+                  {player.online ? "● ONLINE" : "● BRAK POŁĄCZENIA"}
+                </span>
+              </div>
+              <span className={done ? "text-xs font-black text-emerald-300" : "text-xs font-bold text-zinc-600"}>
+                {player.skipped ? "POMINIĘTY" : completed ? "✓ GOTOWE" : "czeka"}
+              </span>
+            </div>
+
+            {!done && !player.online && onSkip && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onSkip(player.id)}
+                className="mt-3 w-full rounded-xl border border-amber-300/20 bg-amber-300/[.07] px-3 py-2 text-[10px] font-black text-amber-200 disabled:opacity-40"
+              >
+                POMIŃ W TEJ FAZIE
+              </button>
+            )}
           </article>
         );
       })}
+    </div>
+  );
+}
+
+function HostCue({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mb-5 rounded-2xl border border-violet-300/15 bg-violet-300/[.05] p-4">
+      <p className="text-[9px] font-black uppercase tracking-[.2em] text-violet-300">INSTRUKCJA PROWADZĄCEGO</p>
+      <strong className="mt-1 block text-sm font-black text-white">{title}</strong>
+      <div className="mt-2 text-xs font-medium leading-5 text-zinc-400">{children}</div>
     </div>
   );
 }
