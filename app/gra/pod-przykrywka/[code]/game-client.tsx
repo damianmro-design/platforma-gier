@@ -363,7 +363,11 @@ function HostGame({
           </div>
         )}
 
-        {game.phase !== "briefing" && game.mission && (
+        {game.phase !== "briefing" &&
+          game.phase !== "checkpoint" &&
+          game.phase !== "interrogation" &&
+          game.phase !== "last_word" &&
+          game.mission && (
           <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
             <div className="min-w-0 space-y-5">
               <section className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6 sm:p-7">
@@ -659,7 +663,11 @@ function PlayerGame({
           </div>
         )}
 
-        {game.phase !== "briefing" && game.mission && (
+        {game.phase !== "briefing" &&
+          game.phase !== "checkpoint" &&
+          game.phase !== "interrogation" &&
+          game.phase !== "last_word" &&
+          game.mission && (
           <div className="space-y-5">
             <section className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
               <div className="flex items-center justify-between gap-3">
@@ -670,6 +678,14 @@ function PlayerGame({
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">{game.mission.title}</h1>
               <p className="mt-4 rounded-2xl border border-white/9 bg-white/[.035] p-5 text-base font-bold leading-7 text-zinc-200">{game.mission.prompt}</p>
+
+              {me.role === "saboteur" && game.twist.secretOrder && (
+                <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-300/[.08] p-5">
+                  <p className="text-[9px] font-black uppercase tracking-[.22em] text-amber-300">TAJNY ROZKAZ</p>
+                  <p className="mt-2 text-sm font-black leading-6 text-amber-50">{game.twist.secretOrder}</p>
+                  <p className="mt-3 text-xs leading-5 text-amber-200/60">Nikt poza Tobą tego nie widzi.</p>
+                </div>
+              )}
             </section>
 
             {game.phase === "mission" && (
