@@ -1,3 +1,5 @@
+import { joinRoom } from "./room-actions";
+
 const games = [
   {
     title: "Polowanie na Milionera",
@@ -177,7 +179,7 @@ export default function Home() {
             <a href="#gry" className="primary-button">
               Wybierz grę <ArrowIcon />
             </a>
-            <a href="#join-preview" className="secondary-button">
+            <a href="#dolacz" className="secondary-button">
               Mam kod pokoju
             </a>
           </div>
@@ -201,7 +203,7 @@ export default function Home() {
           </div>
         </div>
 
-        <aside className="join-card" id="join-preview">
+        <aside className="join-card" id="dolacz">
           <div className="join-card-head">
             <div>
               <span className="mini-label">DOŁĄCZ DO EKIPY</span>
@@ -210,21 +212,28 @@ export default function Home() {
             <span className="spark">✦</span>
           </div>
           <p>
-            Docelowo tutaj wpiszesz jeden kod niezależnie od tego, w którą grę
-            gra Twoja ekipa.
+            Wpisz 4-znakowy kod od osoby, która utworzyła pokój. Platforma sama
+            rozpozna grę i przeniesie Cię do właściwej poczekalni.
           </p>
-          <div className="code-preview" aria-hidden="true">
-            <span>4</span>
-            <span>8</span>
-            <span>2</span>
-            <span>7</span>
-          </div>
-          <button type="button" className="join-disabled" disabled>
-            Wspólny system pokoi — kolejny etap
-          </button>
+          <form action={joinRoom} className="join-form">
+            <label htmlFor="roomCode">Kod pokoju</label>
+            <input
+              id="roomCode"
+              name="roomCode"
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              maxLength={4}
+              required
+              placeholder="4JMG"
+              className="join-code-input"
+            />
+            <button type="submit" className="join-live-button">
+              Dołącz do gry <ArrowIcon />
+            </button>
+          </form>
           <small>
-            Najpierw spinamy katalog i identyfikację platformy, potem routing
-            kodów do konkretnych gier.
+            Jeden kod działa na poziomie całej platformy, niezależnie od tytułu.
           </small>
         </aside>
       </section>
