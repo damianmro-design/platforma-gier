@@ -1157,3 +1157,59 @@ export async function nextZhRound(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as "playing" | "game_over" | null;
 }
+
+export async function getPpState(code: string, playerToken?: string | null) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_pp_state", {
+    p_code: code,
+    p_player_token: playerToken ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as import("@/lib/pod-przykrywka").PpGameState | null;
+}
+
+export async function submitPpAnswer(
+  code: string,
+  playerToken: string,
+  answer: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_answer", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_answer: answer,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function submitPpVote(
+  code: string,
+  playerToken: string,
+  targetPlayerId: string,
+  voteType: "suspicion" | "final",
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_vote", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_target_player_id: targetPlayerId,
+    p_vote_type: voteType,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function advancePpPhase(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_pp_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return String(data ?? "");
+}
