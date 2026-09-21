@@ -166,7 +166,11 @@ export function PlayerRound4({
         <div className="clp-r4-phone-question">
           <span>{reveal ? "WYNIKI" : "DRUŻYNA " + team}</span>
           <h1>{round.prompt}</h1>
-          {!reveal && <p>Szukacie odpowiedzi, którą wybrało najmniej ludzi.</p>}
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Szukacie odpowiedzi wybranej przez najmniej ludzi. 60 pkt za mniejszość, 20 pkt za 2. najmniej popularną.
+            </p>
+          )}
         </div>
 
         {reveal ? (
