@@ -960,7 +960,9 @@ function PlayerWarmup({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
+          <span>
+            <PartyPlayAvatar id={data.player.avatar} size={38} />
+          </span>
           <strong>{data.player.display_name}</strong>
           <small>
             {data.player.team === "A" ? "DRUŻYNA A" : "DRUŻYNA B"}
