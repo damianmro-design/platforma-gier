@@ -43,7 +43,10 @@ export function HostFinal({
         <section className="clp-final-main">
           <div className="clp-final-kicker">DOGRYWKA</div>
           <h1>{final.tiebreakPrompt}</h1>
-          <p className="clp-final-sub">Obie drużyny wpisują procent. Wygrywa odpowiedź bliższa prawdziwemu wynikowi.</p>
+          <p className="clp-final-sub">
+            Obie drużyny wpisują procent. Wygrywa odpowiedź bliższa prawdziwemu wynikowi.
+            Przy identycznej różnicy rozstrzyga wcześniejsze zatwierdzenie.
+          </p>
 
           <div className="clp-final-tiebreak-status">
             <LockStatus team="A" locked={Boolean(final.tiebreakA)} />
@@ -74,6 +77,27 @@ export function HostFinal({
         </div>
 
         <h1>{final.prompt}</h1>
+
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Wybierzcie 1 z 5 odpowiedzi. 1. miejsce daje 50 pkt, potem 40/30/20/10.
+              Ostatnie pytanie liczy się ×3. Lider po rundach głównych zaczyna finał z bonusem 50 pkt.
+            </span>
+          </div>
+        )}
+
+        {final.questionIndex === 0 && !reveal && (
+          <div className="clp-final-carryover">
+            <strong>WYNIK PRZED FINAŁEM: {final.startScoreA} : {final.startScoreB}</strong>
+            <span>
+              {final.startScoreA === final.startScoreB
+                ? "Był remis, więc finał zaczyna się od 0 : 0."
+                : `Lider dostał 50 pkt przewagi. Finał zaczyna się od ${final.scoreA} : ${final.scoreB}.`}
+            </span>
+          </div>
+        )}
 
         <div className="clp-final-reps">
           <FinalRep team="A" player={final.predictorA} locked={Boolean(final.predictionA)} />
@@ -209,6 +233,11 @@ export function PlayerFinal({
         <div className="clp-final-phone-question">
           <span>{reveal ? "RANKING" : "DRUŻYNA " + team}</span>
           <h1>{final.prompt}</h1>
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Wybierzcie 1 odpowiedź. Punkty za miejsce: 50/40/30/20/10{final.multiplier === 3 ? ", w tym pytaniu ×3." : "."}
+            </p>
+          )}
         </div>
 
         {reveal ? (
@@ -256,7 +285,7 @@ function FinalBoard({ final, compact = false }: { final: ClpFinalState; compact?
     <section className={compact ? "clp-final-board compact" : "clp-final-board"}>
       {final.board.map((item) => (
         <article key={item.label}>
-          <b>{item.rank}</b>
+          <b>{item.rank ?? "?"}</b>
           <strong>{item.label}</strong>
           <span>{item.percent == null ? "?" : item.percent + "%"}</span>
         </article>
