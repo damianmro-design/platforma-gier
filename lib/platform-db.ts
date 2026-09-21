@@ -189,10 +189,14 @@ export async function getClpHostProgress(code: string, hostToken: string) {
   });
 
   if (error) throw new Error(error.message);
-  return (data ?? []).map((item) => ({
+  const rows = (data ?? []) as Array<
+    Omit<ClpHostProgress, "answer_count"> & { answer_count: number | string | null }
+  >;
+
+  return rows.map((item) => ({
     ...item,
     answer_count: Number(item.answer_count ?? 0),
-  })) as ClpHostProgress[];
+  }));
 }
 
 export async function advanceClpPhase(code: string, hostToken: string) {
