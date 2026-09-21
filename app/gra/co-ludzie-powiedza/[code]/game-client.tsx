@@ -11,8 +11,9 @@ import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
-import type { ClpRound1State, ClpRound2State } from "@/lib/platform-db";
+import type { ClpRound1State, ClpRound2State, ClpRound3State } from "@/lib/platform-db";
 import { HostRound2, PlayerRound2 } from "./round2";
+import { HostRound3, PlayerRound3 } from "./round3";
 
 type RoomState = {
   code: string;
@@ -75,13 +76,28 @@ type PlayerRound2State = {
   round2: ClpRound2State;
 };
 
+type HostRound3State = {
+  role: "host";
+  room: RoomState;
+  round3: ClpRound3State;
+};
+
+type PlayerRound3State = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  round3: ClpRound3State;
+};
+
 type GameState =
   | HostWarmupState
   | PlayerWarmupState
   | HostRound1State
   | PlayerRound1State
   | HostRound2State
-  | PlayerRound2State;
+  | PlayerRound2State
+  | HostRound3State
+  | PlayerRound3State;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -162,18 +178,44 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "round_3") {
+  if (data.room.phase === "round_4") {
     return (
       <main className="clp-game-shell">
         <section className="clp-transition-card">
-          <span>RUNDA 2 ZAKOŃCZONA ✓</span>
-          <h1>Znacie swoją ekipę.</h1>
+          <span>RUNDA 3 ZAKOŃCZONA ✓</span>
+          <h1>TOP 5 zamknięte.</h1>
           <p>
-            Wyniki są zapisane. Następnym etapem będzie runda „Top 5”, w której
-            drużyny ułożą odpowiedzi od najpopularniejszej do najmniej popularnej.
+            Punkty są zapisane. Następnym etapem będzie kolejna mechanika
+            teleturnieju.
           </p>
         </section>
       </main>
+    );
+  }
+
+  if (data.room.phase === "round_3" && "round3" in data) {
+    if (data.role === "host") {
+      return (
+        <HostRound3
+          code={data.room.code}
+          round={data.round3}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "round3Next" })}
+        />
+      );
+    }
+
+    return (
+      <PlayerRound3
+        player={data.player}
+        round={data.round3}
+        busy={busy}
+        error={error}
+        onRanking={(ranking) =>
+          void send({ action: "round3Ranking", ranking })
+        }
+      />
     );
   }
 
