@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClpRound4State } from "@/lib/platform-db";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -9,20 +10,6 @@ type Player = {
   team: "A" | "B" | null;
 };
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 export function HostRound4({
   code,
@@ -190,7 +177,7 @@ export function PlayerRound4({
         ) : isPredictor ? (
           <section className="clp-r4-picker">
             <div className="clp-r4-your-turn">
-              <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+              <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
               <div>
                 <small>TY ZATWIERDZASZ TYP</small>
                 <strong>Naradźcie się. Która odpowiedź jest najmniej popularna?</strong>
@@ -212,7 +199,7 @@ export function PlayerRound4({
           </section>
         ) : (
           <div className="clp-r4-wait-card">
-            <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+            <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
             <strong>
               {predictor
                 ? predictor.display_name + " zatwierdza odpowiedź Waszej drużyny"
@@ -225,7 +212,7 @@ export function PlayerRound4({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+          <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
           <strong>{player.display_name}</strong>
           <small>DRUŻYNA {team}</small>
         </footer>
@@ -248,7 +235,7 @@ function PredictorCard({
   return (
     <article className={"clp-r4-predictor team-" + team.toLowerCase()}>
       <div>
-        <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+        <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
         <div>
           <small>DRUŻYNA {team}</small>
           <strong>{predictor?.display_name ?? "—"}</strong>
