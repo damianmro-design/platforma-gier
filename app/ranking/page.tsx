@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type RankingEntry = {
   rankPosition: number;
@@ -26,20 +27,6 @@ type RankingResponse = {
   tieBreakers: string[];
 };
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 function medal(position: number) {
   if (position === 1) return "🥇";
@@ -177,7 +164,7 @@ export default function PartyPlayRankingPage() {
 
                   <div className="mt-4 flex items-center gap-3">
                     <div className="grid h-14 w-14 place-items-center rounded-2xl border border-white/8 bg-black/20 text-3xl">
-                      {AVATARS[entry.avatar] ?? "🎮"}
+                      <PartyPlayAvatar id={entry.avatar} size={52} />
                     </div>
                     <div className="min-w-0">
                       <strong className="block truncate text-lg font-black">
@@ -237,7 +224,7 @@ export default function PartyPlayRankingPage() {
 
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/8 bg-black/15 text-xl">
-                        {AVATARS[entry.avatar] ?? "🎮"}
+                        <PartyPlayAvatar id={entry.avatar} size={52} />
                       </span>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -287,7 +274,7 @@ export default function PartyPlayRankingPage() {
                     #{data.currentOutsideTop.rankPosition}
                   </strong>
                   <span className="text-3xl">
-                    {AVATARS[data.currentOutsideTop.avatar] ?? "🎮"}
+                    <PartyPlayAvatar id={data.currentOutsideTop.avatar} size={48} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <strong className="block truncate text-lg font-black">
