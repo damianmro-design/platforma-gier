@@ -157,6 +157,11 @@ export default function LoginPage() {
               Utwórz konto PartyPlay
             </Link>
           </p>
+          <p className="mt-3 text-center text-[10px] leading-5 text-zinc-700">
+            <Link href="/terms" className="hover:text-zinc-400">Regulamin</Link>
+            {" · "}
+            <Link href="/privacy" className="hover:text-zinc-400">Polityka prywatności</Link>
+          </p>
         </div>
       </section>
     </main>
