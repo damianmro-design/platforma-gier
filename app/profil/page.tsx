@@ -277,6 +277,31 @@ export default function ProfilePage() {
     setSaving(false);
   }
 
+  async function openPolowanieProfile() {
+    const supabase = createPartyPlayAuthClient();
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+
+    if (!session) {
+      router.replace("/login?next=/profil");
+      return;
+    }
+
+    const targetBase =
+      process.env.NEXT_PUBLIC_POLOWANIE_URL ??
+      "https://polowanienamilionera.pl";
+
+    const hash = new URLSearchParams({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      next: "/profile",
+    });
+
+    window.location.replace(
+      `${targetBase.replace(/\/$/, "")}/auth/import#${hash.toString()}`,
+    );
+  }
+
   async function logout() {
     const supabase = createPartyPlayAuthClient();
     await supabase.auth.signOut();
@@ -466,6 +491,13 @@ export default function ProfilePage() {
             <span className="text-[9px] font-black uppercase tracking-[.18em] text-amber-300">
               POLOWANIE NA MILIONERA
             </span>
+            <button
+              type="button"
+              onClick={() => void openPolowanieProfile()}
+              className="mt-4 w-full rounded-2xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-300/15"
+            >
+              Otwórz pełny profil Polowania
+            </button>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <div className="rounded-2xl border border-white/8 bg-black/15 p-3">
                 <small className="text-[8px] font-black text-zinc-600">GRY</small>
