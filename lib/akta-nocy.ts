@@ -77,3 +77,144 @@ export const AKTA_NOCY_CASES: NightCase[] = [
     ],
   },
 ];
+
+export type AktaNocyRole = {
+  id: string;
+  name: string;
+  shortLabel: string;
+  publicBio: string;
+  privateSecret: string;
+  objective: string;
+  timeline: string;
+  core: boolean;
+};
+
+export const APARTAMENT_214_ROLES: AktaNocyRole[] = [
+  {
+    id: "manager",
+    name: "Nora Kwiecień",
+    shortLabel: "Menedżerka hotelu",
+    publicBio: "Dba o wizerunek hotelu i przebieg zamkniętej gali.",
+    privateSecret: "Wie o usterce jednego z zamków i zataiła ten fakt po zdarzeniu.",
+    objective: "Nie dopuścić, by śledztwo ujawniło zaniedbania hotelu.",
+    timeline: "22:40 widziała ofiarę żywą, 22:52 odebrała niepokojący telefon.",
+    core: true,
+  },
+  {
+    id: "technician",
+    name: "Paweł Lis",
+    shortLabel: "Technik monitoringu",
+    publicBio: "Odpowiada za kamery, zamki elektroniczne i system wejść.",
+    privateSecret: "Usunął fragment nagrania, ale z powodu niezwiązanego bezpośrednio ze zbrodnią.",
+    objective: "Nie przyznać się zbyt wcześnie do manipulacji nagraniem.",
+    timeline: "22:47 był przy serwerowni, 22:55 wrócił na 2 piętro.",
+    core: true,
+  },
+  {
+    id: "partner",
+    name: "Lena Brzoza",
+    shortLabel: "Partnerka ofiary",
+    publicBio: "Przyjechała na galę z Markiem. Wieczorem doszło między nimi do kłótni.",
+    privateSecret: "Chciała odzyskać pendrive zawierający kompromitujące materiały.",
+    objective: "Ukryć prawdziwy powód swojej ostatniej rozmowy z Markiem.",
+    timeline: "22:35 pokłóciła się z ofiarą, później twierdzi, że już do niego nie wracała.",
+    core: true,
+  },
+  {
+    id: "reporter",
+    name: "Maks Wicher",
+    shortLabel: "Młody reporter",
+    publicBio: "Podziwiał Marka i od miesięcy próbował wejść do jego zespołu.",
+    privateSecret: "Przeszukiwał rzeczy ofiary, gdy sądził, że nikt go nie widzi.",
+    objective: "Nie dopuścić, by grupa odkryła, czego naprawdę szukał.",
+    timeline: "22:50 był widziany przy windzie, 22:58 wysłał nerwową wiadomość.",
+    core: true,
+  },
+  {
+    id: "investor",
+    name: "Igor Serafin",
+    shortLabel: "Sponsor gali",
+    publicBio: "Wpływowy inwestor i główny sponsor wydarzenia.",
+    privateSecret: "Marek posiadał materiały, które mogły zniszczyć jego reputację i interesy.",
+    objective: "Odepchnąć podejrzenia od finansowego motywu konfliktu.",
+    timeline: "22:43 rozmawiał z Markiem, potem twierdzi, że zszedł do lobby.",
+    core: true,
+  },
+  {
+    id: "waitress",
+    name: "Sara Milewska",
+    shortLabel: "Kelnerka nocnej zmiany",
+    publicBio: "Obsługiwała 2 piętro i zamkniętą część VIP.",
+    privateSecret: "Widziała osobę opuszczającą korytarz w czasie, którego nie podała ochronie.",
+    objective: "Nie zostać wciągnięta w skandal i zachować pracę.",
+    timeline: "22:48 zanosiła lód na 2 piętro.",
+    core: false,
+  },
+  {
+    id: "security",
+    name: "Hubert Cichy",
+    shortLabel: "Ochroniarz",
+    publicBio: "Pilnował wejścia do części hotelu przeznaczonej dla gości VIP.",
+    privateSecret: "Na kilka minut opuścił posterunek bez wpisu w raporcie.",
+    objective: "Ukryć zaniedbanie, które mogło ułatwić komuś przejście.",
+    timeline: "22:45 znika z miejsca pracy na kilka minut.",
+    core: false,
+  },
+  {
+    id: "lawyer",
+    name: "Adriana Falk",
+    shortLabel: "Prawniczka sponsora",
+    publicBio: "Pojawiła się na gali jako doradczyni prawna jednego z najważniejszych gości.",
+    privateSecret: "Próbowała powstrzymać publikację materiału przygotowywanego przez Marka.",
+    objective: "Nie ujawniać całej treści rozmów dotyczących przygotowywanego tekstu.",
+    timeline: "22:41 wysłała 2 wiadomości do ofiary.",
+    core: false,
+  },
+  {
+    id: "photographer",
+    name: "Tomasz Rey",
+    shortLabel: "Fotograf gali",
+    publicBio: "Dokumentował wydarzenie i poruszał się po hotelu z aparatem.",
+    privateSecret: "Ma zdjęcie wykonane przypadkiem w chwili, której oficjalnie nie pamięta.",
+    objective: "Zdecydować, kiedy ujawnić fotografię, żeby nie obciążyć siebie.",
+    timeline: "22:46 fotografował przy schodach prowadzących na 2 piętro.",
+    core: false,
+  },
+  {
+    id: "doctor",
+    name: "Julia Narew",
+    shortLabel: "Lekarka i gość gali",
+    publicBio: "Jako pierwsza sprawdziła stan ofiary po jej odnalezieniu.",
+    privateSecret: "Zauważyła szczegół medyczny, który nie pasuje do pierwszej wersji zdarzeń.",
+    objective: "Ustalić, czy obserwacja jest ważna, zanim oskarży niewłaściwą osobę.",
+    timeline: "23:06 weszła do apartamentu po wezwaniu pomocy.",
+    core: false,
+  },
+  {
+    id: "assistant",
+    name: "Oskar Dębski",
+    shortLabel: "Asystent ofiary",
+    publicBio: "Znał kalendarz Marka, jego kontakty i planowaną publikację.",
+    privateSecret: "Skopiował część plików Marka bez jego zgody.",
+    objective: "Ukryć kradzież danych, ale pomóc odnaleźć właściwy motyw.",
+    timeline: "22:32 dostał polecenie przyniesienia dokumentów, wrócił po 23:00.",
+    core: false,
+  },
+  {
+    id: "guest",
+    name: "Mira Solska",
+    shortLabel: "Gościni gali",
+    publicBio: "Influencerka zaproszona do relacjonowania wydarzenia w social mediach.",
+    privateSecret: "Nagrała krótki film, na którym w tle słychać rozmowę z korytarza.",
+    objective: "Nie przyznać się od razu, że nagrywała w strefie, gdzie było to zabronione.",
+    timeline: "22:49 publikowała relację z końca korytarza.",
+    core: false,
+  },
+];
+
+export function getAktaNocyRoles(playerCount: number) {
+  const safeCount = Math.max(5, Math.min(12, playerCount));
+  const core = APARTAMENT_214_ROLES.filter((role) => role.core);
+  const optional = APARTAMENT_214_ROLES.filter((role) => !role.core);
+  return [...core, ...optional.slice(0, safeCount - core.length)];
+}
