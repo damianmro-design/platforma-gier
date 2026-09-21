@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   fetchPartyPlayStats,
   type PartyPlayStatsResponse,
@@ -15,20 +16,6 @@ import {
 
 const PAGE_SIZE = 12;
 
-const AVATAR_EMOJI: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("pl-PL", {
@@ -201,8 +188,12 @@ export default function PartyPlayHistoryPage() {
                     className="rounded-2xl border border-white/8 bg-black/15 p-4"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/8 bg-white/[.035] text-xl">
-                        {AVATAR_EMOJI[item.avatar] ?? meta.icon}
+                      <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/8 bg-white/[.035]">
+                        {item.avatar.startsWith("avatar-") ? (
+                          <PartyPlayAvatar id={item.avatar} size={42} />
+                        ) : (
+                          <span className="text-xl">{meta.icon}</span>
+                        )}
                       </div>
 
                       <div className="min-w-0 flex-1">
