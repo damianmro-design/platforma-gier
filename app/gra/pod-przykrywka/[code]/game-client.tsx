@@ -588,6 +588,59 @@ function HostGame({
           </div>
         )}
 
+        {game.phase === "final_locked" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-cyan-300/20 bg-cyan-300/[.045] p-8 text-center sm:p-12">
+            <span className="text-6xl">🔒</span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-cyan-300">GŁOSY ZOSTAŁY ZAMKNIĘTE</p>
+            <h1 className="mt-3 text-5xl font-black tracking-[-.06em] sm:text-6xl">Decyzji nie można już zmienić.</h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-400">
+              Nie pokazujemy jeszcze ani wyniku głosowania, ani roli żadnej osoby. Zbierz uwagę wszystkich na wspólnym ekranie.
+            </p>
+            <HostCue title="Zbuduj chwilę napięcia przed werdyktem.">
+              Poczekaj kilka sekund, upewnij się, że wszyscy patrzą na ekran, a potem pokaż osobę wskazaną przez grupę.
+            </HostCue>
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-4 rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-8 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              POKAŻ WERDYKT GRUPY →
+            </button>
+          </div>
+        )}
+
+        {game.phase === "final_accused" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-8 text-center sm:p-12">
+            <span className="text-6xl">{game.twist.finalTie ? "⚖️" : "🎯"}</span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-amber-300">WERDYKT GRUPY</p>
+            {game.twist.finalTie ? (
+              <>
+                <h1 className="mt-3 text-5xl font-black tracking-[-.06em] sm:text-6xl">Nie ma jednej wskazanej osoby.</h1>
+                <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-400">
+                  Na pierwszym miejscu jest remis. Zgodnie z zasadami taki wynik działa na korzyść Oszusta.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto mt-7 grid h-24 w-24 place-items-center rounded-[2rem] border border-white/10 bg-black/25 text-5xl">
+                  {avatar(game.twist.finalAccusedPlayerAvatar ?? "")}
+                </div>
+                <h1 className="mt-5 text-6xl font-black tracking-[-.065em] sm:text-7xl">
+                  {game.twist.finalAccusedPlayerName ?? "Gracz"}
+                </h1>
+                <p className="mx-auto mt-4 max-w-2xl text-xl font-black text-zinc-300">
+                  To tę osobę grupa wskazała jako Oszusta.
+                </p>
+              </>
+            )}
+
+            <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-white/10 bg-black/25 p-6">
+              <p className="text-[10px] font-black uppercase tracking-[.22em] text-zinc-500">OSTATNIE PYTANIE</p>
+              <p className="mt-2 text-3xl font-black">Czy grupa miała rację?</p>
+            </div>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-8 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              ODKRYJ PRAWDZIWEGO OSZUSTA →
+            </button>
+          </div>
+        )}
+
         {game.phase !== "briefing" &&
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
@@ -596,6 +649,8 @@ function HostGame({
           game.phase !== "final_defense_intro" &&
           game.phase !== "final_defense_one" &&
           game.phase !== "final_defense_two" &&
+          game.phase !== "final_locked" &&
+          game.phase !== "final_accused" &&
           game.mission && (
           <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
             <div className="min-w-0 space-y-5">
@@ -1023,6 +1078,37 @@ function PlayerGame({
           </div>
         )}
 
+        {game.phase === "final_locked" && (
+          <div className="rounded-[2rem] border border-cyan-300/20 bg-cyan-300/[.045] p-8 text-center">
+            <span className="text-6xl">🔒</span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[.26em] text-cyan-300">GŁOSOWANIE ZAKOŃCZONE</p>
+            <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">Twój głos jest ostateczny.</h1>
+            <p className="mt-4 text-sm leading-6 text-zinc-400">Odłóż telefon i patrz na wspólny ekran. Za chwilę pojawi się werdykt grupy.</p>
+          </div>
+        )}
+
+        {game.phase === "final_accused" && (
+          <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-8 text-center">
+            <span className="text-5xl">{game.twist.finalTie ? "⚖️" : "🎯"}</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-amber-300">WERDYKT GRUPY</p>
+            {game.twist.finalTie ? (
+              <>
+                <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">Remis na pierwszym miejscu.</h1>
+                <p className="mt-4 text-sm leading-6 text-zinc-400">Grupa nie wskazała jednej osoby. Jeszcze nie wiadomo, kto naprawdę był Oszustem.</p>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto mt-6 grid h-20 w-20 place-items-center rounded-2xl border border-white/10 bg-black/25 text-4xl">
+                  {avatar(game.twist.finalAccusedPlayerAvatar ?? "")}
+                </div>
+                <h1 className="mt-4 text-4xl font-black tracking-[-.055em]">{game.twist.finalAccusedPlayerName ?? "Gracz"}</h1>
+                <p className="mt-3 text-sm leading-6 text-zinc-400">To tę osobę wskazała grupa. Rola nadal pozostaje tajna.</p>
+              </>
+            )}
+            <p className="mt-6 rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-xs font-black text-zinc-500">Patrz na wspólny ekran.</p>
+          </div>
+        )}
+
         {game.phase !== "briefing" &&
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
@@ -1031,6 +1117,8 @@ function PlayerGame({
           game.phase !== "final_defense_intro" &&
           game.phase !== "final_defense_one" &&
           game.phase !== "final_defense_two" &&
+          game.phase !== "final_locked" &&
+          game.phase !== "final_accused" &&
           game.mission && (
           <div className="space-y-5">
             <section className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
@@ -1213,6 +1301,10 @@ export default function GameClient({ code }: { code: string }) {
     try {
       const response = await fetch(`/api/gra/pod-przykrywka/${code}`, { cache: "no-store" });
       const payload = await response.json();
+      if (response.status === 401) {
+        window.location.assign(`/pokoj/${code}`);
+        return;
+      }
       if (!response.ok) {
         setError(payload.error ?? "Nie udało się pobrać stanu gry.");
         return;
@@ -1255,6 +1347,8 @@ export default function GameClient({ code }: { code: string }) {
 
   const handlers = useMemo(() => ({
     advance: () => void send({ action: "advance" }),
+    extend: () => void send({ action: "extend_timer", seconds: 60 }),
+    skip: (playerId: string) => void send({ action: "skip_player", playerId }),
     answer: (answer: string) => void send({ action: "answer", answer }),
     vote: (targetPlayerId: string, voteType: "suspicion" | "final") =>
       void send({ action: "vote", targetPlayerId, voteType }),
@@ -1275,7 +1369,14 @@ export default function GameClient({ code }: { code: string }) {
   }
 
   return data.role === "host" ? (
-    <HostGame data={data} busy={busy} error={error} onAdvance={handlers.advance} />
+    <HostGame
+      data={data}
+      busy={busy}
+      error={error}
+      onAdvance={handlers.advance}
+      onExtend={handlers.extend}
+      onSkip={handlers.skip}
+    />
   ) : (
     <PlayerGame data={data} busy={busy} error={error} onAnswer={handlers.answer} onVote={handlers.vote} />
   );
