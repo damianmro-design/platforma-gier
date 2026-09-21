@@ -71,6 +71,16 @@ export function HostRound5({
 
         <h1>{round.prompt}</h1>
 
+        {round.mode !== "reveal" && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Najpierw każdy tajnie wskazuje 1 inną osobę. Potem drużyny przewidują,
+              kto dostał najwięcej głosów. 80 pkt za 1. miejsce, 30 pkt za 2.
+            </span>
+          </div>
+        )}
+
         {round.mode === "vote" && (
           <section className="clp-r5-progress">
             <span>TAJNE GŁOSOWANIE</span>
