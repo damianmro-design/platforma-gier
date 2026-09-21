@@ -461,7 +461,8 @@ export default function Home() {
               tags={["słowna", "szybka", "teleturniej"]}
               accent="violet"
               art="word"
-              status="soon"
+              href="/gry/zakrecone-haslo"
+              status="new"
             />
           </div>
         </section>
