@@ -33,7 +33,7 @@ export const CLP_WARMUP_QUESTIONS = [
     key: "wieczor",
     eyebrow: "WIECZÓR",
     question: "Jak najchętniej spędzasz wolny wieczór?",
-    options: ["Domówka", "Klub", "Planszówki", "Serial lub film", "Kolacja na mieście", "Spontanicznie"],
+    options: ["Domówka", "Klub", "Planszówki", "Serial lub film", "Kolacja na mieście", "Wieczór samemu"],
   },
 ] as const;
 
