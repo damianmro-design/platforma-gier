@@ -123,8 +123,15 @@ export default function LobbyClient({ code }: { code: string }) {
           if (response.ok) {
             const stats = await response.json();
             if (mounted) {
-              setAccountLevel(
-                Math.max(1, Number(stats?.progression?.level?.level ?? 1)),
+              const resolvedLevel = Math.max(
+                1,
+                Number(stats?.progression?.level?.level ?? 1),
+              );
+              setAccountLevel(resolvedLevel);
+              setAvatar((currentAvatar) =>
+                isPartyPlayAvatarUnlocked(currentAvatar, resolvedLevel)
+                  ? currentAvatar
+                  : "avatar-01",
               );
             }
           }
