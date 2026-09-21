@@ -700,3 +700,71 @@ export function getAktaNocyEvidenceBCountFromPhase(
   return Number.isFinite(value) ? Math.max(0, Math.min(5, value)) : 0;
 }
 
+export type AktaNocyReconstructionEvent = {
+  key: string;
+  title: string;
+  copy: string;
+};
+
+export const AKTA_NOCY_RECONSTRUCTION_EVENTS: AktaNocyReconstructionEvent[] = [
+  {
+    key: "return_room",
+    title: "Powrót do apartamentu 214",
+    copy: "Marek wraca do pokoju, a wkrótce potem w stronę 214 kieruje się osoba z identyfikatorem prasowym.",
+  },
+  {
+    key: "argument",
+    title: "Rozmowa zamienia się w konflikt",
+    copy: "Pada zdanie o zniszczeniu kariery. Rozmowa staje się gwałtowna.",
+  },
+  {
+    key: "fatal_confrontation",
+    title: "Konfrontacja kończy się śmiercią Marka",
+    copy: "W apartamencie dochodzi do zdarzenia, po którym Marek już nie opuszcza pokoju.",
+  },
+  {
+    key: "scheduled_message",
+    title: "Na laptopie ustawiona zostaje wiadomość",
+    copy: "Ktoś korzysta z zalogowanego konta Marka i ustawia wysyłkę na późniejszą godzinę.",
+  },
+  {
+    key: "drive_removed",
+    title: "Znika czarny pendrive",
+    copy: "Nośnik z najbardziej wrażliwymi materiałami zostaje zabrany z apartamentu.",
+  },
+  {
+    key: "exit_room",
+    title: "Ktoś opuszcza 214 podczas luki monitoringu",
+    copy: "Drzwi otwierają się od środka, a chwilę później znów pozostają zamknięte.",
+  },
+  {
+    key: "message_sent",
+    title: "Wiadomość wysyła się automatycznie",
+    copy: "O 23:02 system realizuje wcześniej ustawioną wysyłkę do Oskara.",
+  },
+  {
+    key: "cctv_planned",
+    title: "Sprawca wcześniej wyłącza kamerę C-02",
+    copy: "Luka monitoringu jest od początku częścią zaplanowanego sposobu ukrycia zbrodni.",
+  },
+  {
+    key: "investor_return",
+    title: "Igor wraca do apartamentu po rozmowie",
+    copy: "Sponsor po konflikcie o publikację ponownie wchodzi do 214 podczas najważniejszych minut.",
+  },
+];
+
+export const AKTA_NOCY_MOTIVE_OPTIONS = [
+  { key: "career", label: "Kariera i reputacja zawodowa" },
+  { key: "financial", label: "Pieniądze i interesy sponsora" },
+  { key: "relationship", label: "Konflikt osobisty i relacja z Markiem" },
+  { key: "hotel", label: "Ukrycie zaniedbań hotelu" },
+] as const;
+
+export const AKTA_NOCY_COVERUP_OPTIONS = [
+  { key: "scheduled_message", label: "Zaplanowana wiadomość z konta Marka" },
+  { key: "cctv_gap", label: "Luka w monitoringu C-02" },
+  { key: "door_lock", label: "Zamknięte drzwi apartamentu 214" },
+  { key: "missing_drive", label: "Zniknięcie pendrive'a" },
+] as const;
+
