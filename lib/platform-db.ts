@@ -500,3 +500,99 @@ export async function nextClpRound4Question(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as string | null;
 }
+
+
+export type ClpRound5DistributionItem = {
+  id: string;
+  display_name: string;
+  avatar: string;
+  team: "A" | "B";
+  count: number;
+  rank: number;
+};
+
+export type ClpRound5Prediction = {
+  targetPlayerId: string | null;
+  locked: boolean;
+  playerId: string;
+} | null;
+
+export type ClpRound5State = {
+  questionIndex: number;
+  questionCount: number;
+  questionKey: string;
+  prompt: string;
+  mode: "vote" | "predict" | "reveal";
+  scoreA: number;
+  scoreB: number;
+  players: ClpRound1Player[];
+  playerCount: number;
+  votesSubmitted: number;
+  viewerHasVoted: boolean;
+  predictorA: ClpRound1Player | null;
+  predictorB: ClpRound1Player | null;
+  predictionA: ClpRound5Prediction;
+  predictionB: ClpRound5Prediction;
+  distribution: ClpRound5DistributionItem[];
+  lastEvent: {
+    type?: string;
+    rankA?: number;
+    rankB?: number;
+    scoreGainA?: number;
+    scoreGainB?: number;
+  } | null;
+};
+
+export async function getClpRound5State(code: string, playerToken?: string | null) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_round5_state", {
+    p_code: code,
+    p_player_token: playerToken ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ClpRound5State | null;
+}
+
+export async function submitClpRound5Vote(
+  code: string,
+  playerToken: string,
+  targetPlayerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_round5_vote", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_target_player_id: targetPlayerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitClpRound5Prediction(
+  code: string,
+  playerToken: string,
+  targetPlayerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_round5_prediction", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_target_player_id: targetPlayerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpRound5State["lastEvent"];
+}
+
+export async function nextClpRound5Question(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_clp_round5_question", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
