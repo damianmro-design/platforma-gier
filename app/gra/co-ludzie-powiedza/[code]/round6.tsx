@@ -150,6 +150,11 @@ export function PlayerRound6({
         <div className="clp-r6-phone-question">
           <span>{reveal ? "WYNIK" : "DRUŻYNA " + team}</span>
           <h1>{round.prompt}</h1>
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Idealne trafienie: 70 pkt. Pomyłka o 1: 30 pkt. Większa różnica: 0 pkt.
+            </p>
+          )}
         </div>
 
         {reveal ? (
