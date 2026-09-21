@@ -289,6 +289,27 @@ export async function GET(_request: Request, context: RouteContext) {
       reconstructionRows = await getAktaNocyReconstructionHost(code, hostToken);
     }
 
+    let accusationProgress: Awaited<
+      ReturnType<typeof getAktaNocyAccusationProgress>
+    > = [];
+    let accusationResults: Awaited<
+      ReturnType<typeof getAktaNocyAccusationResults>
+    > = [];
+
+    if (
+      room.game_phase === "akt_oskarzenia" ||
+      room.game_phase?.startsWith("ujawnienie_")
+    ) {
+      accusationProgress = await getAktaNocyAccusationProgress(code, hostToken);
+    }
+
+    if (
+      room.game_phase === "ujawnienie_3" ||
+      room.game_phase === "ujawnienie_4"
+    ) {
+      accusationResults = await getAktaNocyAccusationResults(code, hostToken);
+    }
+
     let interrogations: Array<{
       playerId: string;
       displayName: string;
@@ -347,6 +368,24 @@ export async function GET(_request: Request, context: RouteContext) {
       reconstructionEvents: AKTA_NOCY_RECONSTRUCTION_EVENTS,
       motiveOptions: AKTA_NOCY_MOTIVE_OPTIONS,
       coverupOptions: AKTA_NOCY_COVERUP_OPTIONS,
+      accusation:
+        room.game_phase === "akt_oskarzenia" ||
+        room.game_phase?.startsWith("ujawnienie_")
+          ? {
+              players: accusationProgress.map((row) => ({
+                playerId: row.player_id,
+                displayName: row.display_name,
+                avatar: row.avatar,
+                submitted: row.submitted,
+              })),
+              summary:
+                room.game_phase === "ujawnienie_3" ||
+                room.game_phase === "ujawnienie_4"
+                  ? buildAccusationSummary(accusationResults, cast)
+                  : null,
+            }
+          : null,
+      reveal: revealPayloadForPhase(room.game_phase, cast),
     });
   }
 
@@ -358,6 +397,11 @@ export async function GET(_request: Request, context: RouteContext) {
       room.game_phase === "rekonstrukcja" ||
       room.game_phase === "rekonstrukcja_wynik"
         ? await getAktaNocyReconstructionPlayer(code, playerToken)
+        : null;
+    const accusation =
+      room.game_phase === "akt_oskarzenia" ||
+      room.game_phase?.startsWith("ujawnienie_")
+        ? await getAktaNocyAccusationPlayer(code, playerToken)
         : null;
 
     if (!assignment) {
@@ -398,6 +442,8 @@ export async function GET(_request: Request, context: RouteContext) {
       reconstructionEvents: AKTA_NOCY_RECONSTRUCTION_EVENTS,
       motiveOptions: AKTA_NOCY_MOTIVE_OPTIONS,
       coverupOptions: AKTA_NOCY_COVERUP_OPTIONS,
+      accusation,
+      reveal: revealPayloadForPhase(room.game_phase, cast),
     });
   }
 
@@ -459,6 +505,24 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "submitAccusation") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const ok = await submitAktaNocyAccusation(
+        code,
+        playerToken,
+        String(body.suspectPlayerId ?? ""),
+        String(body.motiveKey ?? ""),
+        String(body.evidenceId ?? ""),
+      );
+
+      return NextResponse.json({ ok });
+    }
+
     if (action === "submitReconstruction") {
       const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
 
@@ -501,8 +565,14 @@ export async function POST(request: Request, context: RouteContext) {
     const raw = error instanceof Error ? error.message : "";
     const message = raw.includes("Dossiers not ready")
       ? "Najpierw wszyscy gracze muszą otworzyć swoje akta."
-      : raw.includes("Reconstructions not ready")
-        ? "Najpierw wszyscy gracze muszą przesłać rekonstrukcję."
+      : raw.includes("Accusations not ready")
+        ? "Najpierw wszyscy gracze muszą zatwierdzić akt oskarżenia."
+        : raw.includes("Accusation locked")
+          ? "Twój akt oskarżenia został już zablokowany i nie można go zmienić."
+          : raw.includes("Invalid evidence")
+            ? "Wybierz jeden z ujawnionych dowodów."
+            : raw.includes("Reconstructions not ready")
+              ? "Najpierw wszyscy gracze muszą przesłać rekonstrukcję."
         : raw.includes("Invalid reconstruction")
           ? "Wybierz dokładnie 7 różnych wydarzeń i ustaw je w kolejności."
           : raw.includes("Invalid suspect")
