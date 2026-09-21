@@ -87,7 +87,13 @@ function Shell({
                       ? "PRZESŁUCHANIE"
                       : game.phase === "last_word"
                         ? "OSTATNIE SŁOWO"
-                        : game.phase === "result"
+                        : game.phase === "final_defense_intro"
+                          ? "PRZED FINAŁEM"
+                          : game.phase === "final_defense_one" || game.phase === "final_defense_two"
+                            ? "OBRONA"
+                            : game.phase === "final_vote"
+                              ? "FINAŁOWE GŁOSOWANIE"
+                              : game.phase === "result"
                           ? "FINAŁ"
                           : `MISJA ${game.missionIndex}/${game.missionCount}`}
               </strong>
@@ -223,6 +229,34 @@ function SuspicionBars({ data }: { data: PpVoteCount[] }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function FinalDefenderCard({
+  name,
+  avatarId,
+  votes,
+  label,
+}: {
+  name: string | null;
+  avatarId: string | null;
+  votes: number;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-left">
+      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-3xl">
+        {avatar(avatarId ?? "")}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-black uppercase tracking-[.18em] text-amber-300">{label}</p>
+        <strong className="block truncate text-xl font-black">{name ?? "Gracz"}</strong>
+      </div>
+      <div className="rounded-xl border border-white/8 bg-white/[.035] px-3 py-2 text-center">
+        <b className="block text-lg font-black text-cyan-200">{votes}</b>
+        <span className="text-[8px] font-black uppercase tracking-[.12em] text-zinc-600">podejrzeń</span>
+      </div>
     </div>
   );
 }
@@ -363,10 +397,122 @@ function HostGame({
           </div>
         )}
 
+        {game.phase === "final_defense_intro" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center sm:p-10">
+            <span className="text-6xl">⚖️</span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-amber-300">PRZED OSTATNIM GŁOSOWANIEM</p>
+            <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">2 najbardziej podejrzane osoby dostają głos.</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
+              To tylko wynik 5 rund podejrzeń, nie lista finalistów. Po obronach każdy nadal będzie mógł zagłosować na dowolną osobę.
+            </p>
+
+            <div className="mx-auto mt-7 grid max-w-3xl gap-3 md:grid-cols-2">
+              <FinalDefenderCard
+                name={game.twist.finalDefenderOneName}
+                avatarId={game.twist.finalDefenderOneAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderOneId)?.votes ?? 0)}
+                label="1. NA CELOWNIKU"
+              />
+              <FinalDefenderCard
+                name={game.twist.finalDefenderTwoName}
+                avatarId={game.twist.finalDefenderTwoAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderTwoId)?.votes ?? 0)}
+                label="2. NA CELOWNIKU"
+              />
+            </div>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              PIERWSZA OBRONA →
+            </button>
+          </div>
+        )}
+
+        {(game.phase === "final_defense_one" || game.phase === "final_defense_two") && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-300/[.045] p-7 sm:p-10">
+            <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">
+                  {game.phase === "final_defense_one" ? "OBRONA 1/2" : "OBRONA 2/2"}
+                </p>
+                <h1 className="mt-2 text-4xl font-black tracking-[-.055em]">
+                  {game.phase === "final_defense_one"
+                    ? game.twist.finalDefenderOneName ?? "Gracz"
+                    : game.twist.finalDefenderTwoName ?? "Gracz"}
+                </h1>
+              </div>
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} />
+            </div>
+
+            <div className="mt-7 rounded-2xl border border-white/10 bg-black/25 p-6">
+              <p className="text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">30 SEKUND BEZ PRZERYWANIA</p>
+              <p className="mt-3 text-xl font-black leading-8 text-white">
+                Wyjaśnij swoje najbardziej podejrzane decyzje, wskaż najmocniejszy trop przeciw komuś innemu i powiedz grupie, dlaczego nie powinna głosować na Ciebie.
+              </p>
+            </div>
+
+            <p className="mt-5 text-sm leading-6 text-zinc-400">
+              Pozostali tylko słuchają. Nie ma pytań ani dyskusji do momentu zakończenia obu obron.
+            </p>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 w-full rounded-2xl bg-gradient-to-r from-fuchsia-300 to-violet-400 px-6 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              {game.phase === "final_defense_one" ? "DRUGA OBRONA →" : "OTWÓRZ FINAŁOWE GŁOSOWANIE →"}
+            </button>
+          </div>
+        )}
+
+        {game.phase === "final_defense_intro" && (
+          <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center">
+            <span className="text-5xl">⚖️</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-amber-300">PRZED FINAŁEM</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">2 osoby mają prawo do obrony.</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+              Zostały wybrane na podstawie łącznej liczby podejrzeń z 5 misji. Po obu wypowiedziach zagłosujesz na dowolnego gracza.
+            </p>
+            <div className="mt-6 grid gap-3">
+              <FinalDefenderCard
+                name={game.twist.finalDefenderOneName}
+                avatarId={game.twist.finalDefenderOneAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderOneId)?.votes ?? 0)}
+                label="1. NA CELOWNIKU"
+              />
+              <FinalDefenderCard
+                name={game.twist.finalDefenderTwoName}
+                avatarId={game.twist.finalDefenderTwoAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderTwoId)?.votes ?? 0)}
+                label="2. NA CELOWNIKU"
+              />
+            </div>
+          </div>
+        )}
+
+        {(game.phase === "final_defense_one" || game.phase === "final_defense_two") && (
+          <div className="rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-300/[.045] p-7 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">
+              {game.phase === "final_defense_one" ? "OBRONA 1/2" : "OBRONA 2/2"}
+            </p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
+              {game.twist.isCurrentPlayerFinalDefender
+                ? "To Twoje 30 sekund."
+                : `${game.phase === "final_defense_one"
+                    ? game.twist.finalDefenderOneName ?? "Gracz"
+                    : game.twist.finalDefenderTwoName ?? "Gracz"} się broni.`}
+            </h1>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
+              {game.twist.isCurrentPlayerFinalDefender
+                ? "Wyjaśnij swoje podejrzane decyzje, wskaż najmocniejszy trop przeciw komuś innemu i przekonaj grupę, żeby nie głosowała na Ciebie."
+                : "Nie przerywaj. Słuchaj argumentów i nie oddawaj jeszcze finałowego głosu."}
+            </p>
+          </div>
+        )}
+
         {game.phase !== "briefing" &&
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
           game.phase !== "last_word" &&
+          game.phase !== "final_defense_intro" &&
+          game.phase !== "final_defense_one" &&
+          game.phase !== "final_defense_two" &&
           game.mission && (
           <div className="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
             <div className="min-w-0 space-y-5">
@@ -467,7 +613,7 @@ function HostGame({
                   )}
 
                   <button type="button" disabled={busy} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
-                    {game.missionIndex >= game.missionCount ? "FINAŁOWE WSKAZANIE →" : `MISJA ${game.missionIndex + 1} →`}
+                    {game.missionIndex >= game.missionCount ? "PRZEJDŹ DO OBRON →" : `MISJA ${game.missionIndex + 1} →`}
                   </button>
                 </div>
               )}
@@ -476,7 +622,9 @@ function HostGame({
                 <div className="rounded-[1.75rem] border border-amber-300/20 bg-amber-300/[.05] p-6">
                   <span className="text-3xl">🎯</span>
                   <h2 className="mt-4 text-2xl font-black">Ostatnia decyzja</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">Nie ma już kolejnej misji. Każdy wskazuje osobę, którą uważa za Oszusta.</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Obrony zakończone. Każdy wskazuje 1 osobę, którą uważa za Oszusta. Można zagłosować na dowolnego gracza, nie tylko na osoby, które się broniły.
+                  </p>
                   <div className="mt-5 rounded-2xl border border-white/8 bg-black/20 p-4">
                     <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-amber-300">AKTA PODEJRZEŃ Z 5 MISJI</p>
                     <SuspicionBars data={game.cumulativeSuspicion} />
