@@ -50,6 +50,12 @@ export default function LobbyClient({ code }: { code: string }) {
       const response = await fetch(`/api/pokoj/${code}`, { cache: "no-store" });
       if (!response.ok) return;
       const next = (await response.json()) as LobbyState;
+
+      if (next.room.status === "active" && next.room.gameSlug === "co-ludzie-powiedza") {
+        window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
+        return;
+      }
+
       setData(next);
     } catch {
       // Kolejny polling spróbuje ponownie.
@@ -114,16 +120,6 @@ export default function LobbyClient({ code }: { code: string }) {
 
   if (!data) {
     return <div className="lobby-loading">Łączenie z pokojem…</div>;
-  }
-
-  if (data.room.status === "active") {
-    return (
-      <section className="lobby-started">
-        <span>GRA WYSTARTOWAŁA</span>
-        <h2>Wszyscy gotowi!</h2>
-        <p>Poczekalnia zadziałała. Następny etap to przekierowanie do pierwszej rundy gry.</p>
-      </section>
-    );
   }
 
   return (
