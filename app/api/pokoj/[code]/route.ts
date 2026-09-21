@@ -1,10 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
+import {
+  getPartyPlayUserFromAccessToken,
+  getPolowanieCareerFromAccessToken,
+} from "@/lib/partyplay-auth";
+import { calculatePartyPlayProgress } from "@/lib/partyplay-progress";
+import { isPartyPlayAvatarUnlocked } from "@/lib/partyplay-avatars";
 import {
   assignPlatformTeams,
   getPlatformPlayer,
   getPlatformRecoveryCode,
+  getMyPartyPlayPlatformStats,
   joinPlatformRoom,
   joinPlatformRoomAccount,
   recoverPlatformPlayer,
@@ -88,9 +94,41 @@ export async function POST(request: Request, context: RouteContext) {
         ? await getPartyPlayUserFromAccessToken(partyPlayAccessToken)
         : null;
 
-      const player = partyPlayUser
-        ? await joinPlatformRoomAccount(code, name, avatar, partyPlayUser.id)
-        : await joinPlatformRoom(code, name, avatar);
+      let player;
+
+      if (partyPlayUser && partyPlayAccessToken) {
+        const [polowanie, platformStats] = await Promise.all([
+          getPolowanieCareerFromAccessToken(partyPlayAccessToken),
+          getMyPartyPlayPlatformStats(partyPlayAccessToken, { historyLimit: 1 }),
+        ]);
+
+        const progression = calculatePartyPlayProgress({
+          polowanieGames: polowanie?.games_completed ?? 0,
+          polowanieWins: polowanie?.wins ?? 0,
+          polowanieBadges: polowanie?.badges_count ?? 0,
+          platformGames: platformStats.summary.games.map((game) => ({
+            gameSlug: game.gameSlug,
+            gamesCompleted: Number(game.gamesCompleted ?? 0),
+            wins: Number(game.wins ?? 0),
+          })),
+        });
+
+        if (!isPartyPlayAvatarUnlocked(avatar, progression.level.level)) {
+          return NextResponse.json(
+            { error: "Ten avatar nie jest jeszcze odblokowany na Twoim poziomie." },
+            { status: 403 },
+          );
+        }
+
+        player = await joinPlatformRoomAccount(
+          code,
+          name,
+          avatar,
+          partyPlayUser.id,
+        );
+      } else {
+        player = await joinPlatformRoom(code, name, avatar);
+      }
 
       const response = NextResponse.json({ ok: true, player });
       response.cookies.set(names.player, player.player_token, {
