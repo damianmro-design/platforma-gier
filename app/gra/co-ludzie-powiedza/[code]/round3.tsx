@@ -64,6 +64,16 @@ export function HostRound3({
 
         <h1>{round.prompt}</h1>
 
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Ułóżcie wszystkie 5 odpowiedzi od najpopularniejszej do najmniej popularnej.
+              Każda idealna pozycja daje 15 pkt, a perfekcyjne 5/5 dodatkowe 25 pkt.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r3-predictors">
           <RankerCard
             team="A"
@@ -181,6 +191,11 @@ export function PlayerRound3({
         <div className="clp-r3-phone-question">
           <span>{reveal ? "POPRAWNY RANKING" : "DRUŻYNA " + team}</span>
           <h1>{round.prompt}</h1>
+          {!reveal && (
+            <p className="clp-inline-rule">
+              Ustawcie pełne TOP 5. 15 pkt za każdą idealną pozycję, +25 pkt za perfekcyjne 5/5.
+            </p>
+          )}
         </div>
 
         {reveal ? (
