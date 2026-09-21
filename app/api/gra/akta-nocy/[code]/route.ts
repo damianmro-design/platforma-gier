@@ -2,6 +2,9 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   advanceAktaNocyPhase,
+  getAktaNocyAccusationPlayer,
+  getAktaNocyAccusationProgress,
+  getAktaNocyAccusationResults,
   getAktaNocyHostInterrogations,
   getAktaNocyHostProgress,
   getAktaNocyPlayerAssignment,
@@ -12,6 +15,7 @@ import {
   openAktaNocyDossier,
   revealAktaNocyEvidenceA,
   revealAktaNocyEvidenceB,
+  submitAktaNocyAccusation,
   submitAktaNocyReconstruction,
 } from "@/lib/platform-db";
 import {
@@ -25,6 +29,7 @@ import {
   getAktaNocyInterrogationByRole,
   getAktaNocyRoleByKey,
 } from "@/lib/akta-nocy";
+import { AKTA_NOCY_SOLUTION } from "@/lib/akta-nocy-solution";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -35,7 +40,12 @@ function cleanCode(value: string) {
 }
 
 function publicEvidenceForPhase(phase: string | null | undefined) {
-  if (phase === "rekonstrukcja" || phase === "rekonstrukcja_wynik") {
+  if (
+    phase === "rekonstrukcja" ||
+    phase === "rekonstrukcja_wynik" ||
+    phase === "akt_oskarzenia" ||
+    phase?.startsWith("ujawnienie_")
+  ) {
     return [...AKTA_NOCY_EVIDENCE_A, ...AKTA_NOCY_EVIDENCE_B];
   }
 
@@ -166,6 +176,82 @@ function buildReconstructionSummary(
   };
 }
 
+
+function revealPayloadForPhase(
+  phase: string | null | undefined,
+  cast: ReturnType<typeof publicCastForRows>,
+) {
+  if (!phase?.startsWith("ujawnienie_")) return null;
+
+  const culprit = cast.find(
+    (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+  ) ?? null;
+
+  if (phase === "ujawnienie_1") {
+    return { step: 1, content: AKTA_NOCY_SOLUTION.reveal.step1, culprit: null };
+  }
+
+  if (phase === "ujawnienie_2") {
+    return { step: 2, content: AKTA_NOCY_SOLUTION.reveal.step2, culprit: null };
+  }
+
+  if (phase === "ujawnienie_3") {
+    return { step: 3, content: AKTA_NOCY_SOLUTION.reveal.step3, culprit };
+  }
+
+  return { step: 4, content: AKTA_NOCY_SOLUTION.reveal.step4, culprit };
+}
+
+function buildAccusationSummary(
+  rows: Awaited<ReturnType<typeof getAktaNocyAccusationResults>>,
+  cast: ReturnType<typeof publicCastForRows>,
+) {
+  const castById = new Map(cast.map((item) => [item.playerId, item]));
+  const culprit = cast.find(
+    (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+  ) ?? null;
+  const evidenceById = new Map(
+    [...AKTA_NOCY_EVIDENCE_A, ...AKTA_NOCY_EVIDENCE_B].map((item) => [
+      item.id,
+      item,
+    ]),
+  );
+  const motiveByKey = new Map(
+    AKTA_NOCY_MOTIVE_OPTIONS.map((item) => [item.key, item.label]),
+  );
+
+  const results = rows.map((row) => {
+    const suspect = castById.get(row.suspect_player_id) ?? null;
+    const suspectCorrect = Boolean(
+      culprit && row.suspect_player_id === culprit.playerId,
+    );
+    const motiveCorrect = row.motive_key === AKTA_NOCY_SOLUTION.motiveKey;
+
+    return {
+      playerId: row.player_id,
+      displayName: row.display_name,
+      avatar: row.avatar,
+      suspect,
+      motiveKey: row.motive_key,
+      motiveLabel: motiveByKey.get(row.motive_key) ?? row.motive_key,
+      evidenceId: row.evidence_id,
+      evidenceNo: evidenceById.get(row.evidence_id)?.no ?? "",
+      evidenceTitle: evidenceById.get(row.evidence_id)?.title ?? row.evidence_id,
+      suspectCorrect,
+      motiveCorrect,
+      fullyCorrect: suspectCorrect && motiveCorrect,
+    };
+  });
+
+  return {
+    total: results.length,
+    correctSuspect: results.filter((item) => item.suspectCorrect).length,
+    correctMotive: results.filter((item) => item.motiveCorrect).length,
+    fullyCorrect: results.filter((item) => item.fullyCorrect).length,
+    results,
+  };
+}
+
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
   const code = cleanCode(rawCode);
@@ -201,6 +287,27 @@ export async function GET(_request: Request, context: RouteContext) {
       room.game_phase === "rekonstrukcja_wynik"
     ) {
       reconstructionRows = await getAktaNocyReconstructionHost(code, hostToken);
+    }
+
+    let accusationProgress: Awaited<
+      ReturnType<typeof getAktaNocyAccusationProgress>
+    > = [];
+    let accusationResults: Awaited<
+      ReturnType<typeof getAktaNocyAccusationResults>
+    > = [];
+
+    if (
+      room.game_phase === "akt_oskarzenia" ||
+      room.game_phase?.startsWith("ujawnienie_")
+    ) {
+      accusationProgress = await getAktaNocyAccusationProgress(code, hostToken);
+    }
+
+    if (
+      room.game_phase === "ujawnienie_3" ||
+      room.game_phase === "ujawnienie_4"
+    ) {
+      accusationResults = await getAktaNocyAccusationResults(code, hostToken);
     }
 
     let interrogations: Array<{
@@ -261,6 +368,24 @@ export async function GET(_request: Request, context: RouteContext) {
       reconstructionEvents: AKTA_NOCY_RECONSTRUCTION_EVENTS,
       motiveOptions: AKTA_NOCY_MOTIVE_OPTIONS,
       coverupOptions: AKTA_NOCY_COVERUP_OPTIONS,
+      accusation:
+        room.game_phase === "akt_oskarzenia" ||
+        room.game_phase?.startsWith("ujawnienie_")
+          ? {
+              players: accusationProgress.map((row) => ({
+                playerId: row.player_id,
+                displayName: row.display_name,
+                avatar: row.avatar,
+                submitted: row.submitted,
+              })),
+              summary:
+                room.game_phase === "ujawnienie_3" ||
+                room.game_phase === "ujawnienie_4"
+                  ? buildAccusationSummary(accusationResults, cast)
+                  : null,
+            }
+          : null,
+      reveal: revealPayloadForPhase(room.game_phase, cast),
     });
   }
 
@@ -272,6 +397,11 @@ export async function GET(_request: Request, context: RouteContext) {
       room.game_phase === "rekonstrukcja" ||
       room.game_phase === "rekonstrukcja_wynik"
         ? await getAktaNocyReconstructionPlayer(code, playerToken)
+        : null;
+    const accusation =
+      room.game_phase === "akt_oskarzenia" ||
+      room.game_phase?.startsWith("ujawnienie_")
+        ? await getAktaNocyAccusationPlayer(code, playerToken)
         : null;
 
     if (!assignment) {
@@ -289,6 +419,38 @@ export async function GET(_request: Request, context: RouteContext) {
         { status: 500 },
       );
     }
+
+    const playerAccusationVerdict =
+      accusation &&
+      (room.game_phase === "ujawnienie_3" || room.game_phase === "ujawnienie_4")
+        ? (() => {
+            const culprit = cast.find(
+              (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+            ) ?? null;
+            const suspect = cast.find(
+              (item) => item.playerId === accusation.suspect_player_id,
+            ) ?? null;
+            const evidenceItem = [
+              ...AKTA_NOCY_EVIDENCE_A,
+              ...AKTA_NOCY_EVIDENCE_B,
+            ].find((item) => item.id === accusation.evidence_id);
+            const motiveItem = AKTA_NOCY_MOTIVE_OPTIONS.find(
+              (item) => item.key === accusation.motive_key,
+            );
+
+            return {
+              suspect,
+              motiveLabel: motiveItem?.label ?? accusation.motive_key,
+              evidenceNo: evidenceItem?.no ?? "",
+              evidenceTitle: evidenceItem?.title ?? accusation.evidence_id,
+              suspectCorrect: Boolean(
+                culprit && accusation.suspect_player_id === culprit.playerId,
+              ),
+              motiveCorrect:
+                accusation.motive_key === AKTA_NOCY_SOLUTION.motiveKey,
+            };
+          })()
+        : null;
 
     return NextResponse.json({
       role: "player",
@@ -312,6 +474,9 @@ export async function GET(_request: Request, context: RouteContext) {
       reconstructionEvents: AKTA_NOCY_RECONSTRUCTION_EVENTS,
       motiveOptions: AKTA_NOCY_MOTIVE_OPTIONS,
       coverupOptions: AKTA_NOCY_COVERUP_OPTIONS,
+      accusation,
+      accusationVerdict: playerAccusationVerdict,
+      reveal: revealPayloadForPhase(room.game_phase, cast),
     });
   }
 
@@ -373,6 +538,24 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "submitAccusation") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const ok = await submitAktaNocyAccusation(
+        code,
+        playerToken,
+        String(body.suspectPlayerId ?? ""),
+        String(body.motiveKey ?? ""),
+        String(body.evidenceId ?? ""),
+      );
+
+      return NextResponse.json({ ok });
+    }
+
     if (action === "submitReconstruction") {
       const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
 
@@ -415,8 +598,14 @@ export async function POST(request: Request, context: RouteContext) {
     const raw = error instanceof Error ? error.message : "";
     const message = raw.includes("Dossiers not ready")
       ? "Najpierw wszyscy gracze muszą otworzyć swoje akta."
-      : raw.includes("Reconstructions not ready")
-        ? "Najpierw wszyscy gracze muszą przesłać rekonstrukcję."
+      : raw.includes("Accusations not ready")
+        ? "Najpierw wszyscy gracze muszą zatwierdzić akt oskarżenia."
+        : raw.includes("Accusation locked")
+          ? "Twój akt oskarżenia został już zablokowany i nie można go zmienić."
+          : raw.includes("Invalid evidence")
+            ? "Wybierz jeden z ujawnionych dowodów."
+            : raw.includes("Reconstructions not ready")
+              ? "Najpierw wszyscy gracze muszą przesłać rekonstrukcję."
         : raw.includes("Invalid reconstruction")
           ? "Wybierz dokładnie 7 różnych wydarzeń i ustaw je w kolejności."
           : raw.includes("Invalid suspect")
