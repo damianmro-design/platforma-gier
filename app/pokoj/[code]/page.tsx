@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { lookupPlatformRoom } from "@/lib/platform-db";
+import LobbyClient from "./lobby-client";
 
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "CO LUDZIE POWIEDZĄ",
@@ -8,12 +9,10 @@ const GAME_LABELS: Record<string, string> = {
 
 type RoomPageProps = {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ host?: string | string[] }>;
 };
 
-export default async function RoomPage({ params, searchParams }: RoomPageProps) {
+export default async function RoomPage({ params }: RoomPageProps) {
   const { code: rawCode } = await params;
-  const query = await searchParams;
   const code = rawCode.trim().toUpperCase();
 
   let room;
@@ -26,7 +25,7 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
         <section className="room-card">
           <span className="room-kicker">POKÓJ NIEDOSTĘPNY</span>
           <h1>Nie udało się połączyć z pokojem.</h1>
-          <p>Spróbuj ponownie za chwilę albo wróć na stronę główną.</p>
+          <p className="room-copy">Spróbuj ponownie albo wróć na stronę główną.</p>
           <Link href="/">Wróć do platformy</Link>
         </section>
       </main>
@@ -37,44 +36,36 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
     notFound();
   }
 
-  const isHost = Array.isArray(query.host)
-    ? query.host[0] === "1"
-    : query.host === "1";
-
   return (
-    <main className="room-shell">
-      <section className="room-card">
-        <span className="room-kicker">
-          {isHost ? "POKÓJ UTWORZONY" : "DOŁĄCZONO DO POKOJU"}
-        </span>
+    <main className="room-shell room-shell-live">
+      <div className="room-live-container">
+        <header className="room-live-header">
+          <div>
+            <span className="room-kicker">POCZEKALNIA</span>
+            <p>{GAME_LABELS[room.game_slug] ?? room.game_slug}</p>
+          </div>
 
-        <div className="room-code" aria-label={`Kod pokoju ${room.code}`}>
-          {room.code.split("").map((character, index) => (
-            <span key={`${character}-${index}`}>{character}</span>
-          ))}
-        </div>
+          <div className="compact-room-code">
+            <small>KOD POKOJU</small>
+            <strong>{room.code}</strong>
+          </div>
+        </header>
 
-        <p className="room-game-label">Gracie w</p>
-        <h1>{GAME_LABELS[room.game_slug] ?? room.game_slug}</h1>
+        <section className="room-live-title">
+          <h1>Zbierz ekipę i zaczynamy.</h1>
+          <p>
+            Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy
+            pojawiają się tutaj automatycznie.
+          </p>
+        </section>
 
-        <div className="room-status">
-          <i />
-          Poczekalnia
-        </div>
+        <LobbyClient code={room.code} />
 
-        <p className="room-copy">
-          {isHost
-            ? "Udostępnij kod pozostałym osobom. W kolejnym etapie dodamy listę graczy, avatary, drużyny i przycisk rozpoczęcia gry."
-            : "Jesteś w pokoju. W kolejnym etapie pojawi się tutaj wybór imienia i avatara oraz lista pozostałych uczestników."}
-        </p>
-
-        <div className="room-next">
-          <strong>Następny moduł</strong>
-          <span>gracze → avatary → drużyny → start</span>
-        </div>
-
-        <Link href="/">Wróć do platformy</Link>
-      </section>
+        <footer className="room-live-footer">
+          <Link href="/">← Wróć do katalogu</Link>
+          <span>Pokój wygasa automatycznie po 12 godzinach</span>
+        </footer>
+      </div>
     </main>
   );
 }
