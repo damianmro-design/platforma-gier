@@ -64,7 +64,7 @@ export const AKTA_NOCY_CASES: NightCase[] = [
     duration: "75–105 min",
     difficulty: "średnia",
     premise:
-      "Znany dziennikarz śledczy zostaje znaleziony martwy w zamkniętym apartamencie. Kilkanaście minut wcześniej z jego telefonu wyszła wiadomość, a korytarzowy monitoring ma dokładnie 8 minut luki.",
+      "Znany dziennikarz śledczy zostaje znaleziony martwy w zamkniętym apartamencie. Kilkanaście minut później z jego konta wychodzi wiadomość, a korytarzowy monitoring ma dokładnie 8 minut luki.",
     hook:
       "Każda osoba obecna tej nocy coś ukrywa. Tylko jedna ukrywa samą zbrodnię.",
     investigationMotifs: [
