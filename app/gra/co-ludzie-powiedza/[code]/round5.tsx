@@ -170,6 +170,11 @@ export function PlayerRound5({
                 : "WYNIKI"}
           </span>
           <h1>{round.prompt}</h1>
+          {round.mode !== "reveal" && (
+            <p className="clp-inline-rule">
+              Najpierw tajny głos całej ekipy, potem przewidywanie drużyn. 80 pkt za 1. miejsce, 30 pkt za 2.
+            </p>
+          )}
         </div>
 
         {round.mode === "vote" ? (
