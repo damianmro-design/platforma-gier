@@ -142,6 +142,28 @@ function AnswerCards({ game }: { game: PpGameState }) {
   );
 }
 
+function SuspicionSpotlight({ data }: { data: PpVoteCount[] }) {
+  const highest = Math.max(...data.map((item) => Number(item.votes) || 0), 0);
+  if (highest <= 0) return null;
+
+  const leaders = data.filter((item) => Number(item.votes) === highest);
+  const names = leaders.map(votePlayerName).filter(Boolean);
+
+  return (
+    <div className="mb-4 rounded-2xl border border-amber-300/18 bg-amber-300/[.055] p-4">
+      <span className="text-[9px] font-black uppercase tracking-[.2em] text-amber-300">
+        {leaders.length === 1 ? "NA CELOWNIKU" : "REMIS PODEJRZEŃ"}
+      </span>
+      <strong className="mt-1 block text-xl font-black">
+        {names.join(", ")}
+      </strong>
+      <p className="mt-1 text-xs font-bold text-zinc-500">
+        {highest} {highest === 1 ? "głos" : highest < 5 ? "głosy" : "głosów"} w tej misji
+      </p>
+    </div>
+  );
+}
+
 function SuspicionBars({ data }: { data: PpVoteCount[] }) {
   const max = Math.max(...data.map((item) => Number(item.votes) || 0), 1);
   return (
@@ -307,7 +329,21 @@ function HostGame({
                   <span className="text-3xl">🔎</span>
                   <h2 className="mt-4 text-2xl font-black">Poziom podejrzeń</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">Widzicie sumę głosów, ale nie to, kto na kogo zagłosował.</p>
-                  <div className="mt-5"><SuspicionBars data={game.suspicion} /></div>
+                  <div className="mt-5">
+                    <SuspicionSpotlight data={game.suspicion} />
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-zinc-500">GŁOSY Z TEJ MISJI</p>
+                    <SuspicionBars data={game.suspicion} />
+                  </div>
+
+                  {game.missionIndex > 1 && (
+                    <div className="mt-6 border-t border-white/8 pt-5">
+                      <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-cyan-300">
+                        AKTA PODEJRZEŃ · ŁĄCZNIE PO {game.missionIndex} MISJACH
+                      </p>
+                      <SuspicionBars data={game.cumulativeSuspicion} />
+                    </div>
+                  )}
+
                   <button type="button" disabled={busy} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
                     {game.missionIndex >= game.missionCount ? "FINAŁOWE WSKAZANIE →" : `MISJA ${game.missionIndex + 1} →`}
                   </button>
@@ -319,6 +355,10 @@ function HostGame({
                   <span className="text-3xl">🎯</span>
                   <h2 className="mt-4 text-2xl font-black">Ostatnia decyzja</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">Nie ma już kolejnej misji. Każdy wskazuje osobę, którą uważa za Oszusta.</p>
+                  <div className="mt-5 rounded-2xl border border-white/8 bg-black/20 p-4">
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-amber-300">AKTA PODEJRZEŃ Z 5 MISJI</p>
+                    <SuspicionBars data={game.cumulativeSuspicion} />
+                  </div>
                   <div className="mt-5"><ProgressBar value={game.votedCount} max={game.playerCount} /></div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
                     {readyToAdvance ? "ODKRYJ OSZUSTA →" : "CZEKAJ NA WSZYSTKICH"}
@@ -546,7 +586,16 @@ function PlayerGame({
               <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
                 <span className="text-3xl">🔎</span>
                 <h2 className="mt-3 text-2xl font-black">Poziom podejrzeń</h2>
-                <div className="mt-5"><SuspicionBars data={game.suspicion} /></div>
+                <div className="mt-5">
+                  <SuspicionSpotlight data={game.suspicion} />
+                  <SuspicionBars data={game.suspicion} />
+                </div>
+                {game.missionIndex > 1 && (
+                  <div className="mt-6 border-t border-white/8 pt-5">
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-cyan-300">ŁĄCZNIE W CAŁEJ GRZE</p>
+                    <SuspicionBars data={game.cumulativeSuspicion} />
+                  </div>
+                )}
               </div>
             )}
 
