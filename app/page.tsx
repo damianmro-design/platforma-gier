@@ -445,6 +445,7 @@ export default function Home() {
               tags={["murder mystery", "fabularna", "dedukcja"]}
               accent="red"
               art="crime"
+              href="/gry/akta-nocy"
               status="soon"
             />
 
