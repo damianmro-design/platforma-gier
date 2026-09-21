@@ -49,6 +49,16 @@ export function HostRound7({
 
         <h1>{round.prompt}</h1>
 
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              W każdym pojedynku wybieracie popularniejszą z 2 odpowiedzi.
+              Poprawny wybór daje 50 pkt. Strony odpowiedzi zmieniają się między pytaniami.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r7-reps">
           <Rep team="A" player={round.predictorA} locked={Boolean(round.predictionA)} />
           <div className="clp-r7-versus">VS</div>
