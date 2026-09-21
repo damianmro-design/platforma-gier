@@ -976,9 +976,20 @@ export async function getPartyPlayAccountHistory(
 export type MyPartyPlayPlatformStats = {
   summary: PartyPlayAccountSummary;
   history: PartyPlayAccountHistoryItem[];
+  historyTotal: number;
+  historyOffset: number;
+  historyLimit: number;
+  historyHasMore: boolean;
 };
 
-export async function getMyPartyPlayPlatformStats(accessToken: string) {
+export async function getMyPartyPlayPlatformStats(
+  accessToken: string,
+  options?: {
+    historyLimit?: number;
+    historyOffset?: number;
+    gameSlug?: string | null;
+  },
+) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
   const key =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
@@ -997,13 +1008,21 @@ export async function getMyPartyPlayPlatformStats(accessToken: string) {
     },
   });
 
-  const { data, error } = await supabase.rpc("get_my_partyplay_platform_stats");
+  const { data, error } = await supabase.rpc("get_my_partyplay_platform_stats", {
+    p_history_limit: Math.min(Math.max(options?.historyLimit ?? 10, 1), 50),
+    p_history_offset: Math.max(options?.historyOffset ?? 0, 0),
+    p_game_slug: options?.gameSlug?.trim() || null,
+  });
 
   if (error) throw new Error(error.message);
 
   const payload = (data ?? {}) as {
     summary?: Record<string, unknown>;
     history?: Array<Record<string, unknown>>;
+    historyTotal?: number | string;
+    historyOffset?: number | string;
+    historyLimit?: number | string;
+    historyHasMore?: boolean;
   };
 
   const rawSummary = payload.summary ?? {};
@@ -1048,7 +1067,14 @@ export async function getMyPartyPlayPlatformStats(accessToken: string) {
     completed_at: String(row.completed_at ?? ""),
   }));
 
-  return { summary, history } as MyPartyPlayPlatformStats;
+  return {
+    summary,
+    history,
+    historyTotal: Number(payload.historyTotal ?? history.length),
+    historyOffset: Number(payload.historyOffset ?? 0),
+    historyLimit: Number(payload.historyLimit ?? history.length),
+    historyHasMore: Boolean(payload.historyHasMore),
+  } as MyPartyPlayPlatformStats;
 }
 
 
