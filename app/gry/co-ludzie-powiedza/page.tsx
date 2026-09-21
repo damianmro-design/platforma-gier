@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createRoom } from "../../room-actions";
 
 export const metadata: Metadata = {
   title: "CO LUDZIE POWIEDZĄ — PartyPlay",
@@ -77,9 +78,10 @@ export default function CoLudziePowiedzaPage() {
           </div>
 
           <div className="survey-actions">
-            <button type="button" disabled>
-              Gra w budowie
-            </button>
+            <form action={createRoom}>
+              <input type="hidden" name="gameSlug" value="co-ludzie-powiedza" />
+              <button type="submit">Utwórz pokój</button>
+            </form>
             <a href="#jak-gramy">Zobacz przebieg gry</a>
           </div>
         </div>
