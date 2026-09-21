@@ -35,6 +35,57 @@ type HostInterrogation = {
   pressurePoint: string;
 };
 
+type PublicCastMember = {
+  playerId: string;
+  displayName: string;
+  avatar: string;
+  characterName: string;
+  characterLabel: string;
+};
+
+type ReconstructionEvent = {
+  key: string;
+  title: string;
+  copy: string;
+};
+
+type ReconstructionOption = {
+  key: string;
+  label: string;
+};
+
+type ReconstructionSummary = {
+  total: number;
+  submitted: number;
+  suspectRanking: Array<PublicCastMember & { count: number }>;
+  motiveRanking: Array<ReconstructionOption & { count: number }>;
+  coverupRanking: Array<ReconstructionOption & { count: number }>;
+  consensusTimeline: Array<{
+    key: string;
+    title: string;
+    count: number;
+    avgPosition: number;
+  }>;
+};
+
+type ReconstructionHostState = {
+  players: Array<{
+    playerId: string;
+    displayName: string;
+    avatar: string;
+    submitted: boolean;
+  }>;
+  summary: ReconstructionSummary | null;
+};
+
+type ReconstructionPlayerState = {
+  submitted: boolean;
+  event_order: string[];
+  suspect_player_id: string;
+  motive_key: string;
+  coverup_key: string;
+} | null;
+
 type RoleCard = {
   id: string;
   name: string;
@@ -61,6 +112,11 @@ type HostState = {
   progress: HostProgress[];
   evidence: Evidence[];
   interrogations: HostInterrogation[];
+  cast: PublicCastMember[];
+  reconstruction: ReconstructionHostState | null;
+  reconstructionEvents: ReconstructionEvent[];
+  motiveOptions: ReconstructionOption[];
+  coverupOptions: ReconstructionOption[];
 };
 
 type PlayerState = {
@@ -77,6 +133,11 @@ type PlayerState = {
   };
   roleCard: RoleCard;
   evidence: Evidence[];
+  cast: PublicCastMember[];
+  reconstruction: ReconstructionPlayerState;
+  reconstructionEvents: ReconstructionEvent[];
+  motiveOptions: ReconstructionOption[];
+  coverupOptions: ReconstructionOption[];
 };
 
 type GameState = HostState | PlayerState;
@@ -138,7 +199,10 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
     return () => window.clearInterval(timer);
   }, [load]);
 
-  async function send(action: string) {
+  async function send(
+    action: string,
+    payload: Record<string, unknown> = {},
+  ) {
     setBusy(true);
     setError("");
 
@@ -146,7 +210,7 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
       const response = await fetch(`/api/gra/akta-nocy/${code}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ ...payload, action }),
       });
       const result = await response.json();
 
@@ -202,6 +266,9 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
       onOpen={() => void openDossier()}
       onHide={() => setDossierVisible(false)}
       onShow={() => setDossierVisible(true)}
+      onSubmitReconstruction={(payload) =>
+        send("submitReconstruction", payload)
+      }
     />
   );
 }
