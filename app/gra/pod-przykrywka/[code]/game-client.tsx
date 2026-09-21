@@ -79,7 +79,17 @@ function Shell({
             <div>
               <span className="block text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">POD PRZYKRYWKĄ</span>
               <strong className="mt-1 block text-sm font-black">
-                {game.phase === "briefing" ? "TAJNE ROLE" : game.phase === "result" ? "FINAŁ" : `MISJA ${game.missionIndex}/${game.missionCount}`}
+                {game.phase === "briefing"
+                  ? "TAJNE ROLE"
+                  : game.phase === "checkpoint"
+                    ? "PUNKT KONTROLNY"
+                    : game.phase === "interrogation"
+                      ? "PRZESŁUCHANIE"
+                      : game.phase === "last_word"
+                        ? "OSTATNIE SŁOWO"
+                        : game.phase === "result"
+                          ? "FINAŁ"
+                          : `MISJA ${game.missionIndex}/${game.missionCount}`}
               </strong>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-right">
@@ -91,6 +101,36 @@ function Shell({
         {children}
       </div>
     </main>
+  );
+}
+
+function PhaseTimer({
+  startedAt,
+  seconds,
+}: {
+  startedAt: string;
+  seconds: number;
+}) {
+  const [left, setLeft] = useState(seconds);
+
+  useEffect(() => {
+    function tick() {
+      const elapsed = Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+      setLeft(Math.max(0, seconds - elapsed));
+    }
+
+    tick();
+    const timer = window.setInterval(tick, 250);
+    return () => window.clearInterval(timer);
+  }, [startedAt, seconds]);
+
+  const minutes = Math.floor(left / 60);
+  const secs = left % 60;
+
+  return (
+    <div className="inline-flex min-w-24 items-center justify-center rounded-2xl border border-white/10 bg-black/25 px-4 py-3 font-mono text-2xl font-black tabular-nums text-white">
+      {minutes}:{String(secs).padStart(2, "0")}
+    </div>
   );
 }
 
@@ -223,6 +263,13 @@ function HostGame({
             <p className="mb-3 text-[10px] font-black uppercase tracking-[.22em] text-zinc-500">FINAŁOWE GŁOSY</p>
             <SuspicionBars data={game.result.finalVotes} />
           </div>
+
+          {game.result.secretOrder && (
+            <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-5 text-left">
+              <p className="text-[9px] font-black uppercase tracking-[.22em] text-amber-300">TAJNY ROZKAZ OSZUSTA</p>
+              <p className="mt-2 text-sm font-bold leading-6 text-zinc-200">{game.result.secretOrder}</p>
+            </div>
+          )}
         </section>
       </Shell>
     );
@@ -241,6 +288,77 @@ function HostGame({
             </p>
             <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
               {busy ? "CHWILA…" : "ROZPOCZNIJ MISJĘ 1 →"}
+            </button>
+          </div>
+        )}
+
+        {game.phase === "checkpoint" && (
+          <div className="mx-auto max-w-4xl rounded-[2rem] border border-amber-300/20 bg-amber-300/[.055] p-7 text-center sm:p-10">
+            <span className="text-6xl">🚨</span>
+            <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-amber-300">PUNKT KONTROLNY AKTYWNY</p>
+            <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">Po 3 misjach ktoś trafia na przesłuchanie.</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
+              System wybrał osobę z najwyższym łącznym poziomem podejrzeń. To nie oznacza, że jest Oszustem.
+            </p>
+
+            <div className="mx-auto mt-7 flex max-w-md items-center gap-4 rounded-2xl border border-white/10 bg-black/25 p-4 text-left">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-3xl">
+                {avatar(game.twist.interrogationPlayerAvatar ?? "")}
+              </span>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-500">NA CELOWNIKU</p>
+                <strong className="text-xl font-black">{game.twist.interrogationPlayerName ?? "Gracz"}</strong>
+              </div>
+            </div>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              ROZPOCZNIJ PRZESŁUCHANIE →
+            </button>
+          </div>
+        )}
+
+        {game.phase === "interrogation" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-red-300/20 bg-red-300/[.045] p-7 sm:p-10">
+            <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.25em] text-red-300">PRZESŁUCHANIE</p>
+                <h1 className="mt-2 text-4xl font-black tracking-[-.055em]">
+                  {game.twist.interrogationPlayerName ?? "Gracz"} odpowiada.
+                </h1>
+              </div>
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={45} />
+            </div>
+
+            <div className="mt-7 rounded-2xl border border-white/10 bg-black/25 p-6">
+              <p className="text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">PYTANIE</p>
+              <p className="mt-3 text-2xl font-black leading-9 text-white">
+                {game.twist.interrogationQuestion ?? "Wyjaśnij swoje dotychczasowe decyzje."}
+              </p>
+            </div>
+
+            <p className="mt-5 text-sm leading-6 text-zinc-400">
+              Tylko przesłuchiwana osoba odpowiada. Reszta słucha, nie przerywa i zapamiętuje szczegóły.
+            </p>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 w-full rounded-2xl bg-gradient-to-r from-red-300 to-orange-400 px-6 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              PRZEJDŹ DO OSTATNIEGO SŁOWA →
+            </button>
+          </div>
+        )}
+
+        {game.phase === "last_word" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-violet-300/20 bg-violet-300/[.045] p-7 text-center sm:p-10">
+            <span className="text-5xl">🎙️</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-violet-300">OSTATNIE SŁOWO</p>
+            <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">
+              {game.twist.interrogationPlayerName ?? "Gracz"} ma 30 sekund na obronę.
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
+              Bez pytań i bez przerywania. Może wskazać trop, obronić swoje odpowiedzi albo skierować uwagę na kogoś innego.
+            </p>
+            <div className="mt-6"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-violet-300 to-fuchsia-400 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              ROZPOCZNIJ MISJĘ 4 →
             </button>
           </div>
         )}
@@ -466,6 +584,14 @@ function PlayerGame({
           <p className="mt-4 text-base leading-7 text-zinc-400">
             Oszustem był <strong className="text-white">{game.result.saboteurName}</strong>. {game.result.caught ? "Grupa go rozpracowała." : "Utrzymał przykrywkę do końca."}
           </p>
+
+          {game.result.secretOrder && (
+            <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-300/[.06] p-5 text-left">
+              <p className="text-[9px] font-black uppercase tracking-[.22em] text-amber-300">TAJNY ROZKAZ OSZUSTA</p>
+              <p className="mt-2 text-sm font-bold leading-6 text-zinc-200">{game.result.secretOrder}</p>
+            </div>
+          )}
+
           <div className="mt-8"><RoleCard role={me.role} /></div>
         </section>
       </Shell>
@@ -476,6 +602,62 @@ function PlayerGame({
     <Shell room={room} game={game}>
       <section className="mx-auto max-w-3xl px-5 py-8">
         {game.phase === "briefing" && <RoleCard role={me.role} />}
+
+        {game.phase === "checkpoint" && (
+          <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.055] p-7 text-center">
+            <span className="text-5xl">🚨</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-amber-300">PUNKT KONTROLNY</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">System wybrał osobę do przesłuchania.</h1>
+            <div className="mx-auto mt-6 flex max-w-sm items-center gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-left">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[.04] text-2xl">
+                {avatar(game.twist.interrogationPlayerAvatar ?? "")}
+              </span>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-500">NA CELOWNIKU</p>
+                <strong className="text-lg font-black">{game.twist.interrogationPlayerName ?? "Gracz"}</strong>
+              </div>
+            </div>
+            {game.twist.isCurrentPlayerTarget && (
+              <p className="mt-5 rounded-xl border border-red-300/20 bg-red-300/10 px-4 py-3 text-sm font-black text-red-200">
+                To Ty. Za chwilę odpowiesz na pytanie przed całą grupą.
+              </p>
+            )}
+          </div>
+        )}
+
+        {game.phase === "interrogation" && (
+          <div className="rounded-[2rem] border border-red-300/20 bg-red-300/[.045] p-7 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[.25em] text-red-300">PRZESŁUCHANIE</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
+              {game.twist.isCurrentPlayerTarget ? "Odpowiadasz." : `${game.twist.interrogationPlayerName ?? "Gracz"} odpowiada.`}
+            </h1>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={45} /></div>
+            <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-left text-lg font-black leading-8">
+              {game.twist.interrogationQuestion ?? "Wyjaśnij swoje dotychczasowe decyzje."}
+            </p>
+            <p className="mt-4 text-sm leading-6 text-zinc-400">
+              {game.twist.isCurrentPlayerTarget
+                ? "Odpowiadaj konkretnie. To, co powiesz, może zmienić finałowe głosy."
+                : "Nie przerywaj. Słuchaj odpowiedzi i zapamiętaj niespójności."}
+            </p>
+          </div>
+        )}
+
+        {game.phase === "last_word" && (
+          <div className="rounded-[2rem] border border-violet-300/20 bg-violet-300/[.045] p-7 text-center">
+            <span className="text-5xl">🎙️</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-violet-300">OSTATNIE SŁOWO</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
+              {game.twist.isCurrentPlayerTarget ? "Masz 30 sekund." : `${game.twist.interrogationPlayerName ?? "Gracz"} ma 30 sekund.`}
+            </h1>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
+              {game.twist.isCurrentPlayerTarget
+                ? "To Twoja chwila na obronę. Możesz wskazać trop, wyjaśnić swoje decyzje albo rzucić podejrzenie na kogoś innego."
+                : "Nie przerywaj. Po tym przemówieniu gra przejdzie do misji 4."}
+            </p>
+          </div>
+        )}
 
         {game.phase !== "briefing" && game.mission && (
           <div className="space-y-5">
