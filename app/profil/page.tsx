@@ -390,15 +390,17 @@ export default function ProfilePage() {
                 ODZNAKI
               </span>
               <strong className="mt-2 block text-3xl font-black">
-                {polowanie?.badges_count ?? 0}
+                {(polowanie?.badges_count ?? 0) +
+                  (platformStats?.progression.globalBadgesEarned ?? 0)}
               </strong>
             </div>
             <div className="rounded-2xl border border-white/8 bg-white/[.025] p-4">
               <span className="text-[8px] font-black uppercase tracking-[.15em] text-zinc-600">
-                PUNKTY ŁOWCY
+                RÓŻNE GRY
               </span>
               <strong className="mt-2 block text-3xl font-black">
-                {polowanie?.hunter_points ?? 0}
+                {platformStats?.progression.distinctGamesPlayed ??
+                  ((polowanie?.games_completed ?? 0) > 0 ? 1 : 0)}
               </strong>
             </div>
           </div>
@@ -489,6 +491,18 @@ export default function ProfilePage() {
                 </small>
                 <strong className="mt-1 block text-2xl font-black">
                   {polowanie?.correct_millionaire_votes ?? 0}
+                </strong>
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-black/15 p-3">
+                <small className="text-[8px] font-black text-zinc-600">PUNKTY ŁOWCY</small>
+                <strong className="mt-1 block text-2xl font-black">
+                  {polowanie?.hunter_points ?? 0}
+                </strong>
+              </div>
+              <div className="rounded-2xl border border-white/8 bg-black/15 p-3">
+                <small className="text-[8px] font-black text-zinc-600">ODZNAKI</small>
+                <strong className="mt-1 block text-2xl font-black">
+                  {polowanie?.badges_count ?? 0}
                 </strong>
               </div>
             </div>
