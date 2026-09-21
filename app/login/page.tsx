@@ -2,27 +2,34 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [next, setNext] = useState("/profil");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState("");
-  const next = searchParams.get("next")?.startsWith("/")
-    ? searchParams.get("next")!
-    : "/profil";
-
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedNext = params.get("next");
+    const safeNext =
+      requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+        ? requestedNext
+        : "/profil";
+
+    setNext(safeNext);
+
     const supabase = createPartyPlayAuthClient();
     void supabase.auth.getUser().then(({ data }) => {
-      if (data.user && data.user.is_anonymous !== true) router.replace(next);
+      if (data.user && data.user.is_anonymous !== true) {
+        router.replace(safeNext);
+      }
     });
-  }, [router, next]);
+  }, [router]);
 
   async function login(event: FormEvent) {
     event.preventDefault();
