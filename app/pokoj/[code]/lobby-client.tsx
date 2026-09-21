@@ -2,6 +2,13 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import {
+  PARTYPLAY_AVATARS,
+  PartyPlayAvatar,
+  PartyPlayAvatarLock,
+  isPartyPlayAvatarUnlocked,
+  normalizePartyPlayAvatar,
+} from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -23,30 +30,15 @@ type LobbyState = {
   isHost: boolean;
 };
 
-const AVATARS = [
-  ["lion", "🦁"],
-  ["fox", "🦊"],
-  ["panda", "🐼"],
-  ["tiger", "🐯"],
-  ["koala", "🐨"],
-  ["owl", "🦉"],
-  ["frog", "🐸"],
-  ["penguin", "🐧"],
-  ["bear", "🐻"],
-  ["rabbit", "🐰"],
-  ["monkey", "🐵"],
-  ["cat", "🐱"],
-] as const;
-
-const AVATAR_EMOJI = Object.fromEntries(AVATARS) as Record<string, string>;
 
 export default function LobbyClient({ code }: { code: string }) {
   const [data, setData] = useState<LobbyState | null>(null);
   const [name, setName] = useState("");
-  const [avatar, setAvatar] = useState("lion");
+  const [avatar, setAvatar] = useState("avatar-01");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
   const [accountSignedIn, setAccountSignedIn] = useState(false);
+  const [accountLevel, setAccountLevel] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -93,7 +85,10 @@ export default function LobbyClient({ code }: { code: string }) {
 
       setAccountSignedIn(true);
 
-      const { data: profileData } = await supabase.rpc("get_my_partyplay_profile");
+      const [{ data: profileData }, { data: sessionData }] = await Promise.all([
+        supabase.rpc("get_my_partyplay_profile"),
+        supabase.auth.getSession(),
+      ]);
       if (!mounted) return;
 
       const profile = Array.isArray(profileData) ? profileData[0] : profileData;
@@ -103,11 +98,34 @@ export default function LobbyClient({ code }: { code: string }) {
         userData.user.email?.split("@")[0] ||
         "";
 
-      const profileAvatar = String(profile?.avatar ?? "").trim();
+      const profileAvatar = normalizePartyPlayAvatar(
+        String(profile?.avatar ?? "").trim(),
+      );
 
       if (profileName) setName(profileName.slice(0, 20));
-      if (AVATARS.some(([id]) => id === profileAvatar)) {
-        setAvatar(profileAvatar);
+      setAvatar(profileAvatar);
+
+      const accessToken = sessionData.session?.access_token;
+      if (accessToken) {
+        try {
+          const response = await fetch("/api/account/stats?limit=1", {
+            cache: "no-store",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          });
+
+          if (response.ok) {
+            const stats = await response.json();
+            if (mounted) {
+              setAccountLevel(
+                Math.max(1, Number(stats?.progression?.level?.level ?? 1)),
+              );
+            }
+          }
+        } catch {
+          // Poziom 1 pozostaje bezpiecznym fallbackiem.
+        }
       }
     };
 
@@ -274,19 +292,48 @@ export default function LobbyClient({ code }: { code: string }) {
             placeholder="np. Damian"
           />
 
-          <p className="avatar-label">Wybierz avatar</p>
+          <p className="avatar-label">
+            Wybierz avatar
+            {accountSignedIn ? ` · poziom ${accountLevel}` : " · 6 startowych"}
+          </p>
           <div className="avatar-grid">
-            {AVATARS.map(([id, emoji]) => (
-              <button
-                key={id}
-                type="button"
-                className={avatar === id ? "avatar-choice active" : "avatar-choice"}
-                onClick={() => setAvatar(id)}
-                aria-label={id}
-              >
-                {emoji}
-              </button>
-            ))}
+            {PARTYPLAY_AVATARS.map((item) => {
+              const unlocked = isPartyPlayAvatarUnlocked(
+                item.id,
+                accountSignedIn ? accountLevel : 1,
+              );
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={!unlocked}
+                  className={`${avatar === item.id ? "avatar-choice active" : "avatar-choice"} relative overflow-hidden disabled:cursor-not-allowed disabled:opacity-45`}
+                  onClick={() => unlocked && setAvatar(item.id)}
+                  aria-label={
+                    unlocked
+                      ? item.name
+                      : `${item.name}, od poziomu ${item.unlockLevel}`
+                  }
+                  title={
+                    unlocked
+                      ? item.name
+                      : `Odblokuje się na poziomie ${item.unlockLevel}`
+                  }
+                >
+                  <PartyPlayAvatar
+                    id={item.id}
+                    size={48}
+                    locked={!unlocked}
+                  />
+                  {!unlocked && (
+                    <span className="absolute bottom-1 right-1 rounded-md bg-black/60 p-1 text-zinc-400">
+                      <PartyPlayAvatarLock />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <button className="join-player-button" type="submit" disabled={busy}>
@@ -299,7 +346,9 @@ export default function LobbyClient({ code }: { code: string }) {
         </form>
       ) : (
         <section className="my-player-panel">
-          <div className="my-player-avatar">{AVATAR_EMOJI[me.avatar] ?? "🎮"}</div>
+          <div className="my-player-avatar">
+            <PartyPlayAvatar id={me.avatar} size={58} />
+          </div>
           <div>
             <span>GRASZ JAKO</span>
             <strong>{me.display_name}</strong>
@@ -397,7 +446,9 @@ function PlayerTile({
 }) {
   return (
     <article className={current ? "player-tile current" : "player-tile"}>
-      <span className="tile-avatar">{AVATAR_EMOJI[player.avatar] ?? "🎮"}</span>
+      <span className="tile-avatar">
+        <PartyPlayAvatar id={player.avatar} size={44} />
+      </span>
       <strong>{player.display_name}</strong>
       <small className={player.ready ? "player-ready yes" : "player-ready"}>
         {player.ready ? "✓ GOTOWY" : "czeka"}
