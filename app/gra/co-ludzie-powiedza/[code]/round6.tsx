@@ -55,6 +55,16 @@ export function HostRound6({
 
         <h1>{round.prompt}</h1>
 
+        {!reveal && (
+          <div className="clp-rule-card">
+            <strong>JAK GRAMY?</strong>
+            <span>
+              Obstawcie liczbę od 0 do liczby graczy. Idealne trafienie daje 70 pkt,
+              pomyłka o 1 daje 30 pkt, większa różnica 0 pkt.
+            </span>
+          </div>
+        )}
+
         <div className="clp-r6-predictors">
           <PredictorCard team="A" predictor={round.predictorA} prediction={round.predictionA} reveal={reveal} />
           <div className="clp-r6-vs">VS</div>
