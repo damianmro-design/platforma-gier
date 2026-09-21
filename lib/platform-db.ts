@@ -350,6 +350,8 @@ export type ClpRound2State = {
     type?: string;
     scoreGainA?: number;
     scoreGainB?: number;
+    topTieCount?: number;
+    allTied?: boolean;
   } | null;
 };
 
