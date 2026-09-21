@@ -3,7 +3,7 @@ export const ZH_ALPHABET = [
   "M","N","Ń","O","Ó","P","R","S","Ś","T","U","W","Y","Z","Ź","Ż",
 ] as const;
 
-export const ZH_VOWELS = new Set(["A","Ą","E","Ę","I","O","Ó","U","Y"]);
+export const ZH_VOWELS: ReadonlySet<string> = new Set(["A","Ą","E","Ę","I","O","Ó","U","Y"]);
 
 export const ZH_WHEEL_SEGMENTS = [
   "100","150","200","BANKRUT","250","300","PAS","350","400",
