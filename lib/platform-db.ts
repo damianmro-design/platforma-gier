@@ -360,3 +360,70 @@ export async function nextClpRound2Question(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as string | null;
 }
+
+
+export type ClpRound3Ranking = {
+  ranking: string[] | null;
+  locked: boolean;
+  playerId: string;
+} | null;
+
+export type ClpRound3State = {
+  questionIndex: number;
+  questionCount: number;
+  questionKey: string;
+  prompt: string;
+  options: string[];
+  correctOrder: string[] | null;
+  mode: "rank" | "reveal";
+  scoreA: number;
+  scoreB: number;
+  predictorA: ClpRound1Player | null;
+  predictorB: ClpRound1Player | null;
+  rankingA: ClpRound3Ranking;
+  rankingB: ClpRound3Ranking;
+  lastEvent: {
+    type?: string;
+    exactA?: number;
+    exactB?: number;
+    scoreGainA?: number;
+    scoreGainB?: number;
+  } | null;
+};
+
+export async function getClpRound3State(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_round3_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ClpRound3State | null;
+}
+
+export async function submitClpRound3Ranking(
+  code: string,
+  playerToken: string,
+  ranking: string[],
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_round3_ranking", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_ranking: ranking,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpRound3State["lastEvent"];
+}
+
+export async function nextClpRound3Question(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_clp_round3_question", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
