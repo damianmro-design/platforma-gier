@@ -134,8 +134,8 @@ type RevealPayload = {
     body: string;
     bullets?: readonly string[];
     whyItFits?: readonly string[];
-    timeline?: readonly Array<{ time: string; text: string }>;
-    redHerrings?: readonly Array<{ name: string; truth: string }>;
+    timeline?: ReadonlyArray<{ time: string; text: string }>;
+    redHerrings?: ReadonlyArray<{ name: string; truth: string }>;
   };
 } | null;
 
