@@ -437,7 +437,8 @@ export default function Home() {
               tags={["psychologiczna", "sabotaż", "tajna rola"]}
               accent="cyan"
               art="agent"
-              status="soon"
+              href="/gry/pod-przykrywka"
+              status="new"
             />
 
             <GameCard
