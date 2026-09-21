@@ -51,7 +51,11 @@ export default function LobbyClient({ code }: { code: string }) {
       if (!response.ok) return;
       const next = (await response.json()) as LobbyState;
 
-      if (next.room.status === "active" && next.room.gameSlug === "co-ludzie-powiedza") {
+      if (
+        next.room.status === "active" &&
+        next.room.gameSlug === "co-ludzie-powiedza" &&
+        (next.isHost || next.currentPlayerId)
+      ) {
         window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
         return;
       }
@@ -122,9 +126,21 @@ export default function LobbyClient({ code }: { code: string }) {
     return <div className="lobby-loading">Łączenie z pokojem…</div>;
   }
 
+  const activeWithoutSession =
+    data.room.status === "active" && !me && !data.isHost;
+
   return (
     <div className="lobby-live">
-      {!me ? (
+      {activeWithoutSession ? (
+        <section className="player-join-panel room-already-started">
+          <span className="lobby-label">ROZGRYWKA JUŻ TRWA</span>
+          <h2>Do tego pokoju nie można już dołączyć jako nowy gracz.</h2>
+          <p>
+            Jeśli grałeś wcześniej na tym urządzeniu, wróć do tej samej
+            przeglądarki. Nie twórz nowej postaci w rozpoczętej rozgrywce.
+          </p>
+        </section>
+      ) : !me ? (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
           <h2>Jak mamy Cię wyświetlać?</h2>
