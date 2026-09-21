@@ -1020,10 +1020,14 @@ export type AktaNocyReconstructionHostRow = {
   coverup_key: string | null;
 };
 
-export async function getAktaNocyPublicCast(code: string) {
+export async function getAktaNocyPublicCast(
+  code: string,
+  sessionToken: string,
+) {
   const supabase = getClient();
   const { data, error } = await supabase.rpc("get_akta_nocy_public_cast", {
     p_code: code,
+    p_session_token: sessionToken,
   });
 
   if (error) throw new Error(error.message);
