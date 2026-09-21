@@ -56,13 +56,16 @@ export default function LobbyClient({ code }: { code: string }) {
       if (!response.ok) return;
       const next = (await response.json()) as LobbyState;
 
-      if (
-        next.room.status === "active" &&
-        next.room.gameSlug === "co-ludzie-powiedza" &&
-        (next.isHost || next.currentPlayerId)
-      ) {
-        window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
-        return;
+      if (next.room.status === "active" && (next.isHost || next.currentPlayerId)) {
+        if (next.room.gameSlug === "co-ludzie-powiedza") {
+          window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
+          return;
+        }
+
+        if (next.room.gameSlug === "zakrecone-haslo") {
+          window.location.assign(`/gra/zakrecone-haslo/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -175,12 +178,25 @@ export default function LobbyClient({ code }: { code: string }) {
   }
 
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
+  const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
+  const minPlayers = isWordGame ? 3 : 4;
+  const maxPlayers = isWordGame ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
-  const waiting = data?.players.filter((player) => !player.team) ?? [];
+  const waiting = isWordGame
+    ? data?.players ?? []
+    : data?.players.filter((player) => !player.team) ?? [];
   const allReady = Boolean(data?.players.length && data.players.every((player) => player.ready));
-  const allAssigned = Boolean(data?.players.length && data.players.every((player) => player.team));
-  const canStart = Boolean(data?.isHost && data.players.length >= 4 && allReady && allAssigned);
+  const allAssigned = isWordGame
+    ? true
+    : Boolean(data?.players.length && data.players.every((player) => player.team));
+  const canStart = Boolean(
+    data?.isHost &&
+    data.players.length >= minPlayers &&
+    data.players.length <= maxPlayers &&
+    allReady &&
+    allAssigned,
+  );
 
   const readyCount = useMemo(
     () => data?.players.filter((player) => player.ready).length ?? 0,
@@ -311,7 +327,7 @@ export default function LobbyClient({ code }: { code: string }) {
         <div className="roster-head">
           <div>
             <span className="lobby-label">UCZESTNICY</span>
-            <h2>{data.players.length}/14 osób</h2>
+            <h2>{data.players.length}/{maxPlayers} osób</h2>
           </div>
           <div className="ready-counter">{readyCount}/{data.players.length} gotowych</div>
         </div>
@@ -324,7 +340,7 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
         )}
 
-        {allAssigned && data.players.length > 0 && (
+        {!isWordGame && allAssigned && data.players.length > 0 && (
           <div className="teams-layout">
             <Team title="Drużyna A" players={teamA} currentPlayerId={data.currentPlayerId} />
             <div className="versus">VS</div>
@@ -340,14 +356,16 @@ export default function LobbyClient({ code }: { code: string }) {
             <h3>Ty kontrolujesz start</h3>
           </div>
           <div className="host-buttons">
-            <button
-              type="button"
-              className="shuffle-button"
-              disabled={busy || data.players.length < 2}
-              onClick={() => void send({ action: "shuffle" })}
-            >
-              🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
-            </button>
+            {!isWordGame && (
+              <button
+                type="button"
+                className="shuffle-button"
+                disabled={busy || data.players.length < 2}
+                onClick={() => void send({ action: "shuffle" })}
+              >
+                🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
+              </button>
+            )}
             <button
               type="button"
               className="start-button"
@@ -359,7 +377,9 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
           {!canStart && (
             <p className="start-hint">
-              Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny.
+              {isWordGame
+                ? "Do startu: 3–12 osób i wszyscy oznaczeni jako gotowi."
+                : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
