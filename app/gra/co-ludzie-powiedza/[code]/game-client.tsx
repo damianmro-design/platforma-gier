@@ -11,13 +11,14 @@ import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
-import type { ClpRound1State, ClpRound2State, ClpRound3State, ClpRound4State, ClpRound5State, ClpRound6State, ClpRound7State } from "@/lib/platform-db";
+import type { ClpRound1State, ClpRound2State, ClpRound3State, ClpRound4State, ClpRound5State, ClpRound6State, ClpRound7State, ClpFinalState } from "@/lib/platform-db";
 import { HostRound2, PlayerRound2 } from "./round2";
 import { HostRound3, PlayerRound3 } from "./round3";
 import { HostRound4, PlayerRound4 } from "./round4";
 import { HostRound5, PlayerRound5 } from "./round5";
 import { HostRound6, PlayerRound6 } from "./round6";
 import { HostRound7, PlayerRound7 } from "./round7";
+import { HostFinal, PlayerFinal } from "./final";
 
 type RoomState = {
   code: string;
@@ -145,6 +146,19 @@ type PlayerRound7State = {
   round7: ClpRound7State;
 };
 
+type HostFinalState = {
+  role: "host";
+  room: RoomState;
+  final: ClpFinalState;
+};
+
+type PlayerFinalState = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  final: ClpFinalState;
+};
+
 type GameState =
   | HostWarmupState
   | PlayerWarmupState
@@ -161,7 +175,9 @@ type GameState =
   | HostRound6State
   | PlayerRound6State
   | HostRound7State
-  | PlayerRound7State;
+  | PlayerRound7State
+  | HostFinalState
+  | PlayerFinalState;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -242,17 +258,32 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "final") {
+  if ((data.room.phase === "final" || data.room.phase === "finished") && "final" in data) {
+    if (data.role === "host") {
+      return (
+        <HostFinal
+          code={data.room.code}
+          final={data.final}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "finalNext" })}
+        />
+      );
+    }
+
     return (
-      <main className="clp-game-shell">
-        <section className="clp-transition-card">
-          <span>POJEDYNEK ZAKOŃCZONY ✓</span>
-          <h1>Czas na finał.</h1>
-          <p>
-            Wszystkie rundy główne są zamknięte. Punkty obu drużyn są zapisane.
-          </p>
-        </section>
-      </main>
+      <PlayerFinal
+        player={data.player}
+        final={data.final}
+        busy={busy}
+        error={error}
+        onPrediction={(answer) =>
+          void send({ action: "finalPrediction", answer })
+        }
+        onTiebreak={(count) =>
+          void send({ action: "finalTiebreak", count })
+        }
+      />
     );
   }
 
