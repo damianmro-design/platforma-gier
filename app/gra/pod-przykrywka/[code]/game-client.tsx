@@ -460,52 +460,6 @@ function HostGame({
           </div>
         )}
 
-        {game.phase === "final_defense_intro" && (
-          <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center">
-            <span className="text-5xl">⚖️</span>
-            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-amber-300">PRZED FINAŁEM</p>
-            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">2 osoby mają prawo do obrony.</h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-              Zostały wybrane na podstawie łącznej liczby podejrzeń z 5 misji. Po obu wypowiedziach zagłosujesz na dowolnego gracza.
-            </p>
-            <div className="mt-6 grid gap-3">
-              <FinalDefenderCard
-                name={game.twist.finalDefenderOneName}
-                avatarId={game.twist.finalDefenderOneAvatar}
-                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderOneId)?.votes ?? 0)}
-                label="1. NA CELOWNIKU"
-              />
-              <FinalDefenderCard
-                name={game.twist.finalDefenderTwoName}
-                avatarId={game.twist.finalDefenderTwoAvatar}
-                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderTwoId)?.votes ?? 0)}
-                label="2. NA CELOWNIKU"
-              />
-            </div>
-          </div>
-        )}
-
-        {(game.phase === "final_defense_one" || game.phase === "final_defense_two") && (
-          <div className="rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-300/[.045] p-7 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">
-              {game.phase === "final_defense_one" ? "OBRONA 1/2" : "OBRONA 2/2"}
-            </p>
-            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
-              {game.twist.isCurrentPlayerFinalDefender
-                ? "To Twoje 30 sekund."
-                : `${game.phase === "final_defense_one"
-                    ? game.twist.finalDefenderOneName ?? "Gracz"
-                    : game.twist.finalDefenderTwoName ?? "Gracz"} się broni.`}
-            </h1>
-            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
-            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
-              {game.twist.isCurrentPlayerFinalDefender
-                ? "Wyjaśnij swoje podejrzane decyzje, wskaż najmocniejszy trop przeciw komuś innemu i przekonaj grupę, żeby nie głosowała na Ciebie."
-                : "Nie przerywaj. Słuchaj argumentów i nie oddawaj jeszcze finałowego głosu."}
-            </p>
-          </div>
-        )}
-
         {game.phase !== "briefing" &&
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
@@ -811,10 +765,59 @@ function PlayerGame({
           </div>
         )}
 
+        {game.phase === "final_defense_intro" && (
+          <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center">
+            <span className="text-5xl">⚖️</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-amber-300">PRZED FINAŁEM</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">2 osoby mają prawo do obrony.</h1>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+              Zostały wybrane na podstawie łącznej liczby podejrzeń z 5 misji. Po obu wypowiedziach zagłosujesz na dowolnego gracza.
+            </p>
+            <div className="mt-6 grid gap-3">
+              <FinalDefenderCard
+                name={game.twist.finalDefenderOneName}
+                avatarId={game.twist.finalDefenderOneAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderOneId)?.votes ?? 0)}
+                label="1. NA CELOWNIKU"
+              />
+              <FinalDefenderCard
+                name={game.twist.finalDefenderTwoName}
+                avatarId={game.twist.finalDefenderTwoAvatar}
+                votes={Number(game.cumulativeSuspicion.find((item) => votePlayerId(item) === game.twist.finalDefenderTwoId)?.votes ?? 0)}
+                label="2. NA CELOWNIKU"
+              />
+            </div>
+          </div>
+        )}
+
+        {(game.phase === "final_defense_one" || game.phase === "final_defense_two") && (
+          <div className="rounded-[2rem] border border-fuchsia-300/20 bg-fuchsia-300/[.045] p-7 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[.25em] text-fuchsia-300">
+              {game.phase === "final_defense_one" ? "OBRONA 1/2" : "OBRONA 2/2"}
+            </p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
+              {game.twist.isCurrentPlayerFinalDefender
+                ? "To Twoje 30 sekund."
+                : `${game.phase === "final_defense_one"
+                    ? game.twist.finalDefenderOneName ?? "Gracz"
+                    : game.twist.finalDefenderTwoName ?? "Gracz"} się broni.`}
+            </h1>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
+              {game.twist.isCurrentPlayerFinalDefender
+                ? "Wyjaśnij swoje podejrzane decyzje, wskaż najmocniejszy trop przeciw komuś innemu i przekonaj grupę, żeby nie głosowała na Ciebie."
+                : "Nie przerywaj. Słuchaj argumentów i nie oddawaj jeszcze finałowego głosu."}
+            </p>
+          </div>
+        )}
+
         {game.phase !== "briefing" &&
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
           game.phase !== "last_word" &&
+          game.phase !== "final_defense_intro" &&
+          game.phase !== "final_defense_one" &&
+          game.phase !== "final_defense_two" &&
           game.mission && (
           <div className="space-y-5">
             <section className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
