@@ -8,17 +8,21 @@ import {
   getClpRound2State,
   getClpRound3State,
   getClpRound4State,
+  getClpRound5State,
   getPlatformPlayer,
   lookupPlatformRoom,
   nextClpRound1Question,
   nextClpRound2Question,
   nextClpRound3Question,
   nextClpRound4Question,
+  nextClpRound5Question,
   submitClpAnswer,
   submitClpRound1Guess,
   submitClpRound2Prediction,
   submitClpRound3Ranking,
   submitClpRound4Prediction,
+  submitClpRound5Prediction,
+  submitClpRound5Vote,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -41,6 +45,45 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+
+  if (room.game_phase === "round_5") {
+    const round5 = await getClpRound5State(code, playerToken);
+
+    if (!round5) {
+      return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
+    }
+
+    if (hostToken) {
+      return NextResponse.json({
+        role: "host",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        round5,
+      });
+    }
+
+    if (playerToken) {
+      const player = await getPlatformPlayer(code, playerToken);
+
+      if (!player) {
+        return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
+      }
+
+      return NextResponse.json({
+        role: "player",
+        room: {
+          code: room.code,
+          status: room.status,
+          phase: room.game_phase,
+        },
+        player,
+        round5,
+      });
+    }
+  }
 
   if (room.game_phase === "round_4") {
     const round4 = await getClpRound4State(code);
@@ -384,6 +427,49 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "round5Vote") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const event = await submitClpRound5Vote(
+        code,
+        playerToken,
+        String(body.targetPlayerId ?? ""),
+      );
+
+      return NextResponse.json({ ok: true, event });
+    }
+
+    if (action === "round5Prediction") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const event = await submitClpRound5Prediction(
+        code,
+        playerToken,
+        String(body.targetPlayerId ?? ""),
+      );
+
+      return NextResponse.json({ ok: true, event });
+    }
+
+    if (action === "round5Next") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
+      }
+
+      const phase = await nextClpRound5Question(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const raw = error instanceof Error ? error.message : "";
@@ -400,8 +486,16 @@ export async function POST(request: Request, context: RouteContext) {
               ? "Typowanie jest już zakończone."
               : raw.includes("Invalid prediction")
                 ? "Wybierz jedną z dostępnych odpowiedzi."
-                : raw.includes("Ranking already locked")
-                  ? "Wasza drużyna już zatwierdziła ranking."
+                : raw.includes("Cannot vote self")
+                  ? "Nie możesz zagłosować na siebie."
+                  : raw.includes("Vote already locked")
+                    ? "Twój głos jest już zapisany."
+                    : raw.includes("Voting closed")
+                      ? "Głosowanie jest już zakończone."
+                      : raw.includes("Predictions closed")
+                        ? "Przewidywanie jest już zakończone."
+                        : raw.includes("Ranking already locked")
+                          ? "Wasza drużyna już zatwierdziła ranking."
                   : raw.includes("Invalid ranking")
                     ? "Ułóż wszystkie 5 odpowiedzi bez powtórzeń."
                     : raw.includes("Invalid guess")
