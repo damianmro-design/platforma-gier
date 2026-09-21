@@ -51,7 +51,9 @@ async function getPolowanieHistoryPrefix(
   accessToken: string,
   targetCount: number,
 ) {
-  const history = [];
+  const history: Awaited<
+    ReturnType<typeof getPolowanieHistoryFromAccessToken>
+  > = [];
   let offset = 0;
 
   while (history.length < targetCount) {
@@ -96,6 +98,11 @@ export async function GET(request: Request) {
     const isPlatformGameFilter = Boolean(gameSlug && !isPolowanieFilter);
     const prefixTarget = historyOffset + historyLimit;
 
+    const platformPrefixPromise =
+      !gameSlug
+        ? getPlatformHistoryPrefix(accessToken, prefixTarget)
+        : Promise.resolve(null);
+
     const platformStatsPromise = isPlatformGameFilter
       ? getMyPartyPlayPlatformStats(accessToken, {
           historyLimit,
@@ -107,14 +114,12 @@ export async function GET(request: Request) {
             historyLimit: 1,
             historyOffset: 0,
           })
-        : getPlatformHistoryPrefix(accessToken, prefixTarget).then(
-            (result) => result.stats,
-          );
-
-    const platformPrefixPromise =
-      !gameSlug
-        ? getPlatformHistoryPrefix(accessToken, prefixTarget)
-        : Promise.resolve(null);
+        : platformPrefixPromise.then((result) => {
+            if (!result) {
+              throw new Error("Missing platform history prefix");
+            }
+            return result.stats;
+          });
 
     const polowaniePrefixPromise =
       !gameSlug
