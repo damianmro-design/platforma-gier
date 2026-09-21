@@ -693,6 +693,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czy zaginiony pendrive zawierał właśnie materiały z tego pliku i kto najbardziej bał się ich publikacji?",
+    image: "/akta-nocy/evidence-b05-wicher.webp",
   },
 ];
 
