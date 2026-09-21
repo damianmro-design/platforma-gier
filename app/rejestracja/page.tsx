@@ -143,23 +143,21 @@ export default function RegistrationPage() {
               />
               <span>
                 Akceptuję{" "}
-                <a
-                  href="https://polowanienamilionera.pl/terms"
+                <Link
+                  href="/terms"
                   target="_blank"
-                  rel="noreferrer"
                   className="font-black text-violet-300"
                 >
                   Regulamin
-                </a>{" "}
+                </Link>{" "}
                 i potwierdzam zapoznanie się z{" "}
-                <a
-                  href="https://polowanienamilionera.pl/privacy"
+                <Link
+                  href="/privacy"
                   target="_blank"
-                  rel="noreferrer"
                   className="font-black text-violet-300"
                 >
                   Polityką prywatności
-                </a>.
+                </Link>.
               </span>
             </label>
 
