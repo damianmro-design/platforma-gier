@@ -15,6 +15,63 @@ function bearerToken(request: Request) {
   return header.slice(7).trim() || null;
 }
 
+const HISTORY_BATCH_SIZE = 200;
+
+async function getPlatformHistoryPrefix(
+  accessToken: string,
+  targetCount: number,
+) {
+  const first = await getMyPartyPlayPlatformStats(accessToken, {
+    historyLimit: Math.min(Math.max(targetCount, 1), HISTORY_BATCH_SIZE),
+    historyOffset: 0,
+  });
+
+  const history = [...first.history];
+  let offset = history.length;
+
+  while (history.length < targetCount && offset < first.historyTotal) {
+    const batch = await getMyPartyPlayPlatformStats(accessToken, {
+      historyLimit: Math.min(
+        HISTORY_BATCH_SIZE,
+        targetCount - history.length,
+      ),
+      historyOffset: offset,
+    });
+
+    if (!batch.history.length) break;
+
+    history.push(...batch.history);
+    offset += batch.history.length;
+  }
+
+  return { stats: first, history };
+}
+
+async function getPolowanieHistoryPrefix(
+  accessToken: string,
+  targetCount: number,
+) {
+  const history = [];
+  let offset = 0;
+
+  while (history.length < targetCount) {
+    const batch = await getPolowanieHistoryFromAccessToken(
+      accessToken,
+      Math.min(HISTORY_BATCH_SIZE, targetCount - history.length),
+      offset,
+    );
+
+    if (!batch.length) break;
+
+    history.push(...batch);
+    offset += batch.length;
+
+    if (batch.length < HISTORY_BATCH_SIZE) break;
+  }
+
+  return history;
+}
+
 export async function GET(request: Request) {
   const accessToken = bearerToken(request);
   const user = await getPartyPlayUserFromAccessToken(accessToken);
@@ -30,39 +87,63 @@ export async function GET(request: Request) {
   );
   const gameSlug = url.searchParams.get("game")?.trim() || null;
 
-  if (!user) {
+  if (!user || !accessToken) {
     return NextResponse.json({ error: "Nie jesteś zalogowany." }, { status: 401 });
   }
 
   try {
-    const fetchWindow = Math.min(historyOffset + historyLimit, 200);
     const isPolowanieFilter = gameSlug === "polowanie-na-milionera";
     const isPlatformGameFilter = Boolean(gameSlug && !isPolowanieFilter);
+    const prefixTarget = historyOffset + historyLimit;
 
-    const [platformStats, polowanie, polowanieBadges, polowanieHistory, polowanieHistoryTotal] =
-      await Promise.all([
-        getMyPartyPlayPlatformStats(accessToken!, {
-          historyLimit: isPlatformGameFilter
-            ? historyLimit
-            : gameSlug
-              ? 1
-              : fetchWindow,
-          historyOffset: isPlatformGameFilter ? historyOffset : 0,
-          gameSlug: isPlatformGameFilter ? gameSlug : null,
-        }),
-        getPolowanieCareerFromAccessToken(accessToken!),
-        getPolowanieBadgesFromAccessToken(accessToken!),
-        isPlatformGameFilter
-          ? Promise.resolve([])
-          : getPolowanieHistoryFromAccessToken(
-              accessToken!,
-              isPolowanieFilter ? historyLimit : fetchWindow,
-              isPolowanieFilter ? historyOffset : 0,
-            ),
-        isPlatformGameFilter
-          ? Promise.resolve(0)
-          : getPolowanieHistoryCountFromAccessToken(accessToken!),
-      ]);
+    const platformStatsPromise = isPlatformGameFilter
+      ? getMyPartyPlayPlatformStats(accessToken, {
+          historyLimit,
+          historyOffset,
+          gameSlug,
+        })
+      : isPolowanieFilter
+        ? getMyPartyPlayPlatformStats(accessToken, {
+            historyLimit: 1,
+            historyOffset: 0,
+          })
+        : getPlatformHistoryPrefix(accessToken, prefixTarget).then(
+            (result) => result.stats,
+          );
+
+    const platformPrefixPromise =
+      !gameSlug
+        ? getPlatformHistoryPrefix(accessToken, prefixTarget)
+        : Promise.resolve(null);
+
+    const polowaniePrefixPromise =
+      !gameSlug
+        ? getPolowanieHistoryPrefix(accessToken, prefixTarget)
+        : isPolowanieFilter
+          ? getPolowanieHistoryFromAccessToken(
+              accessToken,
+              historyLimit,
+              historyOffset,
+            )
+          : Promise.resolve([]);
+
+    const [
+      platformStats,
+      platformPrefix,
+      polowanie,
+      polowanieBadges,
+      polowanieHistory,
+      polowanieHistoryTotal,
+    ] = await Promise.all([
+      platformStatsPromise,
+      platformPrefixPromise,
+      getPolowanieCareerFromAccessToken(accessToken),
+      getPolowanieBadgesFromAccessToken(accessToken),
+      polowaniePrefixPromise,
+      isPlatformGameFilter
+        ? Promise.resolve(0)
+        : getPolowanieHistoryCountFromAccessToken(accessToken),
+    ]);
 
     const progression = calculatePartyPlayProgress({
       polowanieGames: polowanie?.games_completed ?? 0,
@@ -84,7 +165,9 @@ export async function GET(request: Request) {
       historyTotal = polowanieHistoryTotal;
       historyHasMore = historyOffset + historyLimit < historyTotal;
     } else if (!gameSlug) {
-      history = [...platformStats.history, ...polowanieHistory]
+      const platformHistory = platformPrefix?.history ?? [];
+
+      history = [...platformHistory, ...polowanieHistory]
         .sort(
           (a, b) =>
             new Date(b.completed_at).getTime() -
