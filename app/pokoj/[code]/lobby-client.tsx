@@ -71,6 +71,11 @@ export default function LobbyClient({ code }: { code: string }) {
           window.location.assign(`/gra/pod-przykrywka/${code}`);
           return;
         }
+
+        if (next.room.gameSlug === "akta-nocy") {
+          window.location.assign(`/gra/akta-nocy/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -185,9 +190,11 @@ export default function LobbyClient({ code }: { code: string }) {
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
   const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
   const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
-  const isIndividualGame = isWordGame || isUndercoverGame;
-  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : 4;
-  const maxPlayers = isWordGame ? 12 : 14;
+  const isAktaNocy = data?.room.gameSlug === "akta-nocy";
+  const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
+  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy;
+  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
+  const maxPlayers = isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
   const waiting = isIndividualGame
@@ -347,7 +354,7 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
         )}
 
-        {!isIndividualGame && allAssigned && data.players.length > 0 && (
+        {isCoLudzie && allAssigned && data.players.length > 0 && (
           <div className="teams-layout">
             <Team title="Drużyna A" players={teamA} currentPlayerId={data.currentPlayerId} />
             <div className="versus">VS</div>
@@ -388,7 +395,9 @@ export default function LobbyClient({ code }: { code: string }) {
                 ? "Do startu: 3–12 osób i wszyscy oznaczeni jako gotowi."
                 : isUndercoverGame
                   ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
-                  : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                  : isAktaNocy
+                    ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
+                    : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>

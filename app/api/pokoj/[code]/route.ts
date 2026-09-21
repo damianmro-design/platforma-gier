@@ -175,7 +175,9 @@ export async function POST(request: Request, context: RouteContext) {
             ? "Do startu potrzeba 3–12 graczy i wszyscy muszą być gotowi."
             : room?.game_slug === "pod-przykrywka"
               ? "Do startu potrzeba 6–14 graczy i wszyscy muszą być gotowi."
-              : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
+              : room?.game_slug === "akta-nocy"
+                ? "Do startu Akt Nocy potrzeba 5–12 graczy i wszyscy muszą być gotowi."
+                : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
 
         return NextResponse.json({ error: message }, { status: 400 });
       }
@@ -191,7 +193,7 @@ export async function POST(request: Request, context: RouteContext) {
       : rawMessage.includes("Name already taken")
         ? "Ta nazwa jest już zajęta w tym pokoju."
       : rawMessage.includes("Room is full")
-        ? "Pokój jest pełny."
+        ? "Pokój osiągnął maksymalną liczbę graczy dla tej gry."
         : rawMessage.includes("Invalid name")
           ? "Wpisz imię od 1 do 20 znaków."
           : "Nie udało się wykonać tej akcji.";
