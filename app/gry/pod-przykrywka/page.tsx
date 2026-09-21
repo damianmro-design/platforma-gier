@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 };
 
 const flow = [
-  ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Sabotażystą."],
-  ["02", "5 misji", "W każdej misji wszyscy odpowiadają na to samo zadanie, ale Sabotażysta dostaje ukryty cel."],
+  ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Oszustem."],
+  ["02", "5 misji", "W każdej misji wszyscy odpowiadają na to samo zadanie, ale Oszust dostaje ukryty cel."],
   ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Szukacie niespójności i bronicie swoich decyzji."],
   ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
-  ["05", "Finałowe wskazanie", "Po 5 misjach głosujecie ostatni raz. Jeśli Sabotażysta jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
+  ["05", "Finałowe wskazanie", "Po 5 misjach głosujecie ostatni raz. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
 ];
 
 export default function PodPrzykrywkaPage() {
@@ -48,12 +48,12 @@ export default function PodPrzykrywkaPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
-            W grupie ukrywa się Sabotażysta. Przez 5 psychologicznych misji próbuje odpowiadać wiarygodnie,
+            W grupie ukrywa się Oszust. Przez 5 psychologicznych misji próbuje odpowiadać wiarygodnie,
             jednocześnie realizując ukryte cele. Reszta obserwuje odpowiedzi, dyskutuje i buduje listę podejrzanych.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
-            {["👥 6–14 graczy", "⏱ 45–75 min", "🕵️ 1 Sabotażysta", "📱 telefon każdego gracza"].map((item) => (
+            {["👥 6–14 graczy", "⏱ 45–75 min", "🕵️ 1 Oszust", "📱 telefon każdego gracza"].map((item) => (
               <span key={item} className="rounded-full border border-white/10 bg-white/[.04] px-3 py-2 text-zinc-300">{item}</span>
             ))}
           </div>
@@ -123,7 +123,7 @@ export default function PodPrzykrywkaPage() {
       <section className="relative z-10 mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:px-8 lg:grid-cols-3">
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🕵️</span>
-          <h3 className="mt-4 text-xl font-black">Sabotażysta nie dostaje „złej odpowiedzi”</h3>
+          <h3 className="mt-4 text-xl font-black">Oszust nie dostaje „złej odpowiedzi”</h3>
           <p className="mt-2 text-sm leading-6 text-zinc-500">Dostaje ukryty cel, który ma wykonać tak, żeby jego odpowiedź nadal dało się obronić podczas dyskusji.</p>
         </article>
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
@@ -134,7 +134,7 @@ export default function PodPrzykrywkaPage() {
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🎯</span>
           <h3 className="mt-4 text-xl font-black">Jeden finał</h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">Grupa wygrywa tylko wtedy, gdy Sabotażysta zostanie jednoznacznie najczęściej wskazaną osobą w finale. Remis oznacza ucieczkę.</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">Grupa wygrywa tylko wtedy, gdy Oszust zostanie jednoznacznie najczęściej wskazaną osobą w finale. Remis oznacza ucieczkę.</p>
         </article>
       </section>
     </main>
