@@ -872,3 +872,76 @@ export async function submitClpFinalTiebreak(
   if (error) throw new Error(error.message);
   return data as ClpFinalState["lastEvent"];
 }
+
+export type AktaNocyAssignment = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  role_key: string;
+  dossier_opened: boolean;
+};
+
+export type AktaNocyHostProgress = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  dossier_opened: boolean;
+};
+
+export async function getAktaNocyPlayerAssignment(
+  code: string,
+  playerToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_player_assignment", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  const assignment = Array.isArray(data) ? data[0] : data;
+  return (assignment ?? null) as AktaNocyAssignment | null;
+}
+
+export async function getAktaNocyHostProgress(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_host_progress", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyHostProgress[];
+}
+
+export async function openAktaNocyDossier(
+  code: string,
+  playerToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("open_akta_nocy_dossier", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function advanceAktaNocyPhase(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_akta_nocy_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
