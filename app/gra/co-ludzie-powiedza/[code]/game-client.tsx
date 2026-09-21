@@ -1,18 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
+import type { ClpRound1State } from "@/lib/platform-db";
 
-type HostState = {
+type RoomState = {
+  code: string;
+  status: string;
+  phase: string | null;
+};
+
+type Player = {
+  id: string;
+  display_name: string;
+  avatar: string;
+  team: "A" | "B" | null;
+  ready: boolean;
+};
+
+type HostWarmupState = {
   role: "host";
-  room: {
-    code: string;
-    status: string;
-    phase: string | null;
-  };
+  room: RoomState;
   progress: Array<{
     player_id: string;
     display_name: string;
@@ -21,27 +38,34 @@ type HostState = {
   }>;
 };
 
-type PlayerState = {
+type PlayerWarmupState = {
   role: "player";
-  room: {
-    code: string;
-    status: string;
-    phase: string | null;
-  };
-  player: {
-    id: string;
-    display_name: string;
-    avatar: string;
-    team: "A" | "B" | null;
-    ready: boolean;
-  };
+  room: RoomState;
+  player: Player;
   answers: Array<{
     question_key: string;
     answer_value: string;
   }>;
 };
 
-type GameState = HostState | PlayerState;
+type HostRound1State = {
+  role: "host";
+  room: RoomState;
+  round1: ClpRound1State;
+};
+
+type PlayerRound1State = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  round1: ClpRound1State;
+};
+
+type GameState =
+  | HostWarmupState
+  | PlayerWarmupState
+  | HostRound1State
+  | PlayerRound1State;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -122,22 +146,44 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "round_1") {
+  if (data.room.phase === "round_2") {
     return (
       <main className="clp-game-shell">
         <section className="clp-transition-card">
-          <span>POZNAJMY TŁUM ✓</span>
-          <h1>Mamy Wasze odpowiedzi.</h1>
+          <span>RUNDA 1 ZAKOŃCZONA ✓</span>
+          <h1>Tablica zamknięta.</h1>
           <p>
-            Dane są zapisane i wrócą później w rundzie „Wasza ekipa powiedziała”.
-            Następny moduł to pierwsza właściwa runda teleturnieju.
+            Wyniki drużyn są zapisane. Następnym modułem będzie „Wasza ekipa
+            powiedziała”, czyli wykorzystanie prywatnych odpowiedzi z początku gry.
           </p>
         </section>
       </main>
     );
   }
 
-  if (data.role === "host") {
+  if (data.room.phase === "round_1" && "round1" in data) {
+    if (data.role === "host") {
+      return (
+        <HostRound1
+          data={data}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "round1Next" })}
+        />
+      );
+    }
+
+    return (
+      <PlayerRound1
+        data={data}
+        busy={busy}
+        error={error}
+        onGuess={(guess) => send({ action: "round1Guess", guess })}
+      />
+    );
+  }
+
+  if (data.role === "host" && "progress" in data) {
     return (
       <HostWarmup
         data={data}
@@ -148,15 +194,299 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
+  if (data.role === "player" && "answers" in data) {
+    return (
+      <PlayerWarmup
+        data={data}
+        busy={busy}
+        error={error}
+        onAnswer={(questionKey, answer) =>
+          void send({ action: "answer", questionKey, answer })
+        }
+      />
+    );
+  }
+
   return (
-    <PlayerWarmup
-      data={data}
-      busy={busy}
-      error={error}
-      onAnswer={(questionKey, answer) =>
-        void send({ action: "answer", questionKey, answer })
-      }
-    />
+    <main className="clp-game-shell">
+      <div className="clp-loading">Synchronizujemy grę…</div>
+    </main>
+  );
+}
+
+function HostRound1({
+  data,
+  busy,
+  error,
+  onNext,
+}: {
+  data: HostRound1State;
+  busy: boolean;
+  error: string;
+  onNext: () => void;
+}) {
+  const round = data.round1;
+  const between = round.mode === "between";
+  const steal = round.mode === "steal";
+
+  return (
+    <main className="clp-game-shell clp-round1-shell">
+      <header className="clp-r1-topbar">
+        <div>
+          <span>CO LUDZIE POWIEDZĄ</span>
+          <strong>CO POWIEDZIELI LUDZIE?</strong>
+        </div>
+        <Scoreboard round={round} />
+        <div className="clp-r1-code">
+          <small>KOD</small>
+          <b>{data.room.code}</b>
+        </div>
+      </header>
+
+      <section className="clp-r1-main">
+        <div className="clp-r1-question-meta">
+          <span>PYTANIE {round.questionIndex + 1}/{round.questionCount}</span>
+          <div className="clp-r1-strikes" aria-label="Błędy">
+            <b className={round.strikes >= 1 ? "on" : ""}>✕</b>
+            <b className={round.strikes >= 2 ? "on" : ""}>✕</b>
+          </div>
+        </div>
+
+        <h1>{round.prompt}</h1>
+
+        <div className="clp-r1-status-row">
+          <div className={`clp-active-team team-${round.activeTeam.toLowerCase()}`}>
+            <span>{steal ? "PRÓBA PRZEJĘCIA" : "GRA"}</span>
+            <strong>Drużyna {round.activeTeam}</strong>
+          </div>
+
+          {round.answerer && !between && (
+            <div className="clp-answerer">
+              <span>{AVATARS[round.answerer.avatar] ?? "🎮"}</span>
+              <div>
+                <small>TERAZ ODPOWIADA</small>
+                <strong>{round.answerer.display_name}</strong>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <AnswerBoard round={round} />
+
+        <RoundEvent event={round.lastEvent} />
+
+        {error && <div className="clp-error">{error}</div>}
+
+        {between && (
+          <div className="clp-r1-between">
+            <div>
+              <span>PYTANIE ZAKOŃCZONE</span>
+              <p>Odsłoniliśmy także odpowiedzi, których nikt nie trafił.</p>
+            </div>
+            <button type="button" disabled={busy} onClick={onNext}>
+              {busy
+                ? "CHWILA…"
+                : round.questionIndex + 1 >= round.questionCount
+                  ? "ZAKOŃCZ RUNDĘ →"
+                  : "NASTĘPNE PYTANIE →"}
+            </button>
+          </div>
+        )}
+      </section>
+    </main>
+  );
+}
+
+function PlayerRound1({
+  data,
+  busy,
+  error,
+  onGuess,
+}: {
+  data: PlayerRound1State;
+  busy: boolean;
+  error: string;
+  onGuess: (guess: string) => Promise<boolean>;
+}) {
+  const round = data.round1;
+  const isMyTurn =
+    round.mode !== "between" && round.answerer?.id === data.player.id;
+  const [guess, setGuess] = useState("");
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    const clean = guess.trim();
+    if (!clean) return;
+
+    const ok = await onGuess(clean);
+    if (ok) setGuess("");
+  }
+
+  return (
+    <main className="clp-game-shell clp-r1-phone-shell">
+      <section className="clp-r1-phone-card">
+        <header className="clp-r1-phone-head">
+          <div>
+            <span>PYTANIE {round.questionIndex + 1}/{round.questionCount}</span>
+            <strong>Drużyna {data.player.team}</strong>
+          </div>
+          <div className="clp-r1-phone-scores">
+            <b>{round.scoreA}</b>
+            <span>:</span>
+            <b>{round.scoreB}</b>
+          </div>
+        </header>
+
+        <div className="clp-r1-phone-question">
+          <span>
+            {round.mode === "steal"
+              ? "PRÓBA PRZEJĘCIA"
+              : round.activeTeam === data.player.team
+                ? "WASZA KOLEJ"
+                : "KOLEJ RYWALI"}
+          </span>
+          <h1>{round.prompt}</h1>
+        </div>
+
+        <AnswerBoard round={round} compact />
+
+        {round.mode === "between" ? (
+          <div className="clp-r1-wait-box">
+            <strong>Pytanie zakończone</strong>
+            <p>Czekamy, aż host uruchomi kolejne.</p>
+          </div>
+        ) : isMyTurn ? (
+          <form className="clp-r1-guess-form" onSubmit={submit}>
+            <label htmlFor="round1Guess">
+              {round.mode === "steal"
+                ? "Masz 1 próbę. Naradźcie się i wpisz odpowiedź."
+                : "Naradźcie się. Ty zatwierdzasz odpowiedź drużyny."}
+            </label>
+            <input
+              id="round1Guess"
+              value={guess}
+              onChange={(event) => setGuess(event.target.value)}
+              maxLength={50}
+              autoComplete="off"
+              placeholder="Wpisz odpowiedź…"
+              disabled={busy}
+            />
+            <button type="submit" disabled={busy || !guess.trim()}>
+              {busy ? "SPRAWDZAMY…" : "SPRAWDŹ ODPOWIEDŹ"}
+            </button>
+          </form>
+        ) : (
+          <div className="clp-r1-wait-box">
+            <strong>
+              {round.answerer
+                ? `Teraz odpowiada ${round.answerer.display_name}`
+                : "Czekamy na odpowiedź"}
+            </strong>
+            <p>
+              {round.activeTeam === data.player.team
+                ? "Pomóż swojej drużynie, ale odpowiedź zatwierdza wskazana osoba."
+                : "Słuchaj rywali i szykujcie się na swoją kolej."}
+            </p>
+          </div>
+        )}
+
+        <RoundEvent event={round.lastEvent} compact />
+        {error && <div className="clp-error">{error}</div>}
+
+        <footer className="clp-phone-footer">
+          <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
+          <strong>{data.player.display_name}</strong>
+          <small>DRUŻYNA {data.player.team}</small>
+        </footer>
+      </section>
+    </main>
+  );
+}
+
+function Scoreboard({ round }: { round: ClpRound1State }) {
+  return (
+    <div className="clp-scoreboard">
+      <div className={round.activeTeam === "A" ? "active" : ""}>
+        <span>A</span>
+        <strong>{round.scoreA}</strong>
+      </div>
+      <small>:</small>
+      <div className={round.activeTeam === "B" ? "active" : ""}>
+        <strong>{round.scoreB}</strong>
+        <span>B</span>
+      </div>
+    </div>
+  );
+}
+
+function AnswerBoard({
+  round,
+  compact = false,
+}: {
+  round: ClpRound1State;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? "clp-board compact" : "clp-board"}>
+      {round.board.map((answer) => {
+        const visible = Boolean(answer.label);
+        const missed = round.mode === "between" && !answer.revealed;
+
+        return (
+          <div
+            key={answer.key}
+            className={`clp-board-row ${visible ? "visible" : ""} ${missed ? "missed" : ""}`}
+          >
+            <b>{answer.position}</b>
+            <span>{visible ? answer.label : "••••••••"}</span>
+            <strong>{visible ? answer.points : "?"}</strong>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RoundEvent({
+  event,
+  compact = false,
+}: {
+  event: ClpRound1State["lastEvent"];
+  compact?: boolean;
+}) {
+  if (!event?.type) return null;
+
+  let title = "";
+  let detail = "";
+  let tone = "neutral";
+
+  if (event.type === "correct" || event.type === "board_complete") {
+    title = "JEST!";
+    detail = `${event.answerLabel ?? event.guess} +${event.points ?? 0} pkt`;
+    tone = "good";
+  } else if (event.type === "wrong") {
+    title = "NIE MA TEGO";
+    detail = event.guess ? `„${event.guess}”` : "Błędna odpowiedź";
+    tone = "bad";
+  } else if (event.type === "pass_to_steal") {
+    title = "PRZEJĘCIE!";
+    detail = `Drużyna ${event.team === "A" ? "B" : "A"} ma 1 próbę.`;
+    tone = "steal";
+  } else if (event.type === "steal_success") {
+    title = "PRZEJĘTE!";
+    detail = `+${event.points ?? 0} pkt za odpowiedź i +${event.bonus ?? 0} bonusu`;
+    tone = "steal";
+  } else if (event.type === "steal_failed") {
+    title = "NIEUDANE PRZEJĘCIE";
+    detail = "Pytanie zostaje zamknięte.";
+    tone = "bad";
+  }
+
+  return (
+    <div className={`clp-r1-event ${tone} ${compact ? "compact" : ""}`}>
+      <strong>{title}</strong>
+      <span>{detail}</span>
+    </div>
   );
 }
 
@@ -166,7 +496,7 @@ function HostWarmup({
   error,
   onAdvance,
 }: {
-  data: HostState;
+  data: HostWarmupState;
   busy: boolean;
   error: string;
   onAdvance: () => void;
@@ -214,12 +544,19 @@ function HostWarmup({
         <div className="clp-player-progress-grid">
           {data.progress.map((player) => {
             const complete = player.answer_count >= CLP_WARMUP_TOTAL;
-            const percent = Math.min(100, (player.answer_count / CLP_WARMUP_TOTAL) * 100);
+            const percent = Math.min(
+              100,
+              (player.answer_count / CLP_WARMUP_TOTAL) * 100,
+            );
 
             return (
               <article
                 key={player.player_id}
-                className={complete ? "clp-progress-player complete" : "clp-progress-player"}
+                className={
+                  complete
+                    ? "clp-progress-player complete"
+                    : "clp-progress-player"
+                }
               >
                 <span className="clp-progress-avatar">
                   {AVATARS[player.avatar] ?? "🎮"}
@@ -263,7 +600,7 @@ function PlayerWarmup({
   error,
   onAnswer,
 }: {
-  data: PlayerState;
+  data: PlayerWarmupState;
   busy: boolean;
   error: string;
   onAnswer: (questionKey: string, answer: string) => void;
@@ -333,7 +670,9 @@ function PlayerWarmup({
         <footer className="clp-phone-footer">
           <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
           <strong>{data.player.display_name}</strong>
-          <small>{data.player.team === "A" ? "DRUŻYNA A" : "DRUŻYNA B"}</small>
+          <small>
+            {data.player.team === "A" ? "DRUŻYNA A" : "DRUŻYNA B"}
+          </small>
         </footer>
       </section>
     </main>
