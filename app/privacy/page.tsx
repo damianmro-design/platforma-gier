@@ -109,8 +109,14 @@ export default function PrivacyPage() {
           do prowadzenia rozgrywki.
         </p>
         <p>
-          Adres e-mail, hasło i tokeny sesji nie są publikowane innym graczom.
-          Szczegółowy zakres widocznych danych może różnić się między grami.
+          Globalny ranking PartyPlay jest dostępny dla zalogowanych użytkowników.
+          Może pokazywać nazwę wyświetlaną, awatar, pozycję, XP, poziom, liczbę
+          ukończonych gier, zwycięstw, rozegranych tytułów i odznak.
+        </p>
+        <p>
+          Adres e-mail, identyfikator konta, hasło i tokeny sesji nie są publikowane
+          w rankingu ani innym graczom. Szczegółowy zakres widocznych danych może
+          różnić się między grami.
         </p>
       </LegalSection>
 
