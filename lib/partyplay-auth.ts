@@ -111,3 +111,62 @@ export async function getPolowanieBadgesFromAccessToken(accessToken: string) {
     progressTarget: Number(row.progress_target ?? 1),
   }));
 }
+
+
+export type PolowanieHistoryItem = {
+  game_slug: string;
+  display_name: string;
+  avatar: string;
+  team: null;
+  final_score: number | null;
+  placement: number | null;
+  won: boolean;
+  completed_at: string;
+  result_data: Record<string, unknown>;
+};
+
+export async function getPolowanieHistoryFromAccessToken(
+  accessToken: string,
+  limit = 50,
+  offset = 0,
+) {
+  const supabase = createPartyPlayAuthorizedClient(accessToken);
+  const { data, error } = await supabase.rpc(
+    "get_my_partyplay_polowanie_history",
+    {
+      p_limit: Math.min(Math.max(limit, 1), 200),
+      p_offset: Math.max(offset, 0),
+    },
+  );
+
+  if (error) return [];
+
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    game_slug: "polowanie-na-milionera",
+    display_name: String(row.display_name ?? ""),
+    avatar: String(row.avatar ?? ""),
+    team: null,
+    final_score:
+      row.final_score == null ? null : Number(row.final_score),
+    placement:
+      row.placement == null ? null : Number(row.placement),
+    won: Boolean(row.won),
+    completed_at: String(row.completed_at ?? ""),
+    result_data:
+      row.result_data && typeof row.result_data === "object"
+        ? (row.result_data as Record<string, unknown>)
+        : {},
+  })) as PolowanieHistoryItem[];
+}
+
+export async function getPolowanieHistoryCountFromAccessToken(
+  accessToken: string,
+) {
+  const supabase = createPartyPlayAuthorizedClient(accessToken);
+  const { data, error } = await supabase.rpc(
+    "get_my_partyplay_polowanie_history_count",
+  );
+
+  if (error) return 0;
+  return Number(data ?? 0);
+}
