@@ -106,6 +106,7 @@ export async function GET(request: Request) {
       polowanie,
       polowanieBadges,
       progression,
+      podPrzykrywka: platformStats.podPrzykrywka,
     });
   } catch {
     return NextResponse.json(
