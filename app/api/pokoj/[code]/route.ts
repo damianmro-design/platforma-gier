@@ -124,7 +124,7 @@ export async function POST(request: Request, context: RouteContext) {
           code,
           name,
           avatar,
-          partyPlayUser.id,
+          partyPlayAccessToken,
         );
       } else {
         player = await joinPlatformRoom(code, name, avatar);
