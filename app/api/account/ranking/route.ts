@@ -71,7 +71,7 @@ export async function GET(request: Request) {
 
         const avatar = identity.profile_avatar_set
           ? identity.avatar
-          : aggregate?.avatar || identity.avatar || "lion";
+          : aggregate?.avatar || identity.avatar || "avatar-01";
 
         return {
           userId: identity.auth_user_id,
