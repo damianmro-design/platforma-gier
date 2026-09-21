@@ -17,13 +17,28 @@ export async function GET(request: Request) {
   const accessToken = bearerToken(request);
   const user = await getPartyPlayUserFromAccessToken(accessToken);
 
+  const url = new URL(request.url);
+  const historyLimit = Math.min(
+    Math.max(Number(url.searchParams.get("limit") ?? "10") || 10, 1),
+    50,
+  );
+  const historyOffset = Math.max(
+    Number(url.searchParams.get("offset") ?? "0") || 0,
+    0,
+  );
+  const gameSlug = url.searchParams.get("game")?.trim() || null;
+
   if (!user) {
     return NextResponse.json({ error: "Nie jesteś zalogowany." }, { status: 401 });
   }
 
   try {
     const [platformStats, polowanie, polowanieBadges] = await Promise.all([
-      getMyPartyPlayPlatformStats(accessToken!),
+      getMyPartyPlayPlatformStats(accessToken!, {
+        historyLimit,
+        historyOffset,
+        gameSlug,
+      }),
       getPolowanieCareerFromAccessToken(accessToken!),
       getPolowanieBadgesFromAccessToken(accessToken!),
     ]);
@@ -42,6 +57,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       summary: platformStats.summary,
       history: platformStats.history,
+      historyTotal: platformStats.historyTotal,
+      historyOffset: platformStats.historyOffset,
+      historyLimit: platformStats.historyLimit,
+      historyHasMore: platformStats.historyHasMore,
       polowanie,
       polowanieBadges,
       progression,
