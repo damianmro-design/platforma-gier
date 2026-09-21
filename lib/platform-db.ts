@@ -994,3 +994,90 @@ export async function revealAktaNocyEvidenceB(
   return (data ?? null) as string | null;
 }
 
+export type AktaNocyPublicCastRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  role_key: string;
+};
+
+export type AktaNocyReconstructionPlayerState = {
+  submitted: boolean;
+  event_order: string[];
+  suspect_player_id: string;
+  motive_key: string;
+  coverup_key: string;
+};
+
+export type AktaNocyReconstructionHostRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  submitted: boolean;
+  event_order: string[] | null;
+  suspect_player_id: string | null;
+  motive_key: string | null;
+  coverup_key: string | null;
+};
+
+export async function getAktaNocyPublicCast(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_public_cast", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyPublicCastRow[];
+}
+
+export async function getAktaNocyReconstructionPlayer(
+  code: string,
+  playerToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_reconstruction_player", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as AktaNocyReconstructionPlayerState | null;
+}
+
+export async function getAktaNocyReconstructionHost(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_reconstruction_host", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyReconstructionHostRow[];
+}
+
+export async function submitAktaNocyReconstruction(
+  code: string,
+  playerToken: string,
+  eventOrder: string[],
+  suspectPlayerId: string,
+  motiveKey: string,
+  coverupKey: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_akta_nocy_reconstruction", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_event_order: eventOrder,
+    p_suspect_player_id: suspectPlayerId,
+    p_motive_key: motiveKey,
+    p_coverup_key: coverupKey,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
