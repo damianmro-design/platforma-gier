@@ -604,3 +604,99 @@ export function getAktaNocyInterrogationByRole(roleKey: string) {
   return AKTA_NOCY_INTERROGATIONS_A.find((item) => item.roleKey === roleKey) ?? null;
 }
 
+export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
+  {
+    id: "scheduled-message",
+    no: "B-01",
+    title: "Metadane wiadomości z 23:02",
+    source: "Analiza konta Marka · aplikacja wiadomości",
+    time: "22:53:41 → 23:02:00",
+    summary:
+      "Wiadomość z konta Marka nie została napisana o 23:02. Została ustawiona wcześniej do automatycznej wysyłki z laptopa znajdującego się w apartamencie 214.",
+    details: [
+      "Polecenie zaplanowania wiadomości zapisano o 22:53:41.",
+      "Wysyłkę ustawiono na dokładnie 23:02:00.",
+      "Operacja została wykonana z laptopa Marka, nie z jego telefonu.",
+      "Konto było już zalogowane, nie odnotowano ponownego wpisania hasła.",
+    ],
+    question:
+      "Jeżeli wiadomość była zaplanowana wcześniej, kto próbował stworzyć wrażenie, że Marek żył jeszcze po 23:00?",
+  },
+  {
+    id: "mirror-photo",
+    no: "B-02",
+    title: "Zdjęcie z odbiciem w lustrze",
+    source: "Plik IMG_8241 · aparat Tomasza Reya",
+    time: "22:49:27",
+    summary:
+      "Na zdjęciu wykonanym przy schodach, w odbiciu dekoracyjnego lustra widać sylwetkę osoby zmierzającej korytarzem w stronę apartamentu 214.",
+    details: [
+      "Twarz jest poza kadrem i nie pozwala na pewną identyfikację.",
+      "Na szyi osoby widać prostokątny identyfikator prasowy.",
+      "Zdjęcie powstało już po rozpoczęciu luki monitoringu.",
+      "Pozostali widoczni goście znajdują się po przeciwnej stronie korytarza.",
+    ],
+    question:
+      "Która z obecnych osób miała identyfikator prasowy i dlaczego znalazła się wtedy na 2 piętrze?",
+  },
+  {
+    id: "hallway-audio",
+    no: "B-03",
+    title: "Nagranie z korytarza",
+    source: "Relacja Miry Solskiej · oryginalny plik wideo",
+    time: "22:51:08",
+    summary:
+      "W tle krótkiego nagrania z 2 piętra słychać fragment napiętej rozmowy prowadzonej poza kadrem.",
+    details: [
+      "Najwyraźniejsze zdanie brzmi: „Nie zniszczysz mi kariery”.",
+      "Wypowiada je męski głos.",
+      "Chwilę później słychać krótki trzask i gwałtowne urwanie rozmowy.",
+      "Nagranie nie pozwala jednoznacznie rozpoznać rozmówcy po głosie.",
+    ],
+    question:
+      "Czy konflikt z Markiem dotyczył pieniędzy, reputacji, czy zawodowej kariery?",
+  },
+  {
+    id: "medical-window",
+    no: "B-04",
+    title: "Wstępna ocena czasu śmierci",
+    source: "Notatka Julii Narew · pierwsza ocena na miejscu",
+    time: "około 22:50–22:56",
+    summary:
+      "Stan Marka w chwili odnalezienia nie pasuje do wersji, według której żył jeszcze o 23:02. Lekarka zawęża prawdopodobny czas śmierci do okresu obejmującego lukę monitoringu.",
+    details: [
+      "Nie da się wskazać dokładnej minuty śmierci.",
+      "Najbardziej prawdopodobny przedział obejmuje około 22:50–22:56.",
+      "Wiadomość wysłana o 23:02 nie może być traktowana jako dowód, że Marek wtedy żył.",
+      "Ocena jest zgodna z hipotezą, że miejsce zdarzenia zostało później upozorowane.",
+    ],
+    question:
+      "Czyje alibi obejmuje dokładnie ten przedział i kto nie potrafi go potwierdzić?",
+  },
+  {
+    id: "wicher-file",
+    no: "B-05",
+    title: "Ostatni plik roboczy Marka",
+    source: "Laptop Marka · katalog ROBOCZE / DO_WERYFIKACJI",
+    time: "ostatnia modyfikacja 21:58",
+    summary:
+      "Wśród ostatnio otwieranych dokumentów znajduje się plik oznaczony „WICHER_notatki_redakcyjne”. Nie dotyczy on sponsora gali.",
+    details: [
+      "Dokument opisuje poważny konflikt zawodowy dotyczący wcześniejszego materiału reporterskiego.",
+      "W notatkach Marek zapisał, że zamierza porozmawiać z osobą opisaną w pliku jeszcze tej nocy.",
+      "W pliku pada zdanie: „Jeśli redakcja to zobaczy, jego kariera może się skończyć”.",
+      "Część załączników z dokumentu wskazuje na nośnik zewnętrzny, którego nie znaleziono w pokoju.",
+    ],
+    question:
+      "Czy zaginiony pendrive zawierał właśnie materiały z tego pliku i kto najbardziej bał się ich publikacji?",
+  },
+];
+
+export function getAktaNocyEvidenceBCountFromPhase(
+  phase: string | null | undefined,
+) {
+  if (!phase?.startsWith("dowody_b_")) return 0;
+  const value = Number(phase.replace("dowody_b_", ""));
+  return Number.isFinite(value) ? Math.max(0, Math.min(5, value)) : 0;
+}
+
