@@ -608,14 +608,27 @@ function HostGame({
 
               {game.phase === "mission" && (
                 <section className="rounded-[1.75rem] border border-white/10 bg-white/[.025] p-6">
+                  <HostCue title="Najpierw cisza i telefony.">
+                    Powiedz: „Każdy czyta swoją instrukcję i odpowiada sam. Nie konsultujemy odpowiedzi, dopóki wszyscy nie skończą.”
+                  </HostCue>
+
                   <div className="flex items-end justify-between gap-4">
                     <div>
                       <span className="text-[9px] font-black uppercase tracking-[.2em] text-zinc-500">ODPOWIEDZI</span>
-                      <h2 className="mt-1 text-2xl font-black">{game.submittedCount}/{game.playerCount} gotowych</h2>
+                      <h2 className="mt-1 text-2xl font-black">
+                        {game.submittedCount + game.skippedCount}/{game.playerCount} rozliczonych
+                      </h2>
                     </div>
                   </div>
-                  <div className="mt-4"><ProgressBar value={game.submittedCount} max={game.playerCount} /></div>
-                  <div className="mt-5"><PlayerGrid players={game.players} mode="submitted" /></div>
+                  <div className="mt-4"><ProgressBar value={game.submittedCount + game.skippedCount} max={game.playerCount} /></div>
+                  <div className="mt-5">
+                    <PlayerGrid players={game.players} mode="submitted" busy={busy} onSkip={onSkip} />
+                  </div>
+                  {game.players.some((player) => !player.online && !player.submitted && !player.skipped) && (
+                    <p className="mt-4 rounded-xl border border-amber-300/15 bg-amber-300/[.06] px-4 py-3 text-xs font-bold leading-5 text-amber-100/80">
+                      Jeśli ktoś stracił internet, daj mu chwilę na powrót kodem odzyskiwania. Gdy nie wraca, możesz pominąć go tylko w tej fazie.
+                    </p>
+                  )}
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-6 py-4 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-35">
                     {readyToAdvance
                       ? game.mission.modifier === "silent"
@@ -637,7 +650,26 @@ function HostGame({
             <aside className="min-w-0">
               {game.phase === "evidence" && (
                 <div className="rounded-[1.75rem] border border-cyan-300/15 bg-cyan-300/[.05] p-6">
-                  <span className="text-3xl">{game.mission.modifier === "anonymous" ? "🕶️" : "💬"}</span>
+                  <HostCue title={game.mission.modifier === "anonymous" ? "Rozmawiajcie tylko o treści." : "2 minuty na rozmowę."}>
+                    {game.mission.modifier === "anonymous"
+                      ? "Nie zdradzaj autorów. Pozwól grupie ocenić odpowiedzi bez sugerowania się osobą."
+                      : "Najpierw daj grupie rozmawiać samodzielnie. Jeśli zapadnie cisza, użyj jednego z pytań pomocniczych poniżej."}
+                  </HostCue>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-3xl">{game.mission.modifier === "anonymous" ? "🕶️" : "💬"}</span>
+                    <div className="flex items-center gap-2">
+                      <PhaseTimer startedAt={game.phaseStartedAt} seconds={120} bonusSeconds={game.phaseTimeBonusSeconds} />
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={onExtend}
+                        className="rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-[10px] font-black text-zinc-300 disabled:opacity-40"
+                      >
+                        +60 s
+                      </button>
+                    </div>
+                  </div>
                   <h2 className="mt-4 text-2xl font-black">
                     {game.mission.modifier === "anonymous" ? "Dyskusja bez nazwisk" : "Dyskusja"}
                   </h2>
@@ -677,6 +709,10 @@ function HostGame({
 
               {game.phase === "suspicion" && (
                 <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
+                  <HostCue title="Telefony w dłoń. Bez konsultowania głosu.">
+                    Powiedz: „Każdy wskazuje teraz 1 osobę. Nie mówimy na głos, na kogo głosujemy.”
+                  </HostCue>
+
                   <span className="text-3xl">{game.mission.modifier === "silent" ? "🤫" : "🗳️"}</span>
                   <h2 className="mt-4 text-2xl font-black">
                     {game.mission.modifier === "silent" ? "Cicha runda. Głosujcie." : "Kto jest podejrzany?"}
@@ -688,8 +724,10 @@ function HostGame({
                         ? "Autorzy odpowiedzi zostali ujawnieni. Bez kolejnej dyskusji, każdy oddaje anonimowy głos."
                         : "Każdy wybiera 1 osobę na swoim telefonie. Głosy są anonimowe."}
                   </p>
-                  <div className="mt-5"><ProgressBar value={game.votedCount} max={game.playerCount} /></div>
-                  <div className="mt-5"><PlayerGrid players={game.players} mode="voted" /></div>
+                  <div className="mt-5"><ProgressBar value={game.votedCount + game.skippedCount} max={game.playerCount} /></div>
+                  <div className="mt-5">
+                    <PlayerGrid players={game.players} mode="voted" busy={busy} onSkip={onSkip} />
+                  </div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
                     {readyToAdvance ? "POKAŻ PODEJRZENIA →" : "CZEKAJ NA WSZYSTKICH"}
                   </button>
@@ -733,9 +771,12 @@ function HostGame({
                     <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-amber-300">AKTA PODEJRZEŃ Z 5 MISJI</p>
                     <SuspicionBars data={game.cumulativeSuspicion} />
                   </div>
-                  <div className="mt-5"><ProgressBar value={game.votedCount} max={game.playerCount} /></div>
+                  <div className="mt-5"><ProgressBar value={game.votedCount + game.skippedCount} max={game.playerCount} /></div>
+                  <div className="mt-5">
+                    <PlayerGrid players={game.players} mode="voted" busy={busy} onSkip={onSkip} />
+                  </div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
-                    {readyToAdvance ? "ODKRYJ OSZUSTA →" : "CZEKAJ NA WSZYSTKICH"}
+                    {readyToAdvance ? "ZAMKNIJ GŁOSOWANIE →" : "CZEKAJ NA WSZYSTKICH"}
                   </button>
                 </div>
               )}
