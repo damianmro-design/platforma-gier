@@ -980,3 +980,17 @@ export async function getAktaNocyHostInterrogations(
   return (data ?? []) as AktaNocyHostInterrogationRow[];
 }
 
+export async function revealAktaNocyEvidenceB(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("reveal_akta_nocy_evidence_b", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
