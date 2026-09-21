@@ -4,6 +4,9 @@ export type PpPhase =
   | "evidence"
   | "suspicion"
   | "suspicion_result"
+  | "checkpoint"
+  | "interrogation"
+  | "last_word"
   | "final_vote"
   | "result";
 
@@ -53,16 +56,27 @@ export type PpCurrentPlayer = {
   voteTargetId: string | null;
 };
 
+export type PpTwist = {
+  interrogationPlayerId: string | null;
+  interrogationPlayerName: string | null;
+  interrogationPlayerAvatar: string | null;
+  interrogationQuestion: string | null;
+  isCurrentPlayerTarget: boolean;
+  secretOrder: string | null;
+};
+
 export type PpResult = {
   saboteurId: string;
   saboteurName: string;
   caught: boolean;
   finalTargetPlayerId: string | null;
   finalVotes: PpVoteCount[];
+  secretOrder: string | null;
 };
 
 export type PpGameState = {
   phase: PpPhase;
+  phaseStartedAt: string;
   missionIndex: number;
   missionCount: number;
   playerCount: number;
@@ -74,5 +88,6 @@ export type PpGameState = {
   submissions: PpSubmission[];
   suspicion: PpVoteCount[];
   cumulativeSuspicion: PpVoteCount[];
+  twist: PpTwist;
   result: PpResult | null;
 };
