@@ -289,3 +289,74 @@ export async function nextClpRound1Question(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as string | null;
 }
+
+
+export type ClpRound2DistributionItem = {
+  label: string;
+  count: number | null;
+  rank: number | null;
+  position: number;
+};
+
+export type ClpRound2Prediction = {
+  answer: string;
+  playerId: string;
+} | null;
+
+export type ClpRound2State = {
+  questionIndex: number;
+  questionCount: number;
+  questionKey: string;
+  prompt: string;
+  options: string[];
+  distribution: ClpRound2DistributionItem[];
+  mode: "predict" | "reveal";
+  scoreA: number;
+  scoreB: number;
+  predictorA: ClpRound1Player | null;
+  predictorB: ClpRound1Player | null;
+  predictionA: ClpRound2Prediction;
+  predictionB: ClpRound2Prediction;
+  lastEvent: {
+    type?: string;
+    scoreGainA?: number;
+    scoreGainB?: number;
+  } | null;
+};
+
+export async function getClpRound2State(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_round2_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ClpRound2State | null;
+}
+
+export async function submitClpRound2Prediction(
+  code: string,
+  playerToken: string,
+  answerValue: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_round2_prediction", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_answer_value: answerValue,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpRound2State["lastEvent"];
+}
+
+export async function nextClpRound2Question(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_clp_round2_question", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
