@@ -176,6 +176,7 @@ export type PartyPlayRankingIdentity = {
   auth_user_id: string;
   display_name: string;
   avatar: string;
+  profile_avatar_set: boolean;
   polowanie_games: number;
   polowanie_wins: number;
   polowanie_badges: number;
@@ -195,6 +196,7 @@ export async function getPartyPlayRankingIdentitySourceFromAccessToken(
     auth_user_id: String(row.auth_user_id ?? ""),
     display_name: String(row.display_name ?? "Gracz"),
     avatar: String(row.avatar ?? "lion"),
+    profile_avatar_set: Boolean(row.profile_avatar_set),
     polowanie_games: Number(row.polowanie_games ?? 0),
     polowanie_wins: Number(row.polowanie_wins ?? 0),
     polowanie_badges: Number(row.polowanie_badges ?? 0),
