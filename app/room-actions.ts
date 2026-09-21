@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createPlatformRoom, lookupPlatformRoom } from "@/lib/platform-db";
+import { createPlatformRoom, lookupPlatformRoom, type PlatformRoom } from "@/lib/platform-db";
 
 const ALLOWED_GAMES = new Set(["co-ludzie-powiedza"]);
 
@@ -20,7 +20,7 @@ export async function createRoom(formData: FormData) {
     redirect("/?roomError=unsupported-game");
   }
 
-  let room;
+  let room: PlatformRoom;
 
   try {
     room = await createPlatformRoom(gameSlug);
@@ -38,7 +38,7 @@ export async function joinRoom(formData: FormData) {
     redirect("/?roomError=invalid-code#dolacz");
   }
 
-  let room;
+  let room: PlatformRoom | null;
 
   try {
     room = await lookupPlatformRoom(code);
