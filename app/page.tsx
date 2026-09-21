@@ -35,7 +35,7 @@ const games = [
     tags: ["ankiety", "drużynowa", "bez eliminacji"],
     theme: "yellow",
     status: "W BUDOWIE",
-    href: null,
+    href: "/gry/co-ludzie-powiedza",
     visual: "CO LUDZIE\nPOWIEDZĄ?!",
   },
   {
