@@ -96,9 +96,13 @@ function Shell({
                               ? "OBRONA"
                               : game.phase === "final_vote"
                                 ? "FINAŁOWE GŁOSOWANIE"
-                                : game.phase === "result"
-                                  ? "FINAŁ"
-                                  : `MISJA ${game.missionIndex}/${game.missionCount}`}
+                                : game.phase === "final_locked"
+                                  ? "GŁOSY ZAMKNIĘTE"
+                                  : game.phase === "final_accused"
+                                    ? "WERDYKT GRUPY"
+                                    : game.phase === "result"
+                                      ? "FINAŁ"
+                                      : `MISJA ${game.missionIndex}/${game.missionCount}`}
               </strong>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-right">
@@ -355,18 +359,22 @@ function HostGame({
   busy,
   error,
   onAdvance,
+  onExtend,
+  onSkip,
 }: {
   data: HostResponse;
   busy: boolean;
   error: string;
   onAdvance: () => void;
+  onExtend: () => void;
+  onSkip: (playerId: string) => void;
 }) {
   const { room, game } = data;
   const readyToAdvance =
     game.phase === "mission"
-      ? game.submittedCount === game.playerCount
+      ? game.submittedCount + game.skippedCount === game.playerCount
       : game.phase === "suspicion" || game.phase === "final_vote"
-        ? game.votedCount === game.playerCount
+        ? game.votedCount + game.skippedCount === game.playerCount
         : true;
 
   if (game.phase === "result" && game.result) {
@@ -449,7 +457,7 @@ function HostGame({
                   {game.twist.interrogationPlayerName ?? "Gracz"} odpowiada.
                 </h1>
               </div>
-              <PhaseTimer startedAt={game.phaseStartedAt} seconds={45} />
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={45} bonusSeconds={game.phaseTimeBonusSeconds} />
             </div>
 
             <div className="mt-7 rounded-2xl border border-white/10 bg-black/25 p-6">
@@ -479,7 +487,7 @@ function HostGame({
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
               Bez pytań i bez przerywania. Może wskazać trop, obronić swoje odpowiedzi albo skierować uwagę na kogoś innego.
             </p>
-            <div className="mt-6"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <div className="mt-6"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} /></div>
             <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-violet-300 to-fuchsia-400 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
               ROZPOCZNIJ MISJĘ 4 →
             </button>
@@ -495,7 +503,7 @@ function HostGame({
                   {game.twist.spotlightPlayerName ?? "Gracz"} odpowiada solo.
                 </h1>
               </div>
-              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} />
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} />
             </div>
 
             <div className="mt-7 flex items-center gap-4 rounded-2xl border border-white/10 bg-black/25 p-5">
@@ -560,7 +568,7 @@ function HostGame({
                     : game.twist.finalDefenderTwoName ?? "Gracz"}
                 </h1>
               </div>
-              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} />
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} />
             </div>
 
             <div className="mt-7 rounded-2xl border border-white/10 bg-black/25 p-6">
@@ -879,7 +887,7 @@ function PlayerGame({
             <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
               {game.twist.isCurrentPlayerTarget ? "Odpowiadasz." : `${game.twist.interrogationPlayerName ?? "Gracz"} odpowiada.`}
             </h1>
-            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={45} /></div>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={45} bonusSeconds={game.phaseTimeBonusSeconds} /></div>
             <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-left text-lg font-black leading-8">
               {game.twist.interrogationQuestion ?? "Wyjaśnij swoje dotychczasowe decyzje."}
             </p>
@@ -898,7 +906,7 @@ function PlayerGame({
             <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
               {game.twist.isCurrentPlayerTarget ? "Masz 30 sekund." : `${game.twist.interrogationPlayerName ?? "Gracz"} ma 30 sekund.`}
             </h1>
-            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} /></div>
             <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
               {game.twist.isCurrentPlayerTarget
                 ? "To Twoja chwila na obronę. Możesz wskazać trop, wyjaśnić swoje decyzje albo rzucić podejrzenie na kogoś innego."
@@ -916,7 +924,7 @@ function PlayerGame({
                 ? "To Ty trafiasz na gorące krzesło."
                 : `${game.twist.spotlightPlayerName ?? "Gracz"} odpowiada solo.`}
             </h1>
-            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} /></div>
             <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-left text-lg font-black leading-8">
               {game.twist.spotlightQuestion ?? "Powiedz, co w tej rundzie wzbudziło Twoje największe podejrzenia."}
             </p>
@@ -965,7 +973,7 @@ function PlayerGame({
                     ? game.twist.finalDefenderOneName ?? "Gracz"
                     : game.twist.finalDefenderTwoName ?? "Gracz"} się broni.`}
             </h1>
-            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} bonusSeconds={game.phaseTimeBonusSeconds} /></div>
             <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-zinc-400">
               {game.twist.isCurrentPlayerFinalDefender
                 ? "Wyjaśnij swoje podejrzane decyzje, wskaż najmocniejszy trop przeciw komuś innemu i przekonaj grupę, żeby nie głosowała na Ciebie."
