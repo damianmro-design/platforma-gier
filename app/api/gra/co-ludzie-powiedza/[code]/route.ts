@@ -297,7 +297,7 @@ export async function POST(request: Request, context: RouteContext) {
       }
 
       const ranking = Array.isArray(body.ranking)
-        ? body.ranking.map((item) => String(item))
+        ? body.ranking.map((item: unknown) => String(item))
         : [];
 
       const event = await submitClpRound3Ranking(code, playerToken, ranking);
