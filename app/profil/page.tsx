@@ -396,6 +396,15 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              <div className="mt-4 flex justify-end">
+                <Link
+                  href="/profil/poziomy"
+                  className="rounded-xl border border-white/8 bg-white/[.035] px-3 py-2 text-[9px] font-black uppercase tracking-[.12em] text-zinc-400 transition hover:text-white"
+                >
+                  Jak działa XP i poziomy →
+                </Link>
+              </div>
+
               <div className="mt-4 h-3 overflow-hidden rounded-full bg-black/35">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 transition-all"
