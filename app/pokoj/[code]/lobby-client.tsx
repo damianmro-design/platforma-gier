@@ -39,6 +39,7 @@ export default function LobbyClient({ code }: { code: string }) {
   const [recoverCode, setRecoverCode] = useState("");
   const [accountSignedIn, setAccountSignedIn] = useState(false);
   const [accountLevel, setAccountLevel] = useState(1);
+  const [accountProgressReady, setAccountProgressReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -108,8 +109,8 @@ export default function LobbyClient({ code }: { code: string }) {
       );
 
       if (profileName) setName(profileName.slice(0, 20));
-      setAvatar(profileAvatar);
 
+      let resolvedLevel = 1;
       const accessToken = sessionData.session?.access_token;
       if (accessToken) {
         try {
@@ -122,23 +123,25 @@ export default function LobbyClient({ code }: { code: string }) {
 
           if (response.ok) {
             const stats = await response.json();
-            if (mounted) {
-              const resolvedLevel = Math.max(
-                1,
-                Number(stats?.progression?.level?.level ?? 1),
-              );
-              setAccountLevel(resolvedLevel);
-              setAvatar((currentAvatar) =>
-                isPartyPlayAvatarUnlocked(currentAvatar, resolvedLevel)
-                  ? currentAvatar
-                  : "avatar-01",
-              );
-            }
+            resolvedLevel = Math.max(
+              1,
+              Number(stats?.progression?.level?.level ?? 1),
+            );
           }
         } catch {
           // Poziom 1 pozostaje bezpiecznym fallbackiem.
         }
       }
+
+      if (!mounted) return;
+
+      setAccountLevel(resolvedLevel);
+      setAvatar(
+        isPartyPlayAvatarUnlocked(profileAvatar, resolvedLevel)
+          ? profileAvatar
+          : "avatar-01",
+      );
+      setAccountProgressReady(true);
     };
 
     void loadAccount();
@@ -179,6 +182,22 @@ export default function LobbyClient({ code }: { code: string }) {
     event.preventDefault();
     if (!name.trim()) {
       setError("Wpisz swoje imię.");
+      return;
+    }
+
+    if (accountSignedIn && !accountProgressReady) {
+      setError("Poczekaj chwilę, pobieramy poziom Twojego profilu.");
+      return;
+    }
+
+    if (
+      !isPartyPlayAvatarUnlocked(
+        avatar,
+        accountSignedIn ? accountLevel : 1,
+      )
+    ) {
+      setError("Ten avatar nie jest jeszcze odblokowany.");
+      setAvatar("avatar-01");
       return;
     }
 
@@ -351,12 +370,18 @@ export default function LobbyClient({ code }: { code: string }) {
             })}
           </div>
 
-          <button className="join-player-button" type="submit" disabled={busy}>
+          <button
+            className="join-player-button"
+            type="submit"
+            disabled={busy || (accountSignedIn && !accountProgressReady)}
+          >
             {busy
               ? "Dołączanie…"
-              : accountSignedIn
-                ? "Dołącz jako konto PartyPlay"
-                : "Dołącz jako gość"}
+              : accountSignedIn && !accountProgressReady
+                ? "Ładowanie profilu…"
+                : accountSignedIn
+                  ? "Dołącz jako konto PartyPlay"
+                  : "Dołącz jako gość"}
           </button>
         </form>
       ) : (
