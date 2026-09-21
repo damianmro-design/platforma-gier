@@ -24,6 +24,7 @@ export type PlatformRoom = {
   code: string;
   game_slug: string;
   status: "lobby" | "active" | "finished";
+  game_phase?: string | null;
   created_at?: string;
   expires_at?: string;
 };
@@ -136,4 +137,71 @@ export async function startPlatformRoom(code: string, hostToken: string) {
 
   if (error) throw new Error(error.message);
   return Boolean(data);
+}
+
+
+export type ClpAnswer = {
+  question_key: string;
+  answer_value: string;
+};
+
+export type ClpHostProgress = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  answer_count: number;
+};
+
+export async function submitClpAnswer(
+  code: string,
+  playerToken: string,
+  questionKey: string,
+  answerValue: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_answer", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_question_key: questionKey,
+    p_answer_value: answerValue,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function getClpPlayerAnswers(code: string, playerToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_player_answers", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ClpAnswer[];
+}
+
+export async function getClpHostProgress(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_host_progress", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((item) => ({
+    ...item,
+    answer_count: Number(item.answer_count ?? 0),
+  })) as ClpHostProgress[];
+}
+
+export async function advanceClpPhase(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_clp_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
 }
