@@ -759,8 +759,12 @@ export default function ProfilePage() {
                   key={`${item.game_slug}-${item.completed_at}-${index}`}
                   className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/8 bg-black/15 p-3"
                 >
-                  <span className="text-xl">
-                    {AVATARS.find(([id]) => id === item.avatar)?.[1] ?? "🎮"}
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/8 bg-black/15">
+                    {item.avatar.startsWith("avatar-") ? (
+                      <PartyPlayAvatar id={item.avatar} size={38} />
+                    ) : (
+                      <span className="text-lg">🎮</span>
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <strong className="block truncate text-sm font-black">
