@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClpRound7State } from "@/lib/platform-db";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -9,10 +10,6 @@ type Player = {
   team: "A" | "B" | null;
 };
 
-const AVATARS: Record<string, string> = {
-  lion:"🦁", fox:"🦊", panda:"🐼", tiger:"🐯", koala:"🐨", owl:"🦉",
-  frog:"🐸", penguin:"🐧", bear:"🐻", rabbit:"🐰", monkey:"🐵", cat:"🐱",
-};
 
 export function HostRound7({
   code,
@@ -171,7 +168,7 @@ export function PlayerRound7({
         ) : isPredictor ? (
           <section className="clp-r7-picker">
             <div className="clp-r7-your-turn">
-              <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+              <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
               <div><small>TY DECYDUJESZ</small><strong>Która odpowiedź była popularniejsza?</strong></div>
             </div>
             <div className="clp-r7-pick-grid">
@@ -184,7 +181,7 @@ export function PlayerRound7({
           </section>
         ) : (
           <div className="clp-r7-wait-card">
-            <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+            <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
             <strong>{predictor ? predictor.display_name + " reprezentuje Was w tym pojedynku" : "Czekamy na reprezentanta"}</strong>
             <p>Naradźcie się razem, ale tylko wskazana osoba może zatwierdzić odpowiedź.</p>
           </div>
@@ -193,7 +190,7 @@ export function PlayerRound7({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+          <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
           <strong>{player.display_name}</strong>
           <small>DRUŻYNA {team}</small>
         </footer>
@@ -213,7 +210,7 @@ function Rep({
 }) {
   return (
     <article className={"clp-r7-rep team-" + team.toLowerCase()}>
-      <span>{player ? AVATARS[player.avatar] ?? "🎮" : "🎮"}</span>
+      <span><PartyPlayAvatar id={player?.avatar} size={38} /></span>
       <div>
         <small>DRUŻYNA {team}</small>
         <strong>{player?.display_name ?? "—"}</strong>
