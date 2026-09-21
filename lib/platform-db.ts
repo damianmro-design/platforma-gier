@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { ZhGameState } from "@/lib/zakrecone-haslo";
 
 const DEFAULT_SUPABASE_URL = "https://glcjetxskjnlbeegirln.supabase.co";
 const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
@@ -871,4 +872,85 @@ export async function submitClpFinalTiebreak(
 
   if (error) throw new Error(error.message);
   return data as ClpFinalState["lastEvent"];
+}
+
+
+export async function getZhState(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_zh_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ZhGameState | null;
+}
+
+export async function spinZh(code: string, playerToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("spin_zh", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhLetter(
+  code: string,
+  playerToken: string,
+  letter: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_letter", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_letter: letter,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhVowel(
+  code: string,
+  playerToken: string,
+  letter: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_vowel", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_letter: letter,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhSolve(
+  code: string,
+  playerToken: string,
+  guess: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_solve", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_guess: guess,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function nextZhRound(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_zh_round", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as "playing" | "game_over" | null;
 }
