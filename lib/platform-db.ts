@@ -571,6 +571,8 @@ export type ClpRound5State = {
     rankB?: number;
     scoreGainA?: number;
     scoreGainB?: number;
+    topTieCount?: number;
+    allTied?: boolean;
   } | null;
 };
 
