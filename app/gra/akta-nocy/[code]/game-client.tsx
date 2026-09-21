@@ -1086,6 +1086,7 @@ function PlayerView({
   onHide,
   onShow,
   onSubmitReconstruction,
+  onSubmitAccusation,
 }: {
   data: PlayerState;
   busy: boolean;
@@ -1100,17 +1101,48 @@ function PlayerView({
     motiveKey: string;
     coverupKey: string;
   }) => Promise<boolean>;
+  onSubmitAccusation: (payload: {
+    suspectPlayerId: string;
+    motiveKey: string;
+    evidenceId: string;
+  }) => Promise<boolean>;
 }) {
   const phase = data.room.phase;
   const role = data.roleCard;
   const firstOpen = role.dossierOpened;
   const reconstructionStage =
     phase === "rekonstrukcja" || phase === "rekonstrukcja_wynik";
+  const accusationStage = phase === "akt_oskarzenia";
+  const revealStage = Boolean(phase?.startsWith("ujawnienie_"));
   const publicStage =
     phase === "pierwsze_zeznania" ||
     isEvidencePhase(phase) ||
     phase === "przesluchania_a" ||
-    reconstructionStage;
+    reconstructionStage ||
+    accusationStage ||
+    revealStage;
+
+  if (revealStage && !dossierVisible) {
+    return (
+      <PlayerRevealView
+        data={data}
+        error={error}
+        onShowDossier={onShow}
+      />
+    );
+  }
+
+  if (accusationStage && !dossierVisible) {
+    return (
+      <PlayerAccusationView
+        data={data}
+        busy={busy}
+        error={error}
+        onShowDossier={onShow}
+        onSubmit={onSubmitAccusation}
+      />
+    );
+  }
 
   if (reconstructionStage && !dossierVisible) {
     return (
