@@ -420,6 +420,38 @@ export async function GET(_request: Request, context: RouteContext) {
       );
     }
 
+    const playerAccusationVerdict =
+      accusation &&
+      (room.game_phase === "ujawnienie_3" || room.game_phase === "ujawnienie_4")
+        ? (() => {
+            const culprit = cast.find(
+              (item) => item.characterName === AKTA_NOCY_SOLUTION.culpritName,
+            ) ?? null;
+            const suspect = cast.find(
+              (item) => item.playerId === accusation.suspect_player_id,
+            ) ?? null;
+            const evidenceItem = [
+              ...AKTA_NOCY_EVIDENCE_A,
+              ...AKTA_NOCY_EVIDENCE_B,
+            ].find((item) => item.id === accusation.evidence_id);
+            const motiveItem = AKTA_NOCY_MOTIVE_OPTIONS.find(
+              (item) => item.key === accusation.motive_key,
+            );
+
+            return {
+              suspect,
+              motiveLabel: motiveItem?.label ?? accusation.motive_key,
+              evidenceNo: evidenceItem?.no ?? "",
+              evidenceTitle: evidenceItem?.title ?? accusation.evidence_id,
+              suspectCorrect: Boolean(
+                culprit && accusation.suspect_player_id === culprit.playerId,
+              ),
+              motiveCorrect:
+                accusation.motive_key === AKTA_NOCY_SOLUTION.motiveKey,
+            };
+          })()
+        : null;
+
     return NextResponse.json({
       role: "player",
       room: {
@@ -443,6 +475,7 @@ export async function GET(_request: Request, context: RouteContext) {
       motiveOptions: AKTA_NOCY_MOTIVE_OPTIONS,
       coverupOptions: AKTA_NOCY_COVERUP_OPTIONS,
       accusation,
+      accusationVerdict: playerAccusationVerdict,
       reveal: revealPayloadForPhase(room.game_phase, cast),
     });
   }
