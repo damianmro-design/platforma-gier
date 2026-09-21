@@ -1,12 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
-function getConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const DEFAULT_SUPABASE_URL = "https://glcjetxskjnlbeegirln.supabase.co";
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_Zv_I8mghmQSYPzdit-lzvA_TrUcdkZ8";
 
-  if (!url || !key) {
-    throw new Error("Platform database is not configured.");
-  }
+function getConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 
   return { url, key };
 }
