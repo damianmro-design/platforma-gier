@@ -88,14 +88,30 @@ export async function joinPlatformRoomAccount(
   code: string,
   displayName: string,
   avatar: string,
-  partyPlayUserId: string,
+  partyPlayAccessToken: string,
 ) {
-  const supabase = getClient();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": partyPlayAccessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
   const { data, error } = await supabase.rpc("join_platform_room_account", {
     p_code: code,
     p_display_name: displayName,
     p_avatar: avatar,
-    p_partyplay_user_id: partyPlayUserId,
   });
 
   if (error) throw new Error(error.message);
