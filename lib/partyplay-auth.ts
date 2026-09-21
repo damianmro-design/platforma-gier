@@ -173,7 +173,8 @@ export async function getPolowanieHistoryCountFromAccessToken(
 
 
 export type PartyPlayRankingIdentity = {
-  auth_user_id: string;
+  ranking_key: string;
+  is_current_user: boolean;
   display_name: string;
   avatar: string;
   profile_avatar_set: boolean;
@@ -193,7 +194,8 @@ export async function getPartyPlayRankingIdentitySourceFromAccessToken(
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row: Record<string, unknown>) => ({
-    auth_user_id: String(row.auth_user_id ?? ""),
+    ranking_key: String(row.ranking_key ?? ""),
+    is_current_user: Boolean(row.is_current_user),
     display_name: String(row.display_name ?? "Gracz"),
     avatar: String(row.avatar ?? "avatar-01"),
     profile_avatar_set: Boolean(row.profile_avatar_set),
