@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createPlatformRoom, lookupPlatformRoom, type PlatformRoom } from "@/lib/platform-db";
 
-const ALLOWED_GAMES = new Set(["co-ludzie-powiedza"]);
+const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "akta-nocy"]);
 
 function normalizeCode(value: FormDataEntryValue | null) {
   return String(value ?? "")
