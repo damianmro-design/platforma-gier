@@ -945,3 +945,38 @@ export async function advanceAktaNocyPhase(
   return (data ?? null) as string | null;
 }
 
+export type AktaNocyHostInterrogationRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  role_key: string;
+};
+
+export async function revealAktaNocyEvidenceA(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("reveal_akta_nocy_evidence_a", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
+export async function getAktaNocyHostInterrogations(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_host_interrogations", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyHostInterrogationRow[];
+}
+
