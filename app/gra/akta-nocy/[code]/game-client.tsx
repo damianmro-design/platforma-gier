@@ -86,6 +86,59 @@ type ReconstructionPlayerState = {
   coverup_key: string;
 } | null;
 
+type AccusationSummary = {
+  total: number;
+  correctSuspect: number;
+  correctMotive: number;
+  fullyCorrect: number;
+  results: Array<{
+    playerId: string;
+    displayName: string;
+    avatar: string;
+    suspect: PublicCastMember | null;
+    motiveKey: string;
+    motiveLabel: string;
+    evidenceId: string;
+    evidenceNo: string;
+    evidenceTitle: string;
+    suspectCorrect: boolean;
+    motiveCorrect: boolean;
+    fullyCorrect: boolean;
+  }>;
+};
+
+type AccusationHostState = {
+  players: Array<{
+    playerId: string;
+    displayName: string;
+    avatar: string;
+    submitted: boolean;
+  }>;
+  summary: AccusationSummary | null;
+};
+
+type AccusationPlayerState = {
+  submitted: boolean;
+  suspect_player_id: string;
+  motive_key: string;
+  evidence_id: string;
+} | null;
+
+type RevealPayload = {
+  step: number;
+  culprit: PublicCastMember | null;
+  content: {
+    eyebrow: string;
+    title: string;
+    subtitle?: string;
+    body: string;
+    bullets?: readonly string[];
+    whyItFits?: readonly string[];
+    timeline?: readonly Array<{ time: string; text: string }>;
+    redHerrings?: readonly Array<{ name: string; truth: string }>;
+  };
+} | null;
+
 type RoleCard = {
   id: string;
   name: string;
@@ -117,6 +170,8 @@ type HostState = {
   reconstructionEvents: ReconstructionEvent[];
   motiveOptions: ReconstructionOption[];
   coverupOptions: ReconstructionOption[];
+  accusation: AccusationHostState | null;
+  reveal: RevealPayload;
 };
 
 type PlayerState = {
@@ -138,6 +193,8 @@ type PlayerState = {
   reconstructionEvents: ReconstructionEvent[];
   motiveOptions: ReconstructionOption[];
   coverupOptions: ReconstructionOption[];
+  accusation: AccusationPlayerState;
+  reveal: RevealPayload;
 };
 
 type GameState = HostState | PlayerState;
@@ -268,6 +325,9 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
       onShow={() => setDossierVisible(true)}
       onSubmitReconstruction={(payload) =>
         send("submitReconstruction", payload)
+      }
+      onSubmitAccusation={(payload) =>
+        send("submitAccusation", payload)
       }
     />
   );
