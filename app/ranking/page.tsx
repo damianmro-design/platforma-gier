@@ -211,15 +211,16 @@ export default function PartyPlayRankingPage() {
               ))}
             </section>
 
-            <section className="mt-5 overflow-hidden rounded-3xl border border-white/8 bg-white/[.025]">
-              <div className="border-b border-white/8 p-5">
-                <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
-                  TOP 50
-                </span>
-              </div>
+            {rest.length > 0 && (
+              <section className="mt-5 overflow-hidden rounded-3xl border border-white/8 bg-white/[.025]">
+                <div className="border-b border-white/8 p-5">
+                  <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
+                    MIEJSCA 4–50
+                  </span>
+                </div>
 
-              <div>
-                {rest.map((entry) => (
+                <div>
+                  {rest.map((entry) => (
                   <div
                     key={entry.rankPosition}
                     className={`grid grid-cols-[42px_1fr_auto] items-center gap-3 border-b border-white/[.055] px-4 py-4 last:border-b-0 sm:grid-cols-[52px_1fr_90px_90px_110px] ${
@@ -271,9 +272,10 @@ export default function PartyPlayRankingPage() {
                       </strong>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {data.currentOutsideTop && (
               <section className="mt-5 rounded-3xl border border-violet-300/25 bg-violet-300/[.07] p-5">
