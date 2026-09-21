@@ -1105,3 +1105,77 @@ footer { position: relative; z-index: 1; border-top: 1px solid var(--line); }
   .room-card { padding: 22px; border-radius: 24px; }
   .room-code span { min-height: 64px; font-size: 28px; }
 }
+
+
+.join-form {
+  margin-top: 22px;
+}
+
+.join-form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #747d90;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.join-code-input {
+  width: 100%;
+  min-height: 72px;
+  border: 1px solid rgba(167,139,250,.22);
+  border-radius: 17px;
+  background: rgba(0,0,0,.24);
+  color: #e9d5ff;
+  padding: 0 20px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 30px;
+  font-weight: 950;
+  letter-spacing: .38em;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.join-code-input::placeholder {
+  color: #353b4d;
+}
+
+.join-code-input:focus {
+  border-color: rgba(167,139,250,.65);
+  box-shadow: 0 0 0 4px rgba(124,58,237,.1);
+}
+
+.join-live-button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: linear-gradient(100deg, #7c3aed, #d946ef);
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 950;
+  box-shadow: 0 16px 40px rgba(124,58,237,.22);
+}
+
+.join-live-button:hover {
+  filter: brightness(1.08);
+}
+
+.survey-actions form {
+  margin: 0;
+}
+
+.survey-actions form button {
+  cursor: pointer;
+  border-color: rgba(253,224,71,.3);
+  background: linear-gradient(100deg, #fde047, #fb923c);
+  color: #111827;
+}
