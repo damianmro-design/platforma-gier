@@ -20,6 +20,14 @@ alter table app_private.platform_rooms enable row level security;
 
 revoke all on app_private.platform_rooms from public, anon, authenticated;
 
+drop policy if exists "deny direct client access" on app_private.platform_rooms;
+create policy "deny direct client access"
+on app_private.platform_rooms
+for all
+to anon, authenticated
+using (false)
+with check (false);
+
 create or replace function app_private.create_platform_room_internal(p_game_slug text)
 returns table (
   id uuid,
