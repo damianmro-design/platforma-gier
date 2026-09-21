@@ -170,3 +170,33 @@ export async function getPolowanieHistoryCountFromAccessToken(
   if (error) return 0;
   return Number(data ?? 0);
 }
+
+
+export type PartyPlayRankingIdentity = {
+  auth_user_id: string;
+  display_name: string;
+  avatar: string;
+  polowanie_games: number;
+  polowanie_wins: number;
+  polowanie_badges: number;
+};
+
+export async function getPartyPlayRankingIdentitySourceFromAccessToken(
+  accessToken: string,
+) {
+  const supabase = createPartyPlayAuthorizedClient(accessToken);
+  const { data, error } = await supabase.rpc(
+    "get_partyplay_ranking_identity_source",
+  );
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    auth_user_id: String(row.auth_user_id ?? ""),
+    display_name: String(row.display_name ?? "Gracz"),
+    avatar: String(row.avatar ?? "lion"),
+    polowanie_games: Number(row.polowanie_games ?? 0),
+    polowanie_wins: Number(row.polowanie_wins ?? 0),
+    polowanie_badges: Number(row.polowanie_badges ?? 0),
+  })) as PartyPlayRankingIdentity[];
+}
