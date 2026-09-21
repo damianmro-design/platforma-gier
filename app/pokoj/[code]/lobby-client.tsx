@@ -308,7 +308,7 @@ export default function LobbyClient({ code }: { code: string }) {
                   key={item.id}
                   type="button"
                   disabled={!unlocked}
-                  className={`${avatar === item.id ? "avatar-choice active" : "avatar-choice"} relative overflow-hidden disabled:cursor-not-allowed disabled:opacity-45`}
+                  className={`${avatar === item.id ? "avatar-choice active" : "avatar-choice"} relative overflow-hidden disabled:cursor-not-allowed`}
                   onClick={() => unlocked && setAvatar(item.id)}
                   aria-label={
                     unlocked
