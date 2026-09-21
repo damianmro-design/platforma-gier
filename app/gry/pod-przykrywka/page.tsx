@@ -10,10 +10,11 @@ export const metadata: Metadata = {
 
 const flow = [
   ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Oszustem."],
-  ["02", "5 misji", "W każdej misji wszyscy odpowiadają na to samo zadanie, ale Oszust dostaje ukryty cel."],
+  ["02", "5 misji", "W każdej misji wszyscy odpowiadają, ale Oszust dostaje ukryty cel i później specjalny tajny rozkaz."],
   ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Szukacie niespójności i bronicie swoich decyzji."],
   ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
-  ["05", "Finałowe wskazanie", "Po 5 misjach głosujecie ostatni raz. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
+  ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
+  ["06", "Finałowe wskazanie", "Po 5 misjach głosujecie ostatni raz. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
 ];
 
 export default function PodPrzykrywkaPage() {
@@ -108,7 +109,7 @@ export default function PodPrzykrywkaPage() {
             <h2 className="mt-2 text-4xl font-black tracking-[-.055em]">Nie wystarczy mieć rację. Trzeba jeszcze przekonać innych.</h2>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {flow.map(([no, title, copy]) => (
               <article key={no} className="rounded-2xl border border-white/9 bg-black/20 p-5">
                 <span className="text-xs font-black tracking-[.25em] text-cyan-300">{no}</span>
@@ -123,8 +124,8 @@ export default function PodPrzykrywkaPage() {
       <section className="relative z-10 mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:px-8 lg:grid-cols-3">
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🕵️</span>
-          <h3 className="mt-4 text-xl font-black">Oszust nie dostaje „złej odpowiedzi”</h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">Dostaje ukryty cel, który ma wykonać tak, żeby jego odpowiedź nadal dało się obronić podczas dyskusji.</p>
+          <h3 className="mt-4 text-xl font-black">Oszust gra na 2 poziomach</h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">Dostaje ukryty cel do każdej misji, a po punkcie kontrolnym również tajny rozkaz do wykonania podczas dyskusji.</p>
         </article>
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🔎</span>
