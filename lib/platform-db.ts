@@ -1157,3 +1157,55 @@ export async function nextZhRound(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as "playing" | "game_over" | null;
 }
+
+
+export type PartyPlayRankingAggregate = {
+  userId: string;
+  displayName: string;
+  avatar: string;
+  games: PartyPlayGameSummary[];
+};
+
+export async function getPartyPlayRankingAggregates(accessToken: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": accessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const { data, error } = await supabase.rpc(
+    "get_partyplay_ranking_aggregates",
+  );
+
+  if (error) throw new Error(error.message);
+
+  return (Array.isArray(data) ? data : []).map(
+    (row: Record<string, unknown>) => ({
+      userId: String(row.userId ?? ""),
+      displayName: String(row.displayName ?? "Gracz"),
+      avatar: String(row.avatar ?? "lion"),
+      games: (Array.isArray(row.games) ? row.games : []).map(
+        (game: Record<string, unknown>) => ({
+          gameSlug: String(game.gameSlug ?? ""),
+          gamesCompleted: Number(game.gamesCompleted ?? 0),
+          wins: Number(game.wins ?? 0),
+          totalScore: Number(game.totalScore ?? 0),
+          bestPlacement:
+            game.bestPlacement == null ? null : Number(game.bestPlacement),
+        }),
+      ),
+    }),
+  ) as PartyPlayRankingAggregate[];
+}
