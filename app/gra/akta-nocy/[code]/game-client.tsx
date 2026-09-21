@@ -96,8 +96,16 @@ const AVATARS: Record<string, string> = {
   cat: "🐱",
 };
 
-function isEvidencePhase(phase: string | null) {
+function isEvidenceAPhase(phase: string | null) {
   return Boolean(phase?.startsWith("dowody_a_"));
+}
+
+function isEvidenceBPhase(phase: string | null) {
+  return Boolean(phase?.startsWith("dowody_b_"));
+}
+
+function isEvidencePhase(phase: string | null) {
+  return isEvidenceAPhase(phase) || isEvidenceBPhase(phase);
 }
 
 export default function AktaNocyGameClient({ code }: { code: string }) {
@@ -179,7 +187,8 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
         busy={busy}
         error={error}
         onAdvance={() => void send("advance")}
-        onReveal={() => void send("revealEvidenceA")}
+        onRevealA={() => void send("revealEvidenceA")}
+        onRevealB={() => void send("revealEvidenceB")}
       />
     );
   }
@@ -202,13 +211,15 @@ function HostView({
   busy,
   error,
   onAdvance,
-  onReveal,
+  onRevealA,
+  onRevealB,
 }: {
   data: HostState;
   busy: boolean;
   error: string;
   onAdvance: () => void;
-  onReveal: () => void;
+  onRevealA: () => void;
+  onRevealB: () => void;
 }) {
   const phase = data.room.phase;
   const opened = data.progress.filter((player) => player.dossier_opened).length;
@@ -333,7 +344,7 @@ function HostView({
     );
   }
 
-  if (isEvidencePhase(phase)) {
+  if (isEvidenceAPhase(phase)) {
     const allEvidence = data.evidence.length >= 4;
 
     return (
@@ -360,7 +371,7 @@ function HostView({
           </div>
           <PrimaryButton
             disabled={busy}
-            onClick={allEvidence ? onAdvance : onReveal}
+            onClick={allEvidence ? onAdvance : onRevealA}
           >
             {busy
               ? "CHWILA…"
@@ -430,9 +441,67 @@ function HostView({
           ))}
         </div>
 
-        <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-white/[.025] p-5 text-sm leading-6 text-orange-50/45">
-          Po tej rundzie przejdziemy do Paczki Dowodowej B. Tam pojawią się dane, które pozwolą odróżnić mocne alibi od dobrze opowiedzianej historii.
+        <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <strong className="block text-lg">Przesłuchania zakończone</strong>
+            <span className="mt-1 block text-sm leading-6 text-orange-50/45">
+              Teraz pojawią się mocniejsze dane techniczne, zdjęcie, nagranie i analiza czasu śmierci.
+            </span>
+          </div>
+          <PrimaryButton disabled={busy} onClick={onAdvance}>
+            {busy ? "OTWIERANIE…" : "OTWÓRZ PACZKĘ DOWODOWĄ B →"}
+          </PrimaryButton>
         </section>
+      </HostShell>
+    );
+  }
+
+  if (isEvidenceBPhase(phase)) {
+    const evidenceB = data.evidence.filter((item) => item.no.startsWith("B-"));
+    const allEvidenceB = evidenceB.length >= 5;
+
+    return (
+      <HostShell code={data.room.code} label="PACZKA DOWODOWA B">
+        <EvidenceStage
+          evidence={evidenceB}
+          eyebrow="ETAP 04 · PACZKA DOWODOWA B"
+          title="Teraz sprawdzamy nie tylko co ludzie powiedzieli, ale co zostawiły po sobie urządzenia i przypadkowe nagrania."
+          lead="Każdy z tych dowodów zawęża przedział czasowy albo zmienia znaczenie wcześniejszego alibi. Ujawniaj je po jednym i pozwól ekipie dyskutować."
+        />
+
+        {error && <ErrorBox message={error} />}
+
+        <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-orange-100/10 bg-white/[.025] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <strong className="block text-lg">
+              {allEvidenceB
+                ? "Paczka B jest kompletna"
+                : `Ujawniono ${evidenceB.length}/5 nowych dowodów`}
+            </strong>
+            <span className="mt-1 block text-sm leading-6 text-orange-50/45">
+              {allEvidenceB
+                ? "Macie już wystarczająco dużo danych, żeby w następnym etapie odtworzyć kluczowe minuty nocy i sprawdzić, która wersja wydarzeń naprawdę się spina."
+                : "Po każdym dowodzie zapytaj: czyje alibi właśnie się wzmocniło, a czyje osłabło?"}
+            </span>
+          </div>
+          {!allEvidenceB && (
+            <PrimaryButton disabled={busy} onClick={onRevealB}>
+              {busy ? "CHWILA…" : "UJAWNIJ KOLEJNY DOWÓD →"}
+            </PrimaryButton>
+          )}
+        </section>
+
+        {allEvidenceB && (
+          <section className="mt-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5">
+            <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
+              Następny etap
+            </span>
+            <h2 className="mt-2 text-xl font-black">Rekonstrukcja nocy</h2>
+            <p className="mt-2 text-sm leading-6 text-orange-50/50">
+              Kolejny moduł będzie wymagał od grupy ułożenia wydarzeń 22:47–23:05 w prawidłowej kolejności i wskazania, które elementy sceny zostały upozorowane.
+            </p>
+          </section>
+        )}
       </HostShell>
     );
   }
@@ -566,6 +635,10 @@ function PlayerPublicEvidence({
   onShowDossier: () => void;
 }) {
   const interrogation = data.room.phase === "przesluchania_a";
+  const evidenceBStage = isEvidenceBPhase(data.room.phase);
+  const visibleEvidence = evidenceBStage
+    ? data.evidence.filter((item) => item.no.startsWith("B-"))
+    : data.evidence;
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
@@ -573,7 +646,13 @@ function PlayerPublicEvidence({
       <div className="relative mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
         <TopBar
           code={data.room.code}
-          label={interrogation ? "PRZESŁUCHANIA" : "PACZKA DOWODOWA A"}
+          label={
+            interrogation
+              ? "PRZESŁUCHANIA"
+              : evidenceBStage
+                ? "PACZKA DOWODOWA B"
+                : "PACZKA DOWODOWA A"
+          }
         />
 
         {interrogation && (
@@ -588,7 +667,13 @@ function PlayerPublicEvidence({
           </section>
         )}
 
-        <EvidenceCards evidence={data.evidence} compact />
+        {evidenceBStage && (
+          <section className="mt-6 rounded-[1.25rem] border border-orange-100/10 bg-white/[.025] p-4 text-xs leading-5 text-orange-50/45">
+            Paczka A nadal pozostaje częścią śledztwa. Poniżej widzisz nowe dowody z Paczki B.
+          </section>
+        )}
+
+        <EvidenceCards evidence={visibleEvidence} compact />
 
         <div className="mt-5 flex justify-end">
           <button
