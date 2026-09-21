@@ -10,6 +10,7 @@ import {
   getClpRound4State,
   getClpRound5State,
   getClpRound6State,
+  getClpRound7State,
   getPlatformPlayer,
   lookupPlatformRoom,
   nextClpRound1Question,
@@ -18,6 +19,7 @@ import {
   nextClpRound4Question,
   nextClpRound5Question,
   nextClpRound6Question,
+  nextClpRound7Question,
   submitClpAnswer,
   submitClpRound1Guess,
   submitClpRound2Prediction,
@@ -26,6 +28,7 @@ import {
   submitClpRound5Prediction,
   submitClpRound5Vote,
   submitClpRound6Prediction,
+  submitClpRound7Prediction,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -48,6 +51,37 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+
+  if (room.game_phase === "round_7") {
+    const round7 = await getClpRound7State(code);
+
+    if (!round7) {
+      return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
+    }
+
+    if (hostToken) {
+      return NextResponse.json({
+        role: "host",
+        room: { code: room.code, status: room.status, phase: room.game_phase },
+        round7,
+      });
+    }
+
+    if (playerToken) {
+      const player = await getPlatformPlayer(code, playerToken);
+
+      if (!player) {
+        return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
+      }
+
+      return NextResponse.json({
+        role: "player",
+        room: { code: room.code, status: room.status, phase: room.game_phase },
+        player,
+        round7,
+      });
+    }
+  }
 
   if (room.game_phase === "round_6") {
     const round6 = await getClpRound6State(code);
@@ -529,6 +563,33 @@ export async function POST(request: Request, context: RouteContext) {
       }
 
       const phase = await nextClpRound6Question(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
+    if (action === "round7Prediction") {
+      const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value;
+
+      if (!playerToken) {
+        return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+      }
+
+      const event = await submitClpRound7Prediction(
+        code,
+        playerToken,
+        String(body.answer ?? ""),
+      );
+
+      return NextResponse.json({ ok: true, event });
+    }
+
+    if (action === "round7Next") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
+      }
+
+      const phase = await nextClpRound7Question(code, hostToken);
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
