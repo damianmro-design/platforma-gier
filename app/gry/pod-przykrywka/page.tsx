@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const flow = [
   ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Oszustem."],
-  ["02", "5 misji", "W każdej misji wszyscy odpowiadają, ale Oszust dostaje ukryty cel i później specjalny tajny rozkaz."],
+  ["02", "5 misji", "Wszyscy odpowiadają, ale 3 z 5 rund losowo zmieniają zasady: pojawiają się Anonimowe Akta, Cicha Runda i Gorące Krzesło. Oszust nadal dostaje własny ukryty cel."],
   ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Szukacie niespójności i bronicie swoich decyzji."],
   ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
   ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
@@ -121,11 +121,16 @@ export default function PodPrzykrywkaPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:px-8 lg:grid-cols-3">
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:px-8 md:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🕵️</span>
           <h3 className="mt-4 text-xl font-black">Oszust gra na 2 poziomach</h3>
           <p className="mt-2 text-sm leading-6 text-zinc-500">Dostaje ukryty cel do każdej misji, a po punkcie kontrolnym również tajny rozkaz do wykonania podczas dyskusji.</p>
+        </article>
+        <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
+          <span className="text-3xl">🎲</span>
+          <h3 className="mt-4 text-xl font-black">Reguły potrafią się zmienić</h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">3 rundy dostają losowy twist: anonimowe odpowiedzi, głosowanie bez dyskusji albo 30 sekund na gorącym krześle.</p>
         </article>
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🔎</span>
