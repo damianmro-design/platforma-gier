@@ -139,6 +139,15 @@ type RevealPayload = {
   };
 } | null;
 
+type AccusationVerdict = {
+  suspect: PublicCastMember | null;
+  motiveLabel: string;
+  evidenceNo: string;
+  evidenceTitle: string;
+  suspectCorrect: boolean;
+  motiveCorrect: boolean;
+} | null;
+
 type RoleCard = {
   id: string;
   name: string;
@@ -194,6 +203,7 @@ type PlayerState = {
   motiveOptions: ReconstructionOption[];
   coverupOptions: ReconstructionOption[];
   accusation: AccusationPlayerState;
+  accusationVerdict: AccusationVerdict;
   reveal: RevealPayload;
 };
 
