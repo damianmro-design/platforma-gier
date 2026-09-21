@@ -11,7 +11,8 @@ import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
 } from "@/lib/co-ludzie-powiedza";
-import type { ClpRound1State } from "@/lib/platform-db";
+import type { ClpRound1State, ClpRound2State } from "@/lib/platform-db";
+import { HostRound2, PlayerRound2 } from "./round2";
 
 type RoomState = {
   code: string;
@@ -61,11 +62,26 @@ type PlayerRound1State = {
   round1: ClpRound1State;
 };
 
+type HostRound2State = {
+  role: "host";
+  room: RoomState;
+  round2: ClpRound2State;
+};
+
+type PlayerRound2State = {
+  role: "player";
+  room: RoomState;
+  player: Player;
+  round2: ClpRound2State;
+};
+
 type GameState =
   | HostWarmupState
   | PlayerWarmupState
   | HostRound1State
-  | PlayerRound1State;
+  | PlayerRound1State
+  | HostRound2State
+  | PlayerRound2State;
 
 const AVATARS: Record<string, string> = {
   lion: "🦁",
@@ -146,18 +162,44 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.room.phase === "round_2") {
+  if (data.room.phase === "round_3") {
     return (
       <main className="clp-game-shell">
         <section className="clp-transition-card">
-          <span>RUNDA 1 ZAKOŃCZONA ✓</span>
-          <h1>Tablica zamknięta.</h1>
+          <span>RUNDA 2 ZAKOŃCZONA ✓</span>
+          <h1>Znacie swoją ekipę.</h1>
           <p>
-            Wyniki drużyn są zapisane. Następnym modułem będzie „Wasza ekipa
-            powiedziała”, czyli wykorzystanie prywatnych odpowiedzi z początku gry.
+            Wyniki są zapisane. Następnym etapem będzie runda „Top 5”, w której
+            drużyny ułożą odpowiedzi od najpopularniejszej do najmniej popularnej.
           </p>
         </section>
       </main>
+    );
+  }
+
+  if (data.room.phase === "round_2" && "round2" in data) {
+    if (data.role === "host") {
+      return (
+        <HostRound2
+          code={data.room.code}
+          round={data.round2}
+          busy={busy}
+          error={error}
+          onNext={() => void send({ action: "round2Next" })}
+        />
+      );
+    }
+
+    return (
+      <PlayerRound2
+        player={data.player}
+        round={data.round2}
+        busy={busy}
+        error={error}
+        onPrediction={(answer) =>
+          void send({ action: "round2Prediction", answer })
+        }
+      />
     );
   }
 
