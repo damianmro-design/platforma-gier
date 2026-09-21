@@ -54,13 +54,16 @@ export default function LobbyClient({ code }: { code: string }) {
       if (!response.ok) return;
       const next = (await response.json()) as LobbyState;
 
-      if (
-        next.room.status === "active" &&
-        next.room.gameSlug === "co-ludzie-powiedza" &&
-        (next.isHost || next.currentPlayerId)
-      ) {
-        window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
-        return;
+      if (next.room.status === "active" && (next.isHost || next.currentPlayerId)) {
+        if (next.room.gameSlug === "co-ludzie-powiedza") {
+          window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
+          return;
+        }
+
+        if (next.room.gameSlug === "akta-nocy") {
+          window.location.assign(`/gra/akta-nocy/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -132,7 +135,19 @@ export default function LobbyClient({ code }: { code: string }) {
   const waiting = data?.players.filter((player) => !player.team) ?? [];
   const allReady = Boolean(data?.players.length && data.players.every((player) => player.ready));
   const allAssigned = Boolean(data?.players.length && data.players.every((player) => player.team));
-  const canStart = Boolean(data?.isHost && data.players.length >= 4 && allReady && allAssigned);
+  const isAktaNocy = data?.room.gameSlug === "akta-nocy";
+  const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
+  const maxPlayers = isAktaNocy ? 12 : 14;
+  const canStartAktaNocy = Boolean(
+    data?.isHost &&
+      data.players.length >= 5 &&
+      data.players.length <= 12 &&
+      allReady,
+  );
+  const canStartClassic = Boolean(
+    data?.isHost && data.players.length >= 4 && allReady && allAssigned,
+  );
+  const canStart = isAktaNocy ? canStartAktaNocy : canStartClassic;
 
   const readyCount = useMemo(
     () => data?.players.filter((player) => player.ready).length ?? 0,
@@ -252,7 +267,7 @@ export default function LobbyClient({ code }: { code: string }) {
         <div className="roster-head">
           <div>
             <span className="lobby-label">UCZESTNICY</span>
-            <h2>{data.players.length}/14 osób</h2>
+            <h2>{data.players.length}/{maxPlayers} osób</h2>
           </div>
           <div className="ready-counter">{readyCount}/{data.players.length} gotowych</div>
         </div>
@@ -265,7 +280,7 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
         )}
 
-        {allAssigned && data.players.length > 0 && (
+        {isCoLudzie && allAssigned && data.players.length > 0 && (
           <div className="teams-layout">
             <Team title="Drużyna A" players={teamA} currentPlayerId={data.currentPlayerId} />
             <div className="versus">VS</div>
@@ -281,14 +296,16 @@ export default function LobbyClient({ code }: { code: string }) {
             <h3>Ty kontrolujesz start</h3>
           </div>
           <div className="host-buttons">
-            <button
-              type="button"
-              className="shuffle-button"
-              disabled={busy || data.players.length < 2}
-              onClick={() => void send({ action: "shuffle" })}
-            >
-              🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
-            </button>
+            {!isAktaNocy && (
+              <button
+                type="button"
+                className="shuffle-button"
+                disabled={busy || data.players.length < 2}
+                onClick={() => void send({ action: "shuffle" })}
+              >
+                🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
+              </button>
+            )}
             <button
               type="button"
               className="start-button"
@@ -300,7 +317,9 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
           {!canStart && (
             <p className="start-hint">
-              Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny.
+              {isAktaNocy
+                ? "Do startu: 5–12 osób i wszyscy gotowi."
+                : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
