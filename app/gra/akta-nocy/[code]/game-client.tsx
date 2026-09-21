@@ -1,5 +1,6 @@
 "use client";
 
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   useCallback,
   useEffect,
@@ -142,20 +143,6 @@ type PlayerState = {
 
 type GameState = HostState | PlayerState;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 function isEvidenceAPhase(phase: string | null) {
   return Boolean(phase?.startsWith("dowody_a_"));
@@ -475,7 +462,7 @@ function HostView({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                    {AVATARS[item.avatar] ?? "●"}
+                    <PartyPlayAvatar id={item.avatar} size={40} />
                   </span>
                   <div className="min-w-0">
                     <span className="text-[9px] font-black uppercase tracking-[.2em] text-red-300/75">
@@ -633,7 +620,7 @@ function HostView({
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
-                      {AVATARS[player.avatar] ?? "●"}
+                      <PartyPlayAvatar id={player.avatar} size={36} />
                     </span>
                     <strong className="truncate text-sm">{player.displayName}</strong>
                   </div>
@@ -1509,7 +1496,7 @@ function Roster({ progress }: { progress: HostProgress[] }) {
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                {AVATARS[player.avatar] ?? "●"}
+                <PartyPlayAvatar id={player.avatar} size={36} />
               </span>
               <strong className="truncate text-sm text-orange-50/85">
                 {player.display_name}
