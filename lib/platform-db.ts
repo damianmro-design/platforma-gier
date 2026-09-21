@@ -973,6 +973,20 @@ export async function getPartyPlayAccountHistory(
 }
 
 
+export type PodPrzykrywkaAccountStats = {
+  gamesCompleted: number;
+  wins: number;
+  agentGames: number;
+  agentWins: number;
+  oszustGames: number;
+  oszustWins: number;
+  correctFinalVotes: number;
+  perfectCoverWins: number;
+  innocentFinalDefenderWins: number;
+  interrogatedWins: number;
+  hotSeatAppearances: number;
+};
+
 export type MyPartyPlayPlatformStats = {
   summary: PartyPlayAccountSummary;
   history: PartyPlayAccountHistoryItem[];
@@ -980,6 +994,7 @@ export type MyPartyPlayPlatformStats = {
   historyOffset: number;
   historyLimit: number;
   historyHasMore: boolean;
+  podPrzykrywka: PodPrzykrywkaAccountStats;
 };
 
 export async function getMyPartyPlayPlatformStats(
@@ -1023,10 +1038,12 @@ export async function getMyPartyPlayPlatformStats(
     historyOffset?: number | string;
     historyLimit?: number | string;
     historyHasMore?: boolean;
+    podPrzykrywka?: Record<string, unknown>;
   };
 
   const rawSummary = payload.summary ?? {};
   const rawGames = Array.isArray(rawSummary.games) ? rawSummary.games : [];
+  const rawPodPrzykrywka = payload.podPrzykrywka ?? {};
 
   const summary: PartyPlayAccountSummary = {
     games_completed: Number(rawSummary.games_completed ?? 0),
@@ -1074,6 +1091,19 @@ export async function getMyPartyPlayPlatformStats(
     historyOffset: Number(payload.historyOffset ?? 0),
     historyLimit: Number(payload.historyLimit ?? history.length),
     historyHasMore: Boolean(payload.historyHasMore),
+    podPrzykrywka: {
+      gamesCompleted: Number(rawPodPrzykrywka.gamesCompleted ?? 0),
+      wins: Number(rawPodPrzykrywka.wins ?? 0),
+      agentGames: Number(rawPodPrzykrywka.agentGames ?? 0),
+      agentWins: Number(rawPodPrzykrywka.agentWins ?? 0),
+      oszustGames: Number(rawPodPrzykrywka.oszustGames ?? 0),
+      oszustWins: Number(rawPodPrzykrywka.oszustWins ?? 0),
+      correctFinalVotes: Number(rawPodPrzykrywka.correctFinalVotes ?? 0),
+      perfectCoverWins: Number(rawPodPrzykrywka.perfectCoverWins ?? 0),
+      innocentFinalDefenderWins: Number(rawPodPrzykrywka.innocentFinalDefenderWins ?? 0),
+      interrogatedWins: Number(rawPodPrzykrywka.interrogatedWins ?? 0),
+      hotSeatAppearances: Number(rawPodPrzykrywka.hotSeatAppearances ?? 0),
+    },
   } as MyPartyPlayPlatformStats;
 }
 
