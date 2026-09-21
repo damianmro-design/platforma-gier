@@ -47,6 +47,7 @@ const AVATARS: Record<string, string> = {
   rabbit: "🐰",
   monkey: "🐵",
   cat: "🐱",
+  hidden: "❔",
 };
 
 function avatar(id: string) {
@@ -87,15 +88,17 @@ function Shell({
                       ? "PRZESŁUCHANIE"
                       : game.phase === "last_word"
                         ? "OSTATNIE SŁOWO"
-                        : game.phase === "final_defense_intro"
-                          ? "PRZED FINAŁEM"
-                          : game.phase === "final_defense_one" || game.phase === "final_defense_two"
-                            ? "OBRONA"
-                            : game.phase === "final_vote"
-                              ? "FINAŁOWE GŁOSOWANIE"
-                              : game.phase === "result"
-                          ? "FINAŁ"
-                          : `MISJA ${game.missionIndex}/${game.missionCount}`}
+                        : game.phase === "spotlight"
+                          ? "GORĄCE KRZESŁO"
+                          : game.phase === "final_defense_intro"
+                            ? "PRZED FINAŁEM"
+                            : game.phase === "final_defense_one" || game.phase === "final_defense_two"
+                              ? "OBRONA"
+                              : game.phase === "final_vote"
+                                ? "FINAŁOWE GŁOSOWANIE"
+                                : game.phase === "result"
+                                  ? "FINAŁ"
+                                  : `MISJA ${game.missionIndex}/${game.missionCount}`}
               </strong>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-right">
@@ -184,6 +187,44 @@ function AnswerCards({ game }: { game: PpGameState }) {
           <p className="mt-4 text-lg font-bold leading-7 text-zinc-200">„{item.answer}”</p>
         </article>
       ))}
+    </div>
+  );
+}
+
+function SpecialRoundBanner({
+  modifier,
+}: {
+  modifier: "normal" | "anonymous" | "silent" | "hot_seat";
+}) {
+  if (modifier === "normal") return null;
+
+  const content = {
+    anonymous: {
+      icon: "🕶️",
+      title: "ANONIMOWE AKTA",
+      copy: "Po zebraniu odpowiedzi ich autorzy zostaną ukryci. Najpierw oceniacie treść, dopiero później poznacie nazwiska.",
+    },
+    silent: {
+      icon: "🤫",
+      title: "CICHA RUNDA",
+      copy: "Po zebraniu odpowiedzi nie będzie dyskusji. Zobaczycie je i od razu przejdziecie do tajnego głosowania.",
+    },
+    hot_seat: {
+      icon: "🔥",
+      title: "GORĄCE KRZESŁO",
+      copy: "Po dyskusji jedna z najbardziej podejrzanych osób dostanie 30 sekund solo na odpowiedź przed głosowaniem.",
+    },
+  }[modifier];
+
+  return (
+    <div className="mt-4 rounded-2xl border border-violet-300/20 bg-violet-300/[.06] p-4">
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">{content.icon}</span>
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[.2em] text-violet-300">{content.title}</p>
+          <p className="mt-1 text-xs font-bold leading-5 text-zinc-300">{content.copy}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -397,6 +438,37 @@ function HostGame({
           </div>
         )}
 
+        {game.phase === "spotlight" && (
+          <div className="mx-auto max-w-5xl rounded-[2rem] border border-orange-300/20 bg-orange-300/[.05] p-7 sm:p-10">
+            <div className="flex flex-col items-center justify-between gap-5 sm:flex-row">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[.25em] text-orange-300">GORĄCE KRZESŁO AKTYWNE</p>
+                <h1 className="mt-2 text-4xl font-black tracking-[-.055em]">
+                  {game.twist.spotlightPlayerName ?? "Gracz"} odpowiada solo.
+                </h1>
+              </div>
+              <PhaseTimer startedAt={game.phaseStartedAt} seconds={30} />
+            </div>
+
+            <div className="mt-7 flex items-center gap-4 rounded-2xl border border-white/10 bg-black/25 p-5">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-3xl">
+                {avatar(game.twist.spotlightPlayerAvatar ?? "")}
+              </span>
+              <p className="text-left text-xl font-black leading-8">
+                {game.twist.spotlightQuestion ?? "Powiedz, co w tej rundzie wzbudziło Twoje największe podejrzenia."}
+              </p>
+            </div>
+
+            <p className="mt-5 text-sm leading-6 text-zinc-400">
+              Pozostali nie przerywają. Po 30 sekundach przechodzicie od razu do głosowania.
+            </p>
+
+            <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 w-full rounded-2xl bg-gradient-to-r from-orange-300 to-amber-400 px-6 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
+              PRZEJDŹ DO GŁOSOWANIA →
+            </button>
+          </div>
+        )}
+
         {game.phase === "final_defense_intro" && (
           <div className="mx-auto max-w-5xl rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center sm:p-10">
             <span className="text-6xl">⚖️</span>
@@ -464,6 +536,7 @@ function HostGame({
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
           game.phase !== "last_word" &&
+          game.phase !== "spotlight" &&
           game.phase !== "final_defense_intro" &&
           game.phase !== "final_defense_one" &&
           game.phase !== "final_defense_two" &&
@@ -474,6 +547,7 @@ function HostGame({
                 <span className="text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">{game.mission.category}</span>
                 <h1 className="mt-2 text-3xl font-black tracking-[-.05em] sm:text-4xl">{game.mission.title}</h1>
                 <p className="mt-4 text-base font-medium leading-7 text-zinc-400">{game.mission.briefing}</p>
+                <SpecialRoundBanner modifier={game.mission.modifier} />
               </section>
 
               {game.phase === "mission" && (
@@ -487,7 +561,11 @@ function HostGame({
                   <div className="mt-4"><ProgressBar value={game.submittedCount} max={game.playerCount} /></div>
                   <div className="mt-5"><PlayerGrid players={game.players} mode="submitted" /></div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-6 py-4 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-35">
-                    {readyToAdvance ? "POKAŻ ODPOWIEDZI →" : "CZEKAJ NA WSZYSTKICH"}
+                    {readyToAdvance
+                      ? game.mission.modifier === "silent"
+                        ? "OTWÓRZ CICHĄ RUNDĘ →"
+                        : "POKAŻ ODPOWIEDZI →"
+                      : "CZEKAJ NA WSZYSTKICH"}
                   </button>
                 </section>
               )}
@@ -503,13 +581,17 @@ function HostGame({
             <aside className="min-w-0">
               {game.phase === "evidence" && (
                 <div className="rounded-[1.75rem] border border-cyan-300/15 bg-cyan-300/[.05] p-6">
-                  <span className="text-3xl">💬</span>
-                  <h2 className="mt-4 text-2xl font-black">Dyskusja</h2>
+                  <span className="text-3xl">{game.mission.modifier === "anonymous" ? "🕶️" : "💬"}</span>
+                  <h2 className="mt-4 text-2xl font-black">
+                    {game.mission.modifier === "anonymous" ? "Dyskusja bez nazwisk" : "Dyskusja"}
+                  </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Pytajcie o tok myślenia. Oszust może kłamać, tłumaczyć się i odwracać podejrzenia.
+                    {game.mission.modifier === "anonymous"
+                      ? "Autorzy odpowiedzi są ukryci. Rozmawiajcie tylko o treści i argumentach. Nazwiska poznacie dopiero przy głosowaniu."
+                      : "Pytajcie o tok myślenia. Oszust może kłamać, tłumaczyć się i odwracać podejrzenia."}
                   </p>
 
-                  {game.mission.discussionPrompts.length > 0 && (
+                  {game.mission.modifier !== "anonymous" && game.mission.discussionPrompts.length > 0 && (
                     <div className="mt-5 rounded-2xl border border-white/9 bg-black/20 p-4 text-left">
                       <p className="text-[9px] font-black uppercase tracking-[.2em] text-cyan-300">PYTANIA, GDY DYSKUSJA SIADA</p>
                       <div className="mt-3 space-y-2">
@@ -528,16 +610,28 @@ function HostGame({
                   )}
 
                   <button type="button" disabled={busy} onClick={onAdvance} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
-                    PRZEJDŹ DO TYPOWANIA →
+                    {game.mission.modifier === "anonymous"
+                      ? "UJAWNIJ AUTORÓW I GŁOSUJ →"
+                      : game.mission.modifier === "hot_seat"
+                        ? "GORĄCE KRZESŁO →"
+                        : "PRZEJDŹ DO TYPOWANIA →"}
                   </button>
                 </div>
               )}
 
               {game.phase === "suspicion" && (
                 <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
-                  <span className="text-3xl">🗳️</span>
-                  <h2 className="mt-4 text-2xl font-black">Kto jest podejrzany?</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">Każdy wybiera 1 osobę na swoim telefonie. Głosy są anonimowe.</p>
+                  <span className="text-3xl">{game.mission.modifier === "silent" ? "🤫" : "🗳️"}</span>
+                  <h2 className="mt-4 text-2xl font-black">
+                    {game.mission.modifier === "silent" ? "Cicha runda. Głosujcie." : "Kto jest podejrzany?"}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    {game.mission.modifier === "silent"
+                      ? "Bez dyskusji. Przeczytajcie odpowiedzi i każdy w ciszy wybiera 1 podejrzaną osobę."
+                      : game.mission.modifier === "anonymous"
+                        ? "Autorzy odpowiedzi zostali ujawnieni. Bez kolejnej dyskusji, każdy oddaje anonimowy głos."
+                        : "Każdy wybiera 1 osobę na swoim telefonie. Głosy są anonimowe."}
+                  </p>
                   <div className="mt-5"><ProgressBar value={game.votedCount} max={game.playerCount} /></div>
                   <div className="mt-5"><PlayerGrid players={game.players} mode="voted" /></div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
@@ -765,6 +859,27 @@ function PlayerGame({
           </div>
         )}
 
+        {game.phase === "spotlight" && (
+          <div className="rounded-[2rem] border border-orange-300/20 bg-orange-300/[.05] p-7 text-center">
+            <span className="text-5xl">🔥</span>
+            <p className="mt-4 text-[10px] font-black uppercase tracking-[.25em] text-orange-300">GORĄCE KRZESŁO</p>
+            <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">
+              {game.twist.isCurrentPlayerSpotlight
+                ? "To Ty trafiasz na gorące krzesło."
+                : `${game.twist.spotlightPlayerName ?? "Gracz"} odpowiada solo.`}
+            </h1>
+            <div className="mt-5"><PhaseTimer startedAt={game.phaseStartedAt} seconds={30} /></div>
+            <p className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5 text-left text-lg font-black leading-8">
+              {game.twist.spotlightQuestion ?? "Powiedz, co w tej rundzie wzbudziło Twoje największe podejrzenia."}
+            </p>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-zinc-400">
+              {game.twist.isCurrentPlayerSpotlight
+                ? "Mów konkretnie. Pozostali nie mogą Ci przerywać."
+                : "Nie przerywaj. Po tej odpowiedzi od razu rozpocznie się głosowanie."}
+            </p>
+          </div>
+        )}
+
         {game.phase === "final_defense_intro" && (
           <div className="rounded-[2rem] border border-amber-300/20 bg-amber-300/[.05] p-7 text-center">
             <span className="text-5xl">⚖️</span>
@@ -815,6 +930,7 @@ function PlayerGame({
           game.phase !== "checkpoint" &&
           game.phase !== "interrogation" &&
           game.phase !== "last_word" &&
+          game.phase !== "spotlight" &&
           game.phase !== "final_defense_intro" &&
           game.phase !== "final_defense_one" &&
           game.phase !== "final_defense_two" &&
@@ -829,6 +945,7 @@ function PlayerGame({
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">{game.mission.title}</h1>
               <p className="mt-4 rounded-2xl border border-white/9 bg-white/[.035] p-5 text-base font-bold leading-7 text-zinc-200">{game.mission.prompt}</p>
+              <SpecialRoundBanner modifier={game.mission.modifier} />
 
               {me.role === "saboteur" && game.twist.secretOrder && (
                 <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-300/[.08] p-5">
@@ -915,17 +1032,41 @@ function PlayerGame({
 
             {game.phase === "evidence" && (
               <div className="rounded-[1.75rem] border border-cyan-300/15 bg-cyan-300/[.05] p-6 text-center">
-                <span className="text-4xl">💬</span>
-                <h2 className="mt-3 text-2xl font-black">Patrz na wspólny ekran</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">Host pokazuje wszystkie odpowiedzi. Broń swojej i zadawaj pytania innym.</p>
+                <span className="text-4xl">{game.mission.modifier === "anonymous" ? "🕶️" : "💬"}</span>
+                <h2 className="mt-3 text-2xl font-black">
+                  {game.mission.modifier === "anonymous" ? "Nie wiesz, czyja jest która odpowiedź" : "Patrz na wspólny ekran"}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  {game.mission.modifier === "anonymous"
+                    ? "Najpierw oceniajcie tylko treść. Autorzy zostaną ujawnieni dopiero w chwili rozpoczęcia głosowania."
+                    : game.mission.modifier === "hot_seat"
+                      ? "Host pokazuje odpowiedzi i prowadzi dyskusję. Za chwilę jedna osoba trafi na gorące krzesło."
+                      : "Host pokazuje wszystkie odpowiedzi. Broń swojej i zadawaj pytania innym."}
+                </p>
               </div>
             )}
 
             {game.phase === "suspicion" && (
               <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6">
-                <span className="text-3xl">🗳️</span>
-                <h2 className="mt-3 text-2xl font-black">Kto jest najbardziej podejrzany?</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">Nie możesz wskazać siebie. Możesz zmienić głos, dopóki host nie pokaże wyniku.</p>
+                <span className="text-3xl">{game.mission.modifier === "silent" ? "🤫" : "🗳️"}</span>
+                <h2 className="mt-3 text-2xl font-black">
+                  {game.mission.modifier === "silent" ? "Cicha runda" : "Kto jest najbardziej podejrzany?"}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">
+                  {game.mission.modifier === "silent"
+                    ? "Bez rozmowy. Przeczytaj odpowiedzi i oddaj głos."
+                    : game.mission.modifier === "anonymous"
+                      ? "Autorzy zostali ujawnieni. Nie ma już dodatkowej dyskusji, teraz liczy się Twój głos."
+                      : "Nie możesz wskazać siebie. Możesz zmienić głos, dopóki host nie pokaże wyniku."}
+                </p>
+
+                {(game.mission.modifier === "silent" || game.mission.modifier === "anonymous") && (
+                  <div className="mt-5">
+                    <p className="mb-3 text-[9px] font-black uppercase tracking-[.18em] text-zinc-500">ODPOWIEDZI I AUTORZY</p>
+                    <AnswerCards game={game} />
+                  </div>
+                )}
+
                 <div className="mt-5"><VotePicker game={game} busy={busy} voteType="suspicion" onVote={onVote} /></div>
                 {me.voteTargetId && <p className="mt-4 text-center text-xs font-black text-emerald-300">✓ Głos zapisany</p>}
               </div>
