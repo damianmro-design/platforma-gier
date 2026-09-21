@@ -2,12 +2,19 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   advanceAktaNocyPhase,
+  getAktaNocyHostInterrogations,
   getAktaNocyHostProgress,
   getAktaNocyPlayerAssignment,
   lookupPlatformRoom,
   openAktaNocyDossier,
+  revealAktaNocyEvidenceA,
 } from "@/lib/platform-db";
-import { getAktaNocyRoleByKey } from "@/lib/akta-nocy";
+import {
+  AKTA_NOCY_EVIDENCE_A,
+  getAktaNocyEvidenceCountFromPhase,
+  getAktaNocyInterrogationByRole,
+  getAktaNocyRoleByKey,
+} from "@/lib/akta-nocy";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -15,6 +22,11 @@ type RouteContext = {
 
 function cleanCode(value: string) {
   return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+}
+
+function publicEvidenceForPhase(phase: string | null | undefined) {
+  const count = getAktaNocyEvidenceCountFromPhase(phase);
+  return AKTA_NOCY_EVIDENCE_A.slice(0, count);
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -36,9 +48,38 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+  const evidence = publicEvidenceForPhase(room.game_phase);
 
   if (hostToken) {
     const progress = await getAktaNocyHostProgress(code, hostToken);
+
+    let interrogations: Array<{
+      playerId: string;
+      displayName: string;
+      avatar: string;
+      headline: string;
+      prompts: string[];
+      pressurePoint: string;
+    }> = [];
+
+    if (room.game_phase === "przesluchania_a") {
+      const rows = await getAktaNocyHostInterrogations(code, hostToken);
+      interrogations = rows
+        .map((row) => {
+          const guide = getAktaNocyInterrogationByRole(row.role_key);
+          if (!guide) return null;
+
+          return {
+            playerId: row.player_id,
+            displayName: row.display_name,
+            avatar: row.avatar,
+            headline: guide.headline,
+            prompts: guide.prompts,
+            pressurePoint: guide.pressurePoint,
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    }
 
     return NextResponse.json({
       role: "host",
@@ -48,6 +89,8 @@ export async function GET(_request: Request, context: RouteContext) {
         phase: room.game_phase,
       },
       progress,
+      evidence,
+      interrogations,
     });
   }
 
@@ -86,6 +129,7 @@ export async function GET(_request: Request, context: RouteContext) {
         ...roleCard,
         dossierOpened: assignment.dossier_opened,
       },
+      evidence,
     });
   }
 
@@ -133,14 +177,30 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ ok: Boolean(phase), phase });
     }
 
+    if (action === "revealEvidenceA") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json(
+          { error: "Tylko prowadzący może ujawniać dowody." },
+          { status: 403 },
+        );
+      }
+
+      const phase = await revealAktaNocyEvidenceA(code, hostToken);
+      return NextResponse.json({ ok: Boolean(phase), phase });
+    }
+
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const raw = error instanceof Error ? error.message : "";
     const message = raw.includes("Dossiers not ready")
       ? "Najpierw wszyscy gracze muszą otworzyć swoje akta."
       : raw.includes("Invalid phase")
-        ? "Nie można teraz przejść do kolejnego etapu."
-        : "Nie udało się wykonać tej akcji.";
+        ? "Nie można teraz wykonać tej akcji."
+        : raw.includes("Room not found")
+          ? "Nie znaleziono aktywnej rozgrywki."
+          : "Nie udało się wykonać tej akcji.";
 
     return NextResponse.json({ error: message }, { status: 400 });
   }
