@@ -748,7 +748,7 @@ export type ClpFinalPrediction = {
 } | null;
 
 export type ClpFinalTiebreak = {
-  count: number;
+  count: number | null;
   locked: boolean;
   playerId: string;
 } | null;
