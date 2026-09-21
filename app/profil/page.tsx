@@ -72,9 +72,50 @@ type HistoryItem = {
   completed_at: string;
 };
 
+type GlobalBadge = {
+  code: string;
+  title: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  progressCurrent: number;
+  progressTarget: number;
+};
+
+type PartyPlayProgression = {
+  xp: number;
+  level: {
+    level: number;
+    title: string;
+    minXp: number;
+    nextMinXp: number | null;
+  };
+  levelProgress: number;
+  xpToNextLevel: number;
+  totalGames: number;
+  totalWins: number;
+  distinctGamesPlayed: number;
+  distinctGamesWon: number;
+  polowanieBadges: number;
+  globalBadgesEarned: number;
+  badges: GlobalBadge[];
+};
+
 type PlatformStatsResponse = {
   summary: PlatformSummary;
   history: HistoryItem[];
+  polowanie: PolowanieCareer | null;
+  polowanieBadges: Array<{
+    badgeCode: string;
+    title: string;
+    description: string;
+    icon: string;
+    earned: boolean;
+    earnedAt: string | null;
+    progressCurrent: number;
+    progressTarget: number;
+  }>;
+  progression: PartyPlayProgression;
 };
 
 function gameLabel(slug: string) {
@@ -188,7 +229,10 @@ export default function ProfilePage() {
 
           if (response.ok) {
             const stats = (await response.json()) as PlatformStatsResponse;
-            if (mounted) setPlatformStats(stats);
+            if (mounted) {
+              setPlatformStats(stats);
+              if (stats.polowanie) setPolowanie(stats.polowanie);
+            }
           }
         } catch {
           // Profil nadal działa nawet bez statystyk platformy.
@@ -285,6 +329,48 @@ export default function ProfilePage() {
               <p className="mt-2 truncate text-sm text-zinc-500">{email}</p>
             </div>
           </div>
+
+          {platformStats?.progression && (
+            <div className="mt-7 rounded-3xl border border-violet-300/18 bg-gradient-to-br from-violet-400/[.08] via-fuchsia-400/[.04] to-cyan-300/[.05] p-5">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-[.18em] text-violet-300">
+                    POZIOM PARTYPLAY
+                  </span>
+                  <div className="mt-2 flex items-baseline gap-3">
+                    <strong className="text-4xl font-black tracking-[-.05em]">
+                      {platformStats.progression.level.level}
+                    </strong>
+                    <span className="text-lg font-black text-violet-200">
+                      {platformStats.progression.level.title}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <strong className="block text-2xl font-black">
+                    {platformStats.progression.xp} XP
+                  </strong>
+                  <span className="text-[10px] text-zinc-500">
+                    {platformStats.progression.xpToNextLevel > 0
+                      ? `${platformStats.progression.xpToNextLevel} XP do kolejnego poziomu`
+                      : "Maksymalny poziom"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-black/35">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 transition-all"
+                  style={{ width: `${platformStats.progression.levelProgress}%` }}
+                />
+              </div>
+
+              <p className="mt-3 text-[10px] leading-5 text-zinc-500">
+                XP zdobywasz za ukończone gry, zwycięstwa i odznaki. Wynik punktowy
+                konkretnej gry nie wpływa bezpośrednio na poziom.
+              </p>
+            </div>
+          )}
 
           <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-2xl border border-white/8 bg-white/[.025] p-4">
@@ -446,6 +532,78 @@ export default function ProfilePage() {
             </div>
           </section>
         </div>
+
+        {platformStats?.progression && (
+          <section className="mt-5 rounded-3xl border border-white/8 bg-white/[.025] p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
+                  ODZNAKI PARTYPLAY
+                </span>
+                <h2 className="mt-1 text-xl font-black">
+                  {platformStats.progression.globalBadgesEarned}/{platformStats.progression.badges.length} zdobytych
+                </h2>
+              </div>
+              <span className="text-[10px] text-zinc-600">
+                +25 XP za każdą
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {platformStats.progression.badges.map((badge) => {
+                const percent = Math.max(
+                  0,
+                  Math.min(
+                    100,
+                    Math.round((badge.progressCurrent / Math.max(1, badge.progressTarget)) * 100),
+                  ),
+                );
+
+                return (
+                  <article
+                    key={badge.code}
+                    className={`rounded-2xl border p-4 ${
+                      badge.earned
+                        ? "border-emerald-300/20 bg-emerald-300/[.05]"
+                        : "border-white/8 bg-black/15"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className={`text-3xl ${badge.earned ? "" : "grayscale opacity-35"}`}>
+                        {badge.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <strong className="block text-sm font-black">{badge.title}</strong>
+                        <p className="mt-1 text-[10px] leading-4 text-zinc-500">
+                          {badge.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-black/35">
+                      <div
+                        className={`h-full rounded-full ${
+                          badge.earned
+                            ? "bg-emerald-300"
+                            : "bg-gradient-to-r from-violet-500 to-cyan-400"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[.12em]">
+                      <span className={badge.earned ? "text-emerald-300" : "text-zinc-600"}>
+                        {badge.earned ? "ZDOBYTA" : "POSTĘP"}
+                      </span>
+                      <span className="text-zinc-600">
+                        {badge.progressCurrent}/{badge.progressTarget}
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         <section className="mt-5 rounded-3xl border border-white/8 bg-white/[.025] p-5">
           <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
