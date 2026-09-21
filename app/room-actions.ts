@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createPlatformRoom, lookupPlatformRoom, type PlatformRoom } from "@/lib/platform-db";
 
@@ -20,7 +21,7 @@ export async function createRoom(formData: FormData) {
     redirect("/?roomError=unsupported-game");
   }
 
-  let room: PlatformRoom;
+  let room;
 
   try {
     room = await createPlatformRoom(gameSlug);
@@ -28,7 +29,16 @@ export async function createRoom(formData: FormData) {
     redirect(`/gry/${gameSlug}?roomError=create-failed`);
   }
 
-  redirect(`/pokoj/${room.code}?host=1`);
+  const cookieStore = await cookies();
+  cookieStore.set(`partyplay_host_${room.code}`, room.host_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 12,
+  });
+
+  redirect(`/pokoj/${room.code}`);
 }
 
 export async function joinRoom(formData: FormData) {
