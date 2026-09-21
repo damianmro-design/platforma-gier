@@ -105,6 +105,34 @@ export async function getPlatformPlayer(code: string, playerToken: string) {
   return (player ?? null) as LobbyPlayer | null;
 }
 
+export async function getPlatformRecoveryCode(code: string, playerToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_platform_recovery_code", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
+export async function recoverPlatformPlayer(
+  code: string,
+  displayName: string,
+  recoveryCode: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("recover_platform_player", {
+    p_code: code,
+    p_display_name: displayName,
+    p_recovery_code: recoveryCode,
+  });
+
+  if (error) throw new Error(error.message);
+  const player = Array.isArray(data) ? data[0] : data;
+  return (player ?? null) as JoinedPlayer | null;
+}
+
 export async function setPlatformPlayerReady(code: string, playerToken: string, ready: boolean) {
   const supabase = getClient();
   const { data, error } = await supabase.rpc("set_player_ready", {
