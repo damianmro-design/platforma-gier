@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { joinRoom } from "./room-actions";
+import AccountMenu from "./account-menu";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word";
@@ -267,9 +268,12 @@ export default function Home() {
               <a href="#wybierz" className="transition hover:text-white">Znajdź grę</a>
             </nav>
 
-            <a href="#dolacz" className="rounded-xl border border-white/12 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-200 transition hover:bg-white/[.08]">
-              Mam kod
-            </a>
+            <div className="flex items-center gap-2">
+              <a href="#dolacz" className="rounded-xl border border-white/12 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-200 transition hover:bg-white/[.08]">
+                Mam kod
+              </a>
+              <AccountMenu />
+            </div>
           </div>
         </header>
 
