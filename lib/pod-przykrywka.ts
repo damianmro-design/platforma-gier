@@ -73,5 +73,6 @@ export type PpGameState = {
   currentPlayer: PpCurrentPlayer | null;
   submissions: PpSubmission[];
   suspicion: PpVoteCount[];
+  cumulativeSuspicion: PpVoteCount[];
   result: PpResult | null;
 };
