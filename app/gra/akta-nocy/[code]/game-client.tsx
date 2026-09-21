@@ -945,7 +945,7 @@ function HostView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-black/30 text-xl">
-                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                  <PartyPlayAvatar id={reveal.culprit.avatar} size={40} />
                 </span>
                 <strong className="text-2xl">{reveal.culprit.displayName}</strong>
               </div>
@@ -1480,7 +1480,7 @@ function PlayerRevealView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-black/30 text-xl">
-                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                  <PartyPlayAvatar id={reveal.culprit.avatar} size={40} />
                 </span>
                 <strong className="text-xl">{reveal.culprit.displayName}</strong>
               </div>
