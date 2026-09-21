@@ -192,10 +192,10 @@ function HostGame({
           <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-cyan-300">TO BYŁA OSOBA POD PRZYKRYWKĄ</p>
           <h1 className="mt-3 text-5xl font-black tracking-[-.06em] sm:text-7xl">{game.result.saboteurName}</h1>
           <p className={`mx-auto mt-5 max-w-2xl text-xl font-black ${game.result.caught ? "text-emerald-300" : "text-amber-300"}`}>
-            {game.result.caught ? "Grupa rozpracowała Sabotażystę." : "Sabotażysta utrzymał przykrywkę i wygrywa."}
+            {game.result.caught ? "Grupa rozpracowała Oszusta." : "Oszust utrzymał przykrywkę i wygrywa."}
           </p>
           {!game.result.caught && (
-            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-500">Remis na pierwszym miejscu również oznacza ucieczkę Sabotażysty.</p>
+            <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-zinc-500">Remis na pierwszym miejscu również oznacza ucieczkę Oszusta.</p>
           )}
           <div className="mx-auto mt-10 max-w-3xl text-left">
             <p className="mb-3 text-[10px] font-black uppercase tracking-[.22em] text-zinc-500">FINAŁOWE GŁOSY</p>
@@ -215,7 +215,7 @@ function HostGame({
             <p className="mt-5 text-[10px] font-black uppercase tracking-[.25em] text-cyan-300">TAJNE ROLE ROZDANE</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">Każdy sprawdza swój telefon.</h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
-              W grupie jest dokładnie 1 Sabotażysta. Host nie zna jego tożsamości. Gdy wszyscy przeczytają swoją rolę, rozpocznijcie pierwszą misję.
+              W grupie jest dokładnie 1 Oszust. Host nie zna jego tożsamości. Gdy wszyscy przeczytają swoją rolę, rozpocznijcie pierwszą misję.
             </p>
             <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
               {busy ? "CHWILA…" : "ROZPOCZNIJ MISJĘ 1 →"}
@@ -262,7 +262,7 @@ function HostGame({
                   <span className="text-3xl">💬</span>
                   <h2 className="mt-4 text-2xl font-black">Dyskusja</h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Pytajcie o tok myślenia. Sabotażysta może kłamać, tłumaczyć się i odwracać podejrzenia.
+                    Pytajcie o tok myślenia. Oszust może kłamać, tłumaczyć się i odwracać podejrzenia.
                   </p>
                   <button type="button" disabled={busy} onClick={onAdvance} className="mt-5 w-full rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
                     PRZEJDŹ DO TYPOWANIA →
@@ -299,10 +299,10 @@ function HostGame({
                 <div className="rounded-[1.75rem] border border-amber-300/20 bg-amber-300/[.05] p-6">
                   <span className="text-3xl">🎯</span>
                   <h2 className="mt-4 text-2xl font-black">Ostatnia decyzja</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">Nie ma już kolejnej misji. Każdy wskazuje osobę, którą uważa za Sabotażystę.</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">Nie ma już kolejnej misji. Każdy wskazuje osobę, którą uważa za Oszusta.</p>
                   <div className="mt-5"><ProgressBar value={game.votedCount} max={game.playerCount} /></div>
                   <button type="button" disabled={busy || !readyToAdvance} onClick={onAdvance} className="mt-6 w-full rounded-2xl bg-gradient-to-r from-amber-300 to-orange-400 px-5 py-4 text-sm font-black text-slate-950 disabled:opacity-35">
-                    {readyToAdvance ? "ODKRYJ SABOTAŻYSTĘ →" : "CZEKAJ NA WSZYSTKICH"}
+                    {readyToAdvance ? "ODKRYJ OSZUSTA →" : "CZEKAJ NA WSZYSTKICH"}
                   </button>
                 </div>
               )}
@@ -322,7 +322,7 @@ function RoleCard({ role }: { role: PpRole }) {
     <div className={`rounded-[2rem] border p-7 text-center ${saboteur ? "border-amber-300/20 bg-amber-300/[.05]" : "border-cyan-300/20 bg-cyan-300/[.05]"}`}>
       <span className="text-6xl">{saboteur ? "🕶️" : "🛡️"}</span>
       <p className={`mt-5 text-[10px] font-black uppercase tracking-[.28em] ${saboteur ? "text-amber-300" : "text-cyan-300"}`}>TWOJA TAJNA ROLA</p>
-      <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">{saboteur ? "SABOTAŻYSTA" : "AGENT"}</h1>
+      <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">{saboteur ? "OSZUST" : "AGENT"}</h1>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-zinc-400">
         {saboteur
           ? "Masz odpowiadać wiarygodnie, ale w każdej misji dostaniesz ukryty cel. Realizuj go subtelnie i nie daj się jednoznacznie wskazać w finale."
@@ -405,7 +405,7 @@ function PlayerGame({
           <p className="mt-5 text-[10px] font-black uppercase tracking-[.26em] text-cyan-300">KONIEC GRY</p>
           <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">{won ? "WYGRYWASZ" : "TYM RAZEM NIE"}</h1>
           <p className="mt-4 text-base leading-7 text-zinc-400">
-            Sabotażystą był <strong className="text-white">{game.result.saboteurName}</strong>. {game.result.caught ? "Grupa go rozpracowała." : "Utrzymał przykrywkę do końca."}
+            Oszustem był <strong className="text-white">{game.result.saboteurName}</strong>. {game.result.caught ? "Grupa go rozpracowała." : "Utrzymał przykrywkę do końca."}
           </p>
           <div className="mt-8"><RoleCard role={me.role} /></div>
         </section>
@@ -424,7 +424,7 @@ function PlayerGame({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">{game.mission.category}</span>
                 <span className={`rounded-full px-3 py-1 text-[9px] font-black ${me.role === "saboteur" ? "bg-amber-300/10 text-amber-300" : "bg-cyan-300/10 text-cyan-300"}`}>
-                  {me.role === "saboteur" ? "SABOTAŻYSTA" : "AGENT"}
+                  {me.role === "saboteur" ? "OSZUST" : "AGENT"}
                 </span>
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">{game.mission.title}</h1>
@@ -490,7 +490,7 @@ function PlayerGame({
               <div className="rounded-[1.75rem] border border-amber-300/20 bg-amber-300/[.05] p-6">
                 <span className="text-4xl">🎯</span>
                 <h2 className="mt-3 text-3xl font-black">Ostatnie wskazanie</h2>
-                <p className="mt-2 text-sm leading-6 text-zinc-400">To ten głos rozstrzygnie grę. Remis na pierwszym miejscu pomaga Sabotażyście.</p>
+                <p className="mt-2 text-sm leading-6 text-zinc-400">To ten głos rozstrzygnie grę. Remis na pierwszym miejscu pomaga Oszustowi.</p>
                 <div className="mt-5"><VotePicker game={game} busy={busy} voteType="final" onVote={onVote} /></div>
                 {me.voteTargetId && <p className="mt-4 text-center text-xs font-black text-emerald-300">✓ Finałowy głos zapisany</p>}
               </div>
