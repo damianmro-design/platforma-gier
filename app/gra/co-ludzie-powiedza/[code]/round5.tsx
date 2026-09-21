@@ -76,7 +76,7 @@ export function HostRound5({
             <strong>JAK GRAMY?</strong>
             <span>
               Najpierw każdy tajnie wskazuje 1 inną osobę. Potem drużyny przewidują,
-              kto dostał najwięcej głosów. 80 pkt za 1. miejsce, 30 pkt za 2.
+              kto dostał najwięcej głosów. 80 pkt za samodzielne 1. miejsce, 40 pkt za remis na 1., 30 pkt za 2. Jeśli wszyscy remisują, nikt nie zdobywa punktów.
             </span>
           </div>
         )}
@@ -111,7 +111,7 @@ export function HostRound5({
           <section className="clp-r5-next">
             <div>
               <span>GŁOSY ODSŁONIĘTE</span>
-              <p>80 pkt za trafienie 1. miejsca, 30 pkt za trafienie 2. miejsca.</p>
+              <p>80 pkt za samodzielne 1. miejsce, 40 pkt za remis na 1., 30 pkt za 2. miejsce. Przy remisie wszystkich: 0 pkt.</p>
             </div>
             <button type="button" disabled={busy} onClick={onNext}>
               {busy
@@ -172,7 +172,7 @@ export function PlayerRound5({
           <h1>{round.prompt}</h1>
           {round.mode !== "reveal" && (
             <p className="clp-inline-rule">
-              Najpierw tajny głos całej ekipy, potem przewidywanie drużyn. 80 pkt za 1. miejsce, 30 pkt za 2.
+              Najpierw tajny głos całej ekipy, potem przewidywanie drużyn. 80 pkt za samodzielne 1. miejsce, 40 pkt za remis na 1., 30 pkt za 2.
             </p>
           )}
         </div>
