@@ -667,6 +667,10 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Gracze wybierają 7 wydarzeń spośród 9, ustawiają je w kolejności i wskazują, kto ich zdaniem odpowiada za śmierć Marka. Nie pokazuj jeszcze żadnego rozwiązania.
           </p>
+          <StageArtwork
+            src="/akta-nocy/reconstruction.webp"
+            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_.75fr]">
@@ -859,6 +863,10 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Każdy gracz na własnym telefonie wybiera 1 osobę, 1 motyw i 1 najważniejszy dowód. Odpowiedź zostaje natychmiast zamknięta.
           </p>
+          <StageArtwork
+            src="/akta-nocy/accusation.webp"
+            alt="Karta oskarżenia w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5 sm:p-6">
@@ -951,6 +959,22 @@ function HostView({
           <p className="mt-5 max-w-4xl text-sm leading-7 text-orange-50/62 sm:text-base">
             {content.body}
           </p>
+
+          {reveal.step === 3 && (
+            <StageArtwork
+              src="/akta-nocy/reveal-culprit.webp"
+              alt="Ujawnienie sprawcy sprawy Apartament 214"
+              cinematic
+            />
+          )}
+
+          {reveal.step === 4 && (
+            <StageArtwork
+              src="/akta-nocy/case-closed.webp"
+              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
+              cinematic
+            />
+          )}
 
           {reveal.step === 3 && reveal.culprit && (
             <div className="mt-7 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
@@ -1352,6 +1376,10 @@ function PlayerAccusationView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Wybierz 1 osobę, 1 motyw i 1 najważniejszy dowód. Po zatwierdzeniu odpowiedź zostanie zamknięta i nie będzie można jej edytować.
           </p>
+          <StageArtwork
+            src="/akta-nocy/accusation.webp"
+            alt="Karta oskarżenia w sprawie Apartament 214"
+          />
         </section>
 
         <ChoiceSection label="Kogo oskarżasz?">
@@ -1486,6 +1514,22 @@ function PlayerRevealView({
             </p>
           )}
           <p className="mt-5 text-sm leading-7 text-orange-50/62">{content.body}</p>
+
+          {reveal.step === 3 && (
+            <StageArtwork
+              src="/akta-nocy/reveal-culprit.webp"
+              alt="Ujawnienie sprawcy sprawy Apartament 214"
+              cinematic
+            />
+          )}
+
+          {reveal.step === 4 && (
+            <StageArtwork
+              src="/akta-nocy/case-closed.webp"
+              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
+              cinematic
+            />
+          )}
 
           {reveal.step === 3 && reveal.culprit && (
             <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
@@ -1729,6 +1773,10 @@ function PlayerReconstructionView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Spośród 9 wydarzeń wybierz dokładnie 7, które Twoim zdaniem naprawdę należą do przebiegu nocy. Dwa są fałszywymi tropami.
           </p>
+          <StageArtwork
+            src="/akta-nocy/reconstruction.webp"
+            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5">
@@ -2297,6 +2345,67 @@ function DossierSection({
       </span>
       <div className="mt-3 text-sm leading-7 text-orange-50/62">{children}</div>
     </section>
+  );
+}
+
+function StageArtwork({
+  src,
+  alt,
+  cinematic = false,
+}: {
+  src: string;
+  alt: string;
+  cinematic?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`group relative mt-6 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 shadow-[0_18px_60px_rgba(0,0,0,.35)] ${
+          cinematic ? "sm:rounded-[1.5rem]" : ""
+        }`}
+      >
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full object-cover transition duration-500 group-hover:scale-[1.012] ${
+            cinematic
+              ? "max-h-[640px] object-contain"
+              : "max-h-[480px] object-contain"
+          }`}
+        />
+        <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
+          powiększ
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={alt}
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/92 p-3 backdrop-blur-md sm:p-8"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/75 px-4 py-2 text-xs font-black text-white"
+          >
+            ZAMKNIJ ×
+          </button>
+          <img
+            src={src}
+            alt={alt}
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[92vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.82)]"
+          />
+        </div>
+      )}
+    </>
   );
 }
 
