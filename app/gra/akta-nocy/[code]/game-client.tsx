@@ -87,6 +87,68 @@ type ReconstructionPlayerState = {
   coverup_key: string;
 } | null;
 
+type AccusationSummary = {
+  total: number;
+  correctSuspect: number;
+  correctMotive: number;
+  fullyCorrect: number;
+  results: Array<{
+    playerId: string;
+    displayName: string;
+    avatar: string;
+    suspect: PublicCastMember | null;
+    motiveKey: string;
+    motiveLabel: string;
+    evidenceId: string;
+    evidenceNo: string;
+    evidenceTitle: string;
+    suspectCorrect: boolean;
+    motiveCorrect: boolean;
+    fullyCorrect: boolean;
+  }>;
+};
+
+type AccusationHostState = {
+  players: Array<{
+    playerId: string;
+    displayName: string;
+    avatar: string;
+    submitted: boolean;
+  }>;
+  summary: AccusationSummary | null;
+};
+
+type AccusationPlayerState = {
+  submitted: boolean;
+  suspect_player_id: string;
+  motive_key: string;
+  evidence_id: string;
+} | null;
+
+type RevealPayload = {
+  step: number;
+  culprit: PublicCastMember | null;
+  content: {
+    eyebrow: string;
+    title: string;
+    subtitle?: string;
+    body: string;
+    bullets?: readonly string[];
+    whyItFits?: readonly string[];
+    timeline?: readonly Array<{ time: string; text: string }>;
+    redHerrings?: readonly Array<{ name: string; truth: string }>;
+  };
+} | null;
+
+type AccusationVerdict = {
+  suspect: PublicCastMember | null;
+  motiveLabel: string;
+  evidenceNo: string;
+  evidenceTitle: string;
+  suspectCorrect: boolean;
+  motiveCorrect: boolean;
+} | null;
+
 type RoleCard = {
   id: string;
   name: string;
@@ -118,6 +180,8 @@ type HostState = {
   reconstructionEvents: ReconstructionEvent[];
   motiveOptions: ReconstructionOption[];
   coverupOptions: ReconstructionOption[];
+  accusation: AccusationHostState | null;
+  reveal: RevealPayload;
 };
 
 type PlayerState = {
@@ -139,6 +203,9 @@ type PlayerState = {
   reconstructionEvents: ReconstructionEvent[];
   motiveOptions: ReconstructionOption[];
   coverupOptions: ReconstructionOption[];
+  accusation: AccusationPlayerState;
+  accusationVerdict: AccusationVerdict;
+  reveal: RevealPayload;
 };
 
 type GameState = HostState | PlayerState;
@@ -255,6 +322,9 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
       onShow={() => setDossierVisible(true)}
       onSubmitReconstruction={(payload) =>
         send("submitReconstruction", payload)
+      }
+      onSubmitAccusation={(payload) =>
+        send("submitAccusation", payload)
       }
     />
   );
@@ -739,15 +809,258 @@ function HostView({
           </>
         )}
 
-        <section className="mt-6 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5">
-          <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
-            Następny etap
+        <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-[.24em] text-red-300">
+              Następny etap
+            </span>
+            <h2 className="mt-2 text-xl font-black">Akt oskarżenia</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-orange-50/50">
+              Każdy prywatnie wskaże sprawcę, motyw i najważniejszy dowód. Po zatwierdzeniu odpowiedzi nie będzie można jej zmienić.
+            </p>
+          </div>
+          <PrimaryButton disabled={busy} onClick={onAdvance}>
+            {busy ? "URUCHAMIANIE…" : "ROZPOCZNIJ AKT OSKARŻENIA →"}
+          </PrimaryButton>
+        </section>
+      </HostShell>
+    );
+  }
+
+  if (phase === "akt_oskarzenia") {
+    const accusation = data.accusation;
+    const submitted = accusation?.players.filter((item) => item.submitted).length ?? 0;
+    const total = accusation?.players.length ?? data.progress.length;
+    const allSubmitted = total > 0 && submitted === total;
+
+    return (
+      <HostShell code={data.room.code} label="AKT OSKARŻENIA">
+        <section className="rounded-[1.8rem] border border-red-400/15 bg-red-950/15 p-6 shadow-2xl sm:p-8">
+          <span className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
+            ETAP 06 · AKT OSKARŻENIA
           </span>
-          <h2 className="mt-2 text-xl font-black">Akt oskarżenia</h2>
-          <p className="mt-2 text-sm leading-6 text-orange-50/50">
-            Za chwilę każdy prywatnie wskaże sprawcę, motyw i najważniejszy dowód. Dopiero po zebraniu oskarżeń odkryjemy prawdziwy przebieg nocy.
+          <h1 className="mt-3 max-w-4xl font-serif text-4xl font-black tracking-[-.035em] sm:text-5xl">
+            Czas przestać tylko podejrzewać.
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
+            Każdy gracz na własnym telefonie wybiera 1 osobę, 1 motyw i 1 najważniejszy dowód. Odpowiedź zostaje natychmiast zamknięta.
           </p>
         </section>
+
+        <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5 sm:p-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+                Złożone akty oskarżenia
+              </span>
+              <strong className="mt-1 block text-4xl font-black">{submitted}/{total}</strong>
+            </div>
+            <span className={`rounded-full border px-3 py-2 text-xs font-black ${
+              allSubmitted
+                ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                : "border-orange-100/10 bg-white/[.03] text-orange-100/45"
+            }`}>
+              {allSubmitted ? "WSZYSCY ZDECYDOWALI" : "CZEKAMY"}
+            </span>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/35">
+            <i
+              className="block h-full rounded-full bg-gradient-to-r from-red-700 to-orange-500 transition-all"
+              style={{ width: `${total ? Math.round((submitted / total) * 100) : 0}%` }}
+            />
+          </div>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            {accusation?.players.map((player) => (
+              <div
+                key={player.playerId}
+                className="flex items-center justify-between gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
+                    <PartyPlayAvatar id={player.avatar} size={36} />
+                  </span>
+                  <strong className="truncate text-sm">{player.displayName}</strong>
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-[.14em] ${
+                  player.submitted ? "text-emerald-300" : "text-orange-100/30"
+                }`}>
+                  {player.submitted ? "zamknięte" : "decyduje"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {error && <ErrorBox message={error} />}
+
+        <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <strong className="block text-lg">Po tej decyzji nie ma już odwrotu.</strong>
+            <span className="mt-1 block text-sm text-orange-50/45">
+              Kiedy wszyscy zatwierdzą oskarżenia, rozpocznij finałowe ujawnienie.
+            </span>
+          </div>
+          <PrimaryButton disabled={!allSubmitted || busy} onClick={onAdvance}>
+            {busy ? "PRZYGOTOWUJĘ…" : "ROZPOCZNIJ UJAWNIENIE →"}
+          </PrimaryButton>
+        </section>
+      </HostShell>
+    );
+  }
+
+  if (phase?.startsWith("ujawnienie_") && data.reveal) {
+    const reveal = data.reveal;
+    const content = reveal.content;
+    const summary = data.accusation?.summary;
+    const isFinal = reveal.step === 4;
+
+    return (
+      <HostShell code={data.room.code} label={`UJAWNIENIE · ${reveal.step}/4`}>
+        <section className={`overflow-hidden rounded-[2rem] border p-6 shadow-[0_30px_100px_rgba(0,0,0,.6)] sm:p-8 ${
+          reveal.step === 3
+            ? "border-red-500/35 bg-[#1c0706]"
+            : "border-orange-100/10 bg-[#120907]/95"
+        }`}>
+          <span className="text-[10px] font-black uppercase tracking-[.3em] text-red-300">
+            {content.eyebrow}
+          </span>
+          <h1 className="mt-3 max-w-5xl font-serif text-4xl font-black tracking-[-.04em] sm:text-6xl">
+            {content.title}
+          </h1>
+          {content.subtitle && (
+            <p className="mt-2 text-sm font-black uppercase tracking-[.16em] text-orange-300/55">
+              {content.subtitle}
+            </p>
+          )}
+          <p className="mt-5 max-w-4xl text-sm leading-7 text-orange-50/62 sm:text-base">
+            {content.body}
+          </p>
+
+          {reveal.step === 3 && reveal.culprit && (
+            <div className="mt-7 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
+              <span className="text-[9px] font-black uppercase tracking-[.2em] text-red-300/70">
+                W tę postać wcielał się
+              </span>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-black/30 text-xl">
+                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                </span>
+                <strong className="text-2xl">{reveal.culprit.displayName}</strong>
+              </div>
+            </div>
+          )}
+
+          {content.bullets && (
+            <div className="mt-7 grid gap-3">
+              {content.bullets.map((item) => (
+                <div key={item} className="rounded-xl border border-orange-100/8 bg-white/[.025] p-4 text-sm leading-6 text-orange-50/58">
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {content.timeline && (
+            <div className="mt-7 space-y-2">
+              {content.timeline.map((item) => (
+                <div key={`${item.time}-${item.text}`} className="grid grid-cols-[64px_1fr] gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3">
+                  <strong className="text-red-300">{item.time}</strong>
+                  <span className="text-sm leading-6 text-orange-50/65">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {content.whyItFits && (
+            <div className="mt-7">
+              <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+                Dlaczego dowody wskazują właśnie jego
+              </span>
+              <div className="mt-3 grid gap-2">
+                {content.whyItFits.map((item) => (
+                  <div key={item} className="rounded-xl border border-red-400/10 bg-red-950/15 p-3 text-sm leading-6 text-orange-50/62">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {content.redHerrings && (
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              {content.redHerrings.map((item) => (
+                <div key={item.name} className="rounded-xl border border-orange-100/8 bg-white/[.025] p-4">
+                  <strong className="block text-sm">{item.name}</strong>
+                  <span className="mt-2 block text-xs leading-5 text-orange-50/45">{item.truth}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {reveal.step >= 3 && summary && (
+          <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#100806]/90 p-5 sm:p-6">
+            <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
+              Wasze akty oskarżenia
+            </span>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <TheoryCard label="Trafiony sprawca">
+                <strong className="text-2xl">{summary.correctSuspect}/{summary.total}</strong>
+              </TheoryCard>
+              <TheoryCard label="Trafiony motyw">
+                <strong className="text-2xl">{summary.correctMotive}/{summary.total}</strong>
+              </TheoryCard>
+              <TheoryCard label="Sprawca + motyw">
+                <strong className="text-2xl">{summary.fullyCorrect}/{summary.total}</strong>
+              </TheoryCard>
+            </div>
+
+            {isFinal && (
+              <div className="mt-5 space-y-2">
+                {summary.results.map((item) => (
+                  <div key={item.playerId} className="rounded-xl border border-orange-100/8 bg-white/[.025] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <strong>{item.displayName}</strong>
+                      <span className={`rounded-full px-2.5 py-1 text-[9px] font-black ${
+                        item.fullyCorrect
+                          ? "bg-emerald-400/10 text-emerald-200"
+                          : item.suspectCorrect
+                            ? "bg-orange-400/10 text-orange-200"
+                            : "bg-red-400/10 text-red-200"
+                      }`}>
+                        {item.fullyCorrect ? "SPRAWCA + MOTYW" : item.suspectCorrect ? "TRAFIONY SPRAWCA" : "BŁĘDNY SPRAWCA"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-orange-50/45">
+                      Oskarżenie: {item.suspect?.characterName ?? "brak"} · {item.motiveLabel}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-orange-50/35">
+                      Kluczowy dowód: {item.evidenceNo} · {item.evidenceTitle}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {error && <ErrorBox message={error} />}
+
+        {!isFinal && (
+          <section className="mt-6 flex justify-end">
+            <PrimaryButton disabled={busy} onClick={onAdvance}>
+              {busy
+                ? "CHWILA…"
+                : reveal.step === 1
+                  ? "ODTWÓRZ PRAWDZIWE MINUTY →"
+                  : reveal.step === 2
+                    ? "UJAWNIJ SPRAWCĘ →"
+                    : "OTWÓRZ PEŁNE AKTA →"}
+            </PrimaryButton>
+          </section>
+        )}
       </HostShell>
     );
   }
@@ -770,6 +1083,7 @@ function PlayerView({
   onHide,
   onShow,
   onSubmitReconstruction,
+  onSubmitAccusation,
 }: {
   data: PlayerState;
   busy: boolean;
@@ -784,17 +1098,48 @@ function PlayerView({
     motiveKey: string;
     coverupKey: string;
   }) => Promise<boolean>;
+  onSubmitAccusation: (payload: {
+    suspectPlayerId: string;
+    motiveKey: string;
+    evidenceId: string;
+  }) => Promise<boolean>;
 }) {
   const phase = data.room.phase;
   const role = data.roleCard;
   const firstOpen = role.dossierOpened;
   const reconstructionStage =
     phase === "rekonstrukcja" || phase === "rekonstrukcja_wynik";
+  const accusationStage = phase === "akt_oskarzenia";
+  const revealStage = Boolean(phase?.startsWith("ujawnienie_"));
   const publicStage =
     phase === "pierwsze_zeznania" ||
     isEvidencePhase(phase) ||
     phase === "przesluchania_a" ||
-    reconstructionStage;
+    reconstructionStage ||
+    accusationStage ||
+    revealStage;
+
+  if (revealStage && !dossierVisible) {
+    return (
+      <PlayerRevealView
+        data={data}
+        error={error}
+        onShowDossier={onShow}
+      />
+    );
+  }
+
+  if (accusationStage && !dossierVisible) {
+    return (
+      <PlayerAccusationView
+        data={data}
+        busy={busy}
+        error={error}
+        onShowDossier={onShow}
+        onSubmit={onSubmitAccusation}
+      />
+    );
+  }
 
   if (reconstructionStage && !dossierVisible) {
     return (
@@ -890,6 +1235,336 @@ function PlayerView({
       publicStage={publicStage}
       onHide={onHide}
     />
+  );
+}
+
+function PlayerAccusationView({
+  data,
+  busy,
+  error,
+  onShowDossier,
+  onSubmit,
+}: {
+  data: PlayerState;
+  busy: boolean;
+  error: string;
+  onShowDossier: () => void;
+  onSubmit: (payload: {
+    suspectPlayerId: string;
+    motiveKey: string;
+    evidenceId: string;
+  }) => Promise<boolean>;
+}) {
+  const [suspectPlayerId, setSuspectPlayerId] = useState("");
+  const [motiveKey, setMotiveKey] = useState("");
+  const [evidenceId, setEvidenceId] = useState("");
+  const submitted = Boolean(data.accusation?.submitted);
+
+  const selectedSuspect = data.cast.find(
+    (item) => item.playerId === data.accusation?.suspect_player_id,
+  );
+  const selectedMotive = data.motiveOptions.find(
+    (item) => item.key === data.accusation?.motive_key,
+  );
+  const selectedEvidence = data.evidence.find(
+    (item) => item.id === data.accusation?.evidence_id,
+  );
+
+  async function submit() {
+    if (!suspectPlayerId || !motiveKey || !evidenceId) return;
+    await onSubmit({ suspectPlayerId, motiveKey, evidenceId });
+  }
+
+  if (submitted) {
+    return (
+      <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+        <Backdrop />
+        <div className="relative mx-auto max-w-2xl px-5 py-8">
+          <TopBar code={data.room.code} label="AKT OSKARŻENIA" />
+          <section className="mt-6 rounded-[2rem] border border-emerald-300/15 bg-[#0d120d]/95 p-6 text-center shadow-2xl sm:p-8">
+            <span className="text-[10px] font-black uppercase tracking-[.28em] text-emerald-300">
+              OSKARŻENIE ZABLOKOWANE
+            </span>
+            <h1 className="mt-3 font-serif text-4xl font-black">Decyzja została zapisana.</h1>
+            <p className="mt-4 text-sm leading-7 text-orange-50/55">
+              Nie możesz jej już zmienić. Prowadzący zobaczy tylko, że Twoja odpowiedź jest gotowa.
+            </p>
+
+            <div className="mt-6 grid gap-3 text-left">
+              <MiniTheory label="Oskarżasz">
+                {selectedSuspect
+                  ? `${selectedSuspect.characterName} · ${selectedSuspect.displayName}`
+                  : "zapisano"}
+              </MiniTheory>
+              <MiniTheory label="Motyw">
+                {selectedMotive?.label ?? "zapisano"}
+              </MiniTheory>
+              <MiniTheory label="Najważniejszy dowód">
+                {selectedEvidence
+                  ? `${selectedEvidence.no} · ${selectedEvidence.title}`
+                  : "zapisano"}
+              </MiniTheory>
+            </div>
+
+            <button
+              type="button"
+              onClick={onShowDossier}
+              className="mt-6 rounded-xl border border-orange-100/10 bg-white/[.035] px-5 py-3 text-xs font-black text-orange-50/70"
+            >
+              OTWÓRZ MOJE AKTA
+            </button>
+          </section>
+          {error && <ErrorBox message={error} />}
+        </div>
+      </main>
+    );
+  }
+
+  const ready = Boolean(suspectPlayerId && motiveKey && evidenceId);
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+      <Backdrop />
+      <div className="relative mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <TopBar code={data.room.code} label="AKT OSKARŻENIA" />
+
+        <section className="mt-6 rounded-[1.8rem] border border-red-400/15 bg-red-950/15 p-5 sm:p-6">
+          <span className="text-[10px] font-black uppercase tracking-[.26em] text-red-300">
+            ETAP 06
+          </span>
+          <h1 className="mt-2 font-serif text-3xl font-black sm:text-4xl">
+            Wskaż sprawcę. Teraz naprawdę.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-orange-50/52">
+            Wybierz 1 osobę, 1 motyw i 1 najważniejszy dowód. Po zatwierdzeniu odpowiedź zostanie zamknięta i nie będzie można jej edytować.
+          </p>
+        </section>
+
+        <ChoiceSection label="Kogo oskarżasz?">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {data.cast.map((member) => (
+              <button
+                key={member.playerId}
+                type="button"
+                onClick={() => setSuspectPlayerId(member.playerId)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  suspectPlayerId === member.playerId
+                    ? "border-red-400/35 bg-red-950/25"
+                    : "border-orange-100/10 bg-white/[.025]"
+                }`}
+              >
+                <strong className="block text-sm">{member.characterName}</strong>
+                <span className="mt-1 block text-[11px] text-orange-50/35">
+                  {member.characterLabel} · {member.displayName}
+                </span>
+              </button>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        <ChoiceSection label="Jaki był główny motyw?">
+          <div className="grid gap-2">
+            {data.motiveOptions.map((option) => (
+              <ChoiceButton
+                key={option.key}
+                selected={motiveKey === option.key}
+                onClick={() => setMotiveKey(option.key)}
+              >
+                {option.label}
+              </ChoiceButton>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        <ChoiceSection label="Który dowód jest dla Ciebie najważniejszy?">
+          <div className="grid gap-2">
+            {data.evidence.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setEvidenceId(item.id)}
+                className={`rounded-xl border p-3 text-left transition ${
+                  evidenceId === item.id
+                    ? "border-red-400/35 bg-red-950/25"
+                    : "border-orange-100/10 bg-white/[.025]"
+                }`}
+              >
+                <span className="text-[9px] font-black uppercase tracking-[.18em] text-orange-300/45">
+                  {item.no}
+                </span>
+                <strong className="mt-1 block text-sm">{item.title}</strong>
+              </button>
+            ))}
+          </div>
+        </ChoiceSection>
+
+        {error && <ErrorBox message={error} />}
+
+        <div className="sticky bottom-3 mt-6 rounded-2xl border border-red-400/15 bg-[#100806]/95 p-3 shadow-2xl backdrop-blur-xl">
+          <button
+            type="button"
+            disabled={!ready || busy}
+            onClick={() => void submit()}
+            className="w-full rounded-xl bg-gradient-to-r from-red-700 to-orange-600 px-5 py-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
+          >
+            {busy ? "ZAPISUJĘ…" : "ZATWIERDŹ I ZABLOKUJ OSKARŻENIE"}
+          </button>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={onShowDossier}
+            className="rounded-xl border border-orange-100/10 bg-white/[.035] px-5 py-3 text-xs font-black text-orange-50/70"
+          >
+            PODEJRZYJ MOJE AKTA
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function PlayerRevealView({
+  data,
+  error,
+  onShowDossier,
+}: {
+  data: PlayerState;
+  error: string;
+  onShowDossier: () => void;
+}) {
+  const reveal = data.reveal;
+
+  if (!reveal) {
+    return (
+      <main className="min-h-screen bg-[#070504] text-[#f8eee2]">
+        <div className="mx-auto max-w-2xl px-5 py-20 text-center text-sm text-orange-50/55">
+          Czekamy na kolejny krok prowadzącego…
+        </div>
+      </main>
+    );
+  }
+
+  const content = reveal.content;
+  const verdict = data.accusationVerdict;
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+      <Backdrop />
+      <div className="relative mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
+        <TopBar code={data.room.code} label={`UJAWNIENIE · ${reveal.step}/4`} />
+
+        <section className={`mt-6 overflow-hidden rounded-[2rem] border p-6 shadow-[0_30px_90px_rgba(0,0,0,.55)] sm:p-8 ${
+          reveal.step === 3
+            ? "border-red-500/35 bg-[#1c0706]"
+            : "border-orange-200/12 bg-[#130a08]"
+        }`}>
+          <span className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
+            {content.eyebrow}
+          </span>
+          <h1 className="mt-3 font-serif text-4xl font-black tracking-[-.035em] sm:text-5xl">
+            {content.title}
+          </h1>
+          {content.subtitle && (
+            <p className="mt-2 text-xs font-black uppercase tracking-[.16em] text-orange-300/55">
+              {content.subtitle}
+            </p>
+          )}
+          <p className="mt-5 text-sm leading-7 text-orange-50/62">{content.body}</p>
+
+          {reveal.step === 3 && reveal.culprit && (
+            <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-red-300/65">
+                Tę postać grał
+              </span>
+              <div className="mt-2 flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-black/30 text-xl">
+                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                </span>
+                <strong className="text-xl">{reveal.culprit.displayName}</strong>
+              </div>
+            </div>
+          )}
+
+          {content.bullets && (
+            <div className="mt-6 grid gap-2">
+              {content.bullets.map((item) => (
+                <div key={item} className="rounded-xl border border-orange-100/8 bg-white/[.025] p-3 text-sm leading-6 text-orange-50/56">
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {content.timeline && (
+            <div className="mt-6 space-y-2">
+              {content.timeline.map((item) => (
+                <div key={`${item.time}-${item.text}`} className="grid grid-cols-[58px_1fr] gap-3 rounded-xl border border-orange-100/8 bg-white/[.025] p-3">
+                  <strong className="text-red-300">{item.time}</strong>
+                  <span className="text-sm leading-6 text-orange-50/62">{item.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {content.whyItFits && (
+            <div className="mt-6 space-y-2">
+              {content.whyItFits.map((item) => (
+                <div key={item} className="rounded-xl border border-red-400/10 bg-red-950/15 p-3 text-sm leading-6 text-orange-50/58">
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {content.redHerrings && (
+            <div className="mt-6 grid gap-2">
+              {content.redHerrings.map((item) => (
+                <div key={item.name} className="rounded-xl border border-orange-100/8 bg-white/[.025] p-3">
+                  <strong className="block text-sm">{item.name}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-orange-50/42">{item.truth}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {reveal.step >= 3 && verdict && (
+          <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#100806]/90 p-5">
+            <span className="text-[10px] font-black uppercase tracking-[.22em] text-orange-300/50">
+              Twój akt oskarżenia
+            </span>
+            <div className="mt-4 grid gap-3">
+              <MiniTheory label="Sprawca">
+                {verdict.suspect?.characterName ?? "brak"} · {verdict.suspectCorrect ? "trafiony" : "nietrafiony"}
+              </MiniTheory>
+              <MiniTheory label="Motyw">
+                {verdict.motiveLabel} · {verdict.motiveCorrect ? "trafiony" : "nietrafiony"}
+              </MiniTheory>
+              <MiniTheory label="Wybrany dowód">
+                {verdict.evidenceNo} · {verdict.evidenceTitle}
+              </MiniTheory>
+            </div>
+          </section>
+        )}
+
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <span className="text-xs text-orange-50/35">
+            Kolejny fragment ujawnienia uruchamia prowadzący.
+          </span>
+          <button
+            type="button"
+            onClick={onShowDossier}
+            className="rounded-xl border border-orange-100/10 bg-white/[.035] px-4 py-3 text-xs font-black text-orange-50/70"
+          >
+            MOJE AKTA
+          </button>
+        </div>
+
+        {error && <ErrorBox message={error} />}
+      </div>
+    </main>
   );
 }
 
