@@ -3,6 +3,8 @@ import {
   getPartyPlayUserFromAccessToken,
   getPolowanieBadgesFromAccessToken,
   getPolowanieCareerFromAccessToken,
+  getPolowanieHistoryCountFromAccessToken,
+  getPolowanieHistoryFromAccessToken,
 } from "@/lib/partyplay-auth";
 import { calculatePartyPlayProgress } from "@/lib/partyplay-progress";
 import { getMyPartyPlayPlatformStats } from "@/lib/platform-db";
@@ -33,15 +35,34 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [platformStats, polowanie, polowanieBadges] = await Promise.all([
-      getMyPartyPlayPlatformStats(accessToken!, {
-        historyLimit,
-        historyOffset,
-        gameSlug,
-      }),
-      getPolowanieCareerFromAccessToken(accessToken!),
-      getPolowanieBadgesFromAccessToken(accessToken!),
-    ]);
+    const fetchWindow = Math.min(historyOffset + historyLimit, 200);
+    const isPolowanieFilter = gameSlug === "polowanie-na-milionera";
+    const isPlatformGameFilter = Boolean(gameSlug && !isPolowanieFilter);
+
+    const [platformStats, polowanie, polowanieBadges, polowanieHistory, polowanieHistoryTotal] =
+      await Promise.all([
+        getMyPartyPlayPlatformStats(accessToken!, {
+          historyLimit: isPlatformGameFilter
+            ? historyLimit
+            : gameSlug
+              ? 1
+              : fetchWindow,
+          historyOffset: isPlatformGameFilter ? historyOffset : 0,
+          gameSlug: isPlatformGameFilter ? gameSlug : null,
+        }),
+        getPolowanieCareerFromAccessToken(accessToken!),
+        getPolowanieBadgesFromAccessToken(accessToken!),
+        isPlatformGameFilter
+          ? Promise.resolve([])
+          : getPolowanieHistoryFromAccessToken(
+              accessToken!,
+              isPolowanieFilter ? historyLimit : fetchWindow,
+              isPolowanieFilter ? historyOffset : 0,
+            ),
+        isPlatformGameFilter
+          ? Promise.resolve(0)
+          : getPolowanieHistoryCountFromAccessToken(accessToken!),
+      ]);
 
     const progression = calculatePartyPlayProgress({
       polowanieGames: polowanie?.games_completed ?? 0,
@@ -54,13 +75,34 @@ export async function GET(request: Request) {
       })),
     });
 
+    let history = platformStats.history;
+    let historyTotal = platformStats.historyTotal;
+    let historyHasMore = platformStats.historyHasMore;
+
+    if (isPolowanieFilter) {
+      history = polowanieHistory;
+      historyTotal = polowanieHistoryTotal;
+      historyHasMore = historyOffset + historyLimit < historyTotal;
+    } else if (!gameSlug) {
+      history = [...platformStats.history, ...polowanieHistory]
+        .sort(
+          (a, b) =>
+            new Date(b.completed_at).getTime() -
+            new Date(a.completed_at).getTime(),
+        )
+        .slice(historyOffset, historyOffset + historyLimit);
+
+      historyTotal = platformStats.historyTotal + polowanieHistoryTotal;
+      historyHasMore = historyOffset + historyLimit < historyTotal;
+    }
+
     return NextResponse.json({
       summary: platformStats.summary,
-      history: platformStats.history,
-      historyTotal: platformStats.historyTotal,
-      historyOffset: platformStats.historyOffset,
-      historyLimit: platformStats.historyLimit,
-      historyHasMore: platformStats.historyHasMore,
+      history,
+      historyTotal,
+      historyOffset,
+      historyLimit,
+      historyHasMore,
       polowanie,
       polowanieBadges,
       progression,
