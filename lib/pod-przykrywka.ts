@@ -7,6 +7,9 @@ export type PpPhase =
   | "checkpoint"
   | "interrogation"
   | "last_word"
+  | "final_defense_intro"
+  | "final_defense_one"
+  | "final_defense_two"
   | "final_vote"
   | "result";
 
@@ -63,6 +66,14 @@ export type PpTwist = {
   interrogationQuestion: string | null;
   isCurrentPlayerTarget: boolean;
   secretOrder: string | null;
+  finalDefenderOneId: string | null;
+  finalDefenderOneName: string | null;
+  finalDefenderOneAvatar: string | null;
+  finalDefenderTwoId: string | null;
+  finalDefenderTwoName: string | null;
+  finalDefenderTwoAvatar: string | null;
+  activeFinalDefenderId: string | null;
+  isCurrentPlayerFinalDefender: boolean;
 };
 
 export type PpResult = {
