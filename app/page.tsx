@@ -266,9 +266,16 @@ export default function Home() {
               <a href="#gry" className="transition hover:text-white">Gry</a>
               <a href="#jak-to-dziala" className="transition hover:text-white">Jak to działa</a>
               <a href="#wybierz" className="transition hover:text-white">Znajdź grę</a>
+              <Link href="/ranking" className="transition hover:text-white">Ranking</Link>
             </nav>
 
             <div className="flex items-center gap-2">
+              <Link
+                href="/ranking"
+                className="hidden rounded-xl border border-amber-300/15 bg-amber-300/[.05] px-4 py-2.5 text-xs font-black text-amber-200 transition hover:bg-amber-300/[.09] sm:block"
+              >
+                Ranking
+              </Link>
               <a href="#dolacz" className="rounded-xl border border-white/12 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-200 transition hover:bg-white/[.08]">
                 Mam kod
               </a>
