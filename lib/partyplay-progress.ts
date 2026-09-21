@@ -1,3 +1,12 @@
+import { PARTYPLAY_GAMES } from "@/lib/partyplay-games";
+
+export const PARTYPLAY_XP_RULES = {
+  gameCompleted: 100,
+  win: 75,
+  polowanieBadge: 20,
+  partyPlayBadge: 25,
+} as const;
+
 export type PartyPlayGameProgress = {
   gameSlug: string;
   gamesCompleted: number;
@@ -23,12 +32,15 @@ export type PartyPlayBadge = {
   title: string;
   description: string;
   icon: string;
+  scope: "global" | "game";
+  gameSlug: string | null;
   earned: boolean;
   progressCurrent: number;
   progressTarget: number;
+  xpReward: number;
 };
 
-const LEVELS = [
+export const PARTYPLAY_LEVELS = [
   { level: 1, title: "Rozgrzewka", minXp: 0 },
   { level: 2, title: "Gracz", minXp: 250 },
   { level: 3, title: "Bywalec", minXp: 600 },
@@ -39,10 +51,48 @@ const LEVELS = [
   { level: 8, title: "Weteran", minXp: 5200 },
   { level: 9, title: "Elita", minXp: 7000 },
   { level: 10, title: "Legenda", minXp: 9000 },
+  { level: 11, title: "Ikona", minXp: 11500 },
+  { level: 12, title: "Arcymistrz", minXp: 14500 },
+  { level: 13, title: "Hall of Fame", minXp: 18000 },
+  { level: 14, title: "Nietykalny", minXp: 22000 },
+  { level: 15, title: "Legenda PartyPlay", minXp: 27000 },
 ] as const;
 
 function safeNumber(value: number | null | undefined) {
   return Math.max(0, Number(value ?? 0) || 0);
+}
+
+function makeBadge({
+  code,
+  title,
+  description,
+  icon,
+  scope = "global",
+  gameSlug = null,
+  current,
+  target,
+}: {
+  code: string;
+  title: string;
+  description: string;
+  icon: string;
+  scope?: "global" | "game";
+  gameSlug?: string | null;
+  current: number;
+  target: number;
+}): PartyPlayBadge {
+  return {
+    code,
+    title,
+    description,
+    icon,
+    scope,
+    gameSlug,
+    earned: current >= target,
+    progressCurrent: Math.min(current, target),
+    progressTarget: target,
+    xpReward: PARTYPLAY_XP_RULES.partyPlayBadge,
+  };
 }
 
 export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
@@ -56,6 +106,17 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     wins: safeNumber(game.wins),
   }));
 
+  const gameProgress = new Map<string, PartyPlayGameProgress>();
+  gameProgress.set("polowanie-na-milionera", {
+    gameSlug: "polowanie-na-milionera",
+    gamesCompleted: polowanieGames,
+    wins: polowanieWins,
+  });
+
+  for (const game of platformGames) {
+    gameProgress.set(game.gameSlug, game);
+  }
+
   const platformGamesCompleted = platformGames.reduce(
     (sum, game) => sum + game.gamesCompleted,
     0,
@@ -65,114 +126,171 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
   const totalGames = polowanieGames + platformGamesCompleted;
   const totalWins = polowanieWins + platformWins;
 
-  const distinctGamesPlayed =
-    (polowanieGames > 0 ? 1 : 0) +
-    platformGames.filter((game) => game.gamesCompleted > 0).length;
+  const distinctGamesPlayed = [...gameProgress.values()].filter(
+    (game) => game.gamesCompleted > 0,
+  ).length;
 
-  const distinctGamesWon =
-    (polowanieWins > 0 ? 1 : 0) +
-    platformGames.filter((game) => game.wins > 0).length;
+  const distinctGamesWon = [...gameProgress.values()].filter(
+    (game) => game.wins > 0,
+  ).length;
 
-  const badgeDefinitions = [
-    {
-      code: "first_game",
+  const badges: PartyPlayBadge[] = [
+    makeBadge({
+      code: "global:first_game",
       title: "Pierwszy wieczór",
       description: "Ukończ 1 grę na zalogowanym koncie.",
       icon: "🎮",
       current: totalGames,
       target: 1,
-    },
-    {
-      code: "first_win",
+    }),
+    makeBadge({
+      code: "global:first_win",
       title: "Smak zwycięstwa",
       description: "Wygraj swoją pierwszą grę.",
       icon: "🏆",
       current: totalWins,
       target: 1,
-    },
-    {
-      code: "games_5",
+    }),
+    makeBadge({
+      code: "global:games_5",
       title: "Stały gracz",
       description: "Ukończ 5 gier PartyPlay.",
       icon: "🔥",
       current: totalGames,
       target: 5,
-    },
-    {
-      code: "games_10",
+    }),
+    makeBadge({
+      code: "global:games_10",
       title: "Weteran wieczoru",
       description: "Ukończ 10 gier PartyPlay.",
       icon: "🎲",
       current: totalGames,
       target: 10,
-    },
-    {
-      code: "games_25",
+    }),
+    makeBadge({
+      code: "global:games_25",
       title: "Maratończyk",
       description: "Ukończ 25 gier PartyPlay.",
       icon: "⚡",
       current: totalGames,
       target: 25,
-    },
-    {
-      code: "wins_3",
+    }),
+    makeBadge({
+      code: "global:games_50",
+      title: "Nie gasimy światła",
+      description: "Ukończ 50 gier PartyPlay.",
+      icon: "🌙",
+      current: totalGames,
+      target: 50,
+    }),
+    makeBadge({
+      code: "global:wins_3",
       title: "Łowca zwycięstw",
       description: "Wygraj 3 gry.",
       icon: "🥇",
       current: totalWins,
       target: 3,
-    },
-    {
-      code: "wins_10",
+    }),
+    makeBadge({
+      code: "global:wins_10",
       title: "Kolekcjoner triumfów",
       description: "Wygraj 10 gier.",
       icon: "👑",
       current: totalWins,
       target: 10,
-    },
-    {
-      code: "games_variety_3",
+    }),
+    makeBadge({
+      code: "global:variety_3",
       title: "Wszystkiego po trochu",
       description: "Zagraj w co najmniej 3 różne gry PartyPlay.",
       icon: "🧩",
       current: distinctGamesPlayed,
       target: 3,
-    },
-    {
-      code: "wins_variety_3",
+    }),
+    makeBadge({
+      code: "global:wins_variety_3",
       title: "Uniwersalny mistrz",
       description: "Wygraj w co najmniej 3 różnych grach PartyPlay.",
       icon: "🌟",
       current: distinctGamesWon,
       target: 3,
-    },
+    }),
   ];
 
-  const badges: PartyPlayBadge[] = badgeDefinitions.map((badge) => ({
-    code: badge.code,
-    title: badge.title,
-    description: badge.description,
-    icon: badge.icon,
-    earned: badge.current >= badge.target,
-    progressCurrent: Math.min(badge.current, badge.target),
-    progressTarget: badge.target,
-  }));
+  for (const meta of PARTYPLAY_GAMES.filter((game) => game.connectedToProgress)) {
+    const game = gameProgress.get(meta.slug) ?? {
+      gameSlug: meta.slug,
+      gamesCompleted: 0,
+      wins: 0,
+    };
 
-  const earnedGlobalBadges = badges.filter((badge) => badge.earned).length;
-
-  const xp =
-    totalGames * 100 +
-    totalWins * 75 +
-    polowanieBadges * 20 +
-    earnedGlobalBadges * 25;
-
-  let activeLevelIndex = 0;
-  for (let index = 0; index < LEVELS.length; index += 1) {
-    if (xp >= LEVELS[index].minXp) activeLevelIndex = index;
+    badges.push(
+      makeBadge({
+        code: `game:${meta.slug}:first_game`,
+        title: `${meta.shortLabel}: debiut`,
+        description: `Ukończ pierwszą rozgrywkę w „${meta.label}”.`,
+        icon: meta.icon,
+        scope: "game",
+        gameSlug: meta.slug,
+        current: game.gamesCompleted,
+        target: 1,
+      }),
+      makeBadge({
+        code: `game:${meta.slug}:first_win`,
+        title: `${meta.shortLabel}: pierwsze zwycięstwo`,
+        description: `Wygraj pierwszą rozgrywkę w „${meta.label}”.`,
+        icon: "🏅",
+        scope: "game",
+        gameSlug: meta.slug,
+        current: game.wins,
+        target: 1,
+      }),
+      makeBadge({
+        code: `game:${meta.slug}:games_5`,
+        title: `${meta.shortLabel}: stały bywalec`,
+        description: `Ukończ 5 rozgrywek w „${meta.label}”.`,
+        icon: "🎯",
+        scope: "game",
+        gameSlug: meta.slug,
+        current: game.gamesCompleted,
+        target: 5,
+      }),
+      makeBadge({
+        code: `game:${meta.slug}:wins_3`,
+        title: `${meta.shortLabel}: hat trick`,
+        description: `Wygraj 3 rozgrywki w „${meta.label}”.`,
+        icon: "🏆",
+        scope: "game",
+        gameSlug: meta.slug,
+        current: game.wins,
+        target: 3,
+      }),
+    );
   }
 
-  const currentLevel = LEVELS[activeLevelIndex];
-  const nextLevel = LEVELS[activeLevelIndex + 1];
+  const partyPlayBadgesEarned = badges.filter((badge) => badge.earned).length;
+
+  const xpBreakdown = {
+    games: totalGames * PARTYPLAY_XP_RULES.gameCompleted,
+    wins: totalWins * PARTYPLAY_XP_RULES.win,
+    polowanieBadges: polowanieBadges * PARTYPLAY_XP_RULES.polowanieBadge,
+    partyPlayBadges:
+      partyPlayBadgesEarned * PARTYPLAY_XP_RULES.partyPlayBadge,
+  };
+
+  const xp =
+    xpBreakdown.games +
+    xpBreakdown.wins +
+    xpBreakdown.polowanieBadges +
+    xpBreakdown.partyPlayBadges;
+
+  let activeLevelIndex = 0;
+  for (let index = 0; index < PARTYPLAY_LEVELS.length; index += 1) {
+    if (xp >= PARTYPLAY_LEVELS[index].minXp) activeLevelIndex = index;
+  }
+
+  const currentLevel = PARTYPLAY_LEVELS[activeLevelIndex];
+  const nextLevel = PARTYPLAY_LEVELS[activeLevelIndex + 1];
 
   const level: PartyPlayLevel = {
     level: currentLevel.level,
@@ -192,6 +310,8 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
 
   return {
     xp,
+    xpBreakdown,
+    xpRules: PARTYPLAY_XP_RULES,
     level,
     levelProgress,
     xpToNextLevel: nextLevel == null ? 0 : Math.max(0, nextLevel.minXp - xp),
@@ -200,7 +320,8 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     distinctGamesPlayed,
     distinctGamesWon,
     polowanieBadges,
-    globalBadgesEarned: earnedGlobalBadges,
+    partyPlayBadgesEarned,
+    globalBadgesEarned: partyPlayBadgesEarned,
     badges,
   };
 }
