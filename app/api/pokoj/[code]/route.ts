@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import {
   assignPlatformTeams,
   getPlatformPlayer,
+  getPlatformRecoveryCode,
   joinPlatformRoom,
+  recoverPlatformPlayer,
   listPlatformLobby,
   lookupPlatformRoom,
   setPlatformPlayerReady,
@@ -39,9 +41,10 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostToken = cookieStore.get(names.host)?.value ?? null;
   const playerToken = cookieStore.get(names.player)?.value ?? null;
 
-  const [players, currentPlayer] = await Promise.all([
+  const [players, currentPlayer, recoveryCode] = await Promise.all([
     listPlatformLobby(code),
     playerToken ? getPlatformPlayer(code, playerToken) : Promise.resolve(null),
+    playerToken ? getPlatformRecoveryCode(code, playerToken) : Promise.resolve(null),
   ]);
 
   return NextResponse.json({
@@ -52,6 +55,7 @@ export async function GET(_request: Request, context: RouteContext) {
     },
     players,
     currentPlayerId: currentPlayer?.id ?? null,
+    recoveryCode,
     isHost: Boolean(hostToken),
   });
 }
@@ -78,6 +82,40 @@ export async function POST(request: Request, context: RouteContext) {
       const name = String(body.name ?? "").trim().slice(0, 20);
       const avatar = String(body.avatar ?? "");
       const player = await joinPlatformRoom(code, name, avatar);
+
+      const response = NextResponse.json({ ok: true, player });
+      response.cookies.set(names.player, player.player_token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 12,
+      });
+      return response;
+    }
+
+    if (action === "recover") {
+      const name = String(body.name ?? "").trim().slice(0, 20);
+      const recoveryCode = String(body.recoveryCode ?? "")
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 6);
+
+      if (!name || recoveryCode.length !== 6) {
+        return NextResponse.json(
+          { error: "Wpisz imię i 6-znakowy kod powrotu." },
+          { status: 400 },
+        );
+      }
+
+      const player = await recoverPlatformPlayer(code, name, recoveryCode);
+      if (!player) {
+        return NextResponse.json(
+          { error: "Nie znaleziono gracza z takim imieniem i kodem powrotu." },
+          { status: 404 },
+        );
+      }
 
       const response = NextResponse.json({ ok: true, player });
       response.cookies.set(names.player, player.player_token, {
