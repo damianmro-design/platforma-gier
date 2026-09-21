@@ -69,10 +69,9 @@ export async function GET(request: Request) {
             ? identityName
             : aggregateName || identityName || "Gracz";
 
-        const avatar =
-          identity.avatar === "lion" && aggregate?.avatar
-            ? aggregate.avatar
-            : identity.avatar || aggregate?.avatar || "lion";
+        const avatar = identity.profile_avatar_set
+          ? identity.avatar
+          : aggregate?.avatar || identity.avatar || "lion";
 
         return {
           userId: identity.auth_user_id,
