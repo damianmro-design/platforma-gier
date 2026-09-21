@@ -733,3 +733,111 @@ export async function nextClpRound7Question(code: string, hostToken: string) {
   if (error) throw new Error(error.message);
   return data as string | null;
 }
+
+
+export type ClpFinalBoardItem = {
+  label: string;
+  percent: number | null;
+  rank: number;
+};
+
+export type ClpFinalPrediction = {
+  answer: string | null;
+  locked: boolean;
+  playerId: string;
+} | null;
+
+export type ClpFinalTiebreak = {
+  count: number;
+  locked: boolean;
+  playerId: string;
+} | null;
+
+export type ClpFinalState = {
+  questionIndex: number;
+  questionCount: number;
+  questionKey: string;
+  prompt: string;
+  options: string[];
+  board: ClpFinalBoardItem[];
+  multiplier: 1 | 3;
+  mode: "predict" | "reveal" | "tiebreak" | "finished";
+  scoreA: number;
+  scoreB: number;
+  startScoreA: number;
+  startScoreB: number;
+  winner: "A" | "B" | null;
+  predictorA: ClpRound1Player | null;
+  predictorB: ClpRound1Player | null;
+  predictionA: ClpFinalPrediction;
+  predictionB: ClpFinalPrediction;
+  tiebreakA: ClpFinalTiebreak;
+  tiebreakB: ClpFinalTiebreak;
+  tiebreakPrompt: string;
+  tiebreakCorrectPercent: number | null;
+  lastEvent: {
+    type?: string;
+    rankA?: number;
+    rankB?: number;
+    scoreGainA?: number;
+    scoreGainB?: number;
+    multiplier?: number;
+    correctPercent?: number;
+    differenceA?: number;
+    differenceB?: number;
+    winner?: "A" | "B";
+  } | null;
+};
+
+export async function getClpFinalState(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_clp_final_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ClpFinalState | null;
+}
+
+export async function submitClpFinalPrediction(
+  code: string,
+  playerToken: string,
+  answerValue: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_final_prediction", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_answer_value: answerValue,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpFinalState["lastEvent"];
+}
+
+export async function nextClpFinalQuestion(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_clp_final_question", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
+
+export async function submitClpFinalTiebreak(
+  code: string,
+  playerToken: string,
+  predictedPercent: number,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_clp_final_tiebreak", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_predicted_percent: predictedPercent,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as ClpFinalState["lastEvent"];
+}
