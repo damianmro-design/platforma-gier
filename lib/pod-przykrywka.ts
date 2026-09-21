@@ -2,6 +2,7 @@ export type PpPhase =
   | "briefing"
   | "mission"
   | "evidence"
+  | "spotlight"
   | "suspicion"
   | "suspicion_result"
   | "checkpoint"
@@ -32,6 +33,7 @@ export type PpMission = {
   responseMode: "text" | "choice";
   options: string[];
   discussionPrompts: string[];
+  modifier: "normal" | "anonymous" | "silent" | "hot_seat";
 };
 
 export type PpSubmission = {
@@ -65,6 +67,11 @@ export type PpTwist = {
   interrogationPlayerAvatar: string | null;
   interrogationQuestion: string | null;
   isCurrentPlayerTarget: boolean;
+  spotlightPlayerId: string | null;
+  spotlightPlayerName: string | null;
+  spotlightPlayerAvatar: string | null;
+  spotlightQuestion: string | null;
+  isCurrentPlayerSpotlight: boolean;
   secretOrder: string | null;
   finalDefenderOneId: string | null;
   finalDefenderOneName: string | null;
