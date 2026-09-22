@@ -1636,3 +1636,17 @@ export async function getTestPlayerToken(
   if (error) throw new Error(error.message);
   return data ? String(data) : null;
 }
+
+export async function runAktaNocyTestBots(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("run_akta_nocy_test_bots", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return String(data ?? "idle");
+}
