@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
+  assignPlatformTeams,
   createPlatformRoom,
   prepareTestRoom,
 } from "@/lib/platform-db";
@@ -8,10 +9,10 @@ import {
 const TESTER_EMAIL = "damian.mro@wp.pl";
 
 const BOT_COUNTS: Record<string, number> = {
-  "co-ludzie-powiedza": 3,
-  "zakrecone-haslo": 2,
-  "pod-przykrywka": 5,
-  "akta-nocy": 4,
+  "co-ludzie-powiedza": 4,
+  "zakrecone-haslo": 3,
+  "pod-przykrywka": 6,
+  "akta-nocy": 5,
 };
 
 export async function POST(request: Request) {
@@ -37,6 +38,13 @@ export async function POST(request: Request) {
 
     if (!prepared) {
       return NextResponse.json({ error: "Nie udało się przygotować pokoju testowego." }, { status: 500 });
+    }
+
+    if (gameSlug === "co-ludzie-powiedza") {
+      const teamsReady = await assignPlatformTeams(room.code, room.host_token);
+      if (!teamsReady) {
+        return NextResponse.json({ error: "Nie udało się przygotować drużyn testowych." }, { status: 500 });
+      }
     }
 
     const response = NextResponse.json({ ok: true, code: room.code });

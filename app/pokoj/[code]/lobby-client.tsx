@@ -128,7 +128,7 @@ export default function LobbyClient({ code }: { code: string }) {
       !data ||
       data.currentPlayerId ||
       data.room.status !== "lobby" ||
-      (data.isHost && !data.room.isTest && data.room.gameSlug !== "zakrecone-haslo") ||
+      (data.isHost && (data.room.isTest || data.room.gameSlug !== "zakrecone-haslo")) ||
       autoJoinAttempted.current
     ) {
       return;
@@ -351,6 +351,27 @@ export default function LobbyClient({ code }: { code: string }) {
           </button>
         </form>
       ) : !me ? (
+        data.isHost && data.room.isTest ? (
+          <section className="player-join-panel">
+            <span className="lobby-label">TRYB TESTOWY</span>
+            <h2>Pokój jest gotowy bez innych osób</h2>
+            <p>
+              Boty tworzą pełną minimalną obsadę tej gry. Ty zostajesz prowadzącym
+              i po starcie możesz przełączać widok między ekranem prowadzącego a
+              każdym testerem.
+            </p>
+            {accountSignedIn && (
+              <div className="mt-5 flex items-center gap-3 rounded-2xl border border-cyan-300/15 bg-cyan-300/[.05] p-4">
+                <PartyPlayAvatar id={avatar} size={58} />
+                <div>
+                  <span className="block text-[9px] font-black uppercase tracking-[.15em] text-cyan-300">TESTER</span>
+                  <strong className="mt-1 block text-base font-black">{name || "Damian"}</strong>
+                  <small className="mt-1 block text-zinc-500">Nie zajmujesz miejsca gracza.</small>
+                </div>
+              </div>
+            )}
+          </section>
+        ) : (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
           <h2>{accountSignedIn ? "Twój profil zaGRAj jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
@@ -404,6 +425,7 @@ export default function LobbyClient({ code }: { code: string }) {
             </>
           )}
         </form>
+        )
       ) : (
         <section className="my-player-panel">
           <div className="my-player-avatar"><PartyPlayAvatar id={me.avatar} size={52} /></div>
