@@ -41,12 +41,9 @@ export default function PolowanieOwnerTestButton() {
       next: "/?test=1",
     });
 
-    window.open(
+    window.location.assign(
       `${POLOWANIE_ORIGIN.replace(/\/$/, "")}/auth/import#${hash.toString()}`,
-      "zagraj-polowanie-owner-test",
     );
-
-    setBusy(false);
   }
 
   return (

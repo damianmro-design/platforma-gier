@@ -50,21 +50,7 @@ export default function FloorOwnerTestButton() {
     setBusy(true);
     setMessage("");
 
-    const supabase = createPartyPlayAuthClient();
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-
-    if (!token) {
-      setMessage("Zaloguj się ponownie do zaGRAj.");
-      setBusy(false);
-      return;
-    }
-
-    tokenRef.current = token;
-    const popup = window.open(
-      FLOOR_ORIGIN + "/?ownerTest=1",
-      "zagraj-floor-owner-test",
-    );
+    const popup = window.open("", "zagraj-floor-owner-test");
 
     if (!popup) {
       setMessage("Przeglądarka zablokowała nowe okno. Zezwól na wyskakujące okna.");
@@ -73,6 +59,20 @@ export default function FloorOwnerTestButton() {
     }
 
     popupRef.current = popup;
+
+    const supabase = createPartyPlayAuthClient();
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+
+    if (!token) {
+      popup.close();
+      setMessage("Zaloguj się ponownie do zaGRAj.");
+      setBusy(false);
+      return;
+    }
+
+    tokenRef.current = token;
+    popup.location.href = FLOOR_ORIGIN + "/?ownerTest=1";
   }
 
   return (
