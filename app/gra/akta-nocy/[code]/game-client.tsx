@@ -297,8 +297,8 @@ function AktaNocyAvatar({
   );
 }
 
-function avatar(id: string, size = 36) {
-  return <AktaNocyAvatar seed={id} size={size} />;
+function avatar(id: string, identity = "", size = 36) {
+  return <AktaNocyAvatar seed={`${id}:${identity}`} size={size} />;
 }
 
 function isEvidenceAPhase(phase: string | null) {
@@ -628,7 +628,7 @@ function HostView({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                    {avatar(item.avatar)}
+                    {avatar(item.avatar, item.displayName)}
                   </span>
                   <div className="min-w-0">
                     <span className="text-[9px] font-black uppercase tracking-[.2em] text-red-300/75">
@@ -790,7 +790,7 @@ function HostView({
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
-                      {avatar(player.avatar)}
+                      {avatar(player.avatar, player.displayName)}
                     </span>
                     <strong className="truncate text-sm">{player.displayName}</strong>
                   </div>
@@ -983,7 +983,7 @@ function HostView({
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
-                    {avatar(player.avatar)}
+                    {avatar(player.avatar, player.displayName)}
                   </span>
                   <strong className="truncate text-sm">{player.displayName}</strong>
                 </div>
@@ -1065,7 +1065,7 @@ function HostView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-black/30 text-xl">
-                  {avatar(reveal.culprit.avatar)}
+                  {avatar(reveal.culprit.avatar, reveal.culprit.displayName)}
                 </span>
                 <strong className="text-2xl">{reveal.culprit.displayName}</strong>
               </div>
@@ -1633,7 +1633,7 @@ function PlayerRevealView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-black/30 text-xl">
-                  {avatar(reveal.culprit.avatar)}
+                  {avatar(reveal.culprit.avatar, reveal.culprit.displayName)}
                 </span>
                 <strong className="text-xl">{reveal.culprit.displayName}</strong>
               </div>
@@ -2380,7 +2380,7 @@ function Roster({ progress }: { progress: HostProgress[] }) {
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                {avatar(player.avatar)}
+                {avatar(player.avatar, player.displayName)}
               </span>
               <strong className="truncate text-sm text-orange-50/85">
                 {player.display_name}
