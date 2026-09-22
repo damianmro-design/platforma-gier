@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { joinRoom } from "./room-actions";
 import AccountMenu from "./account-menu";
+import FloorOwnerTestButton from "@/components/floor-owner-test-button";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
@@ -392,6 +393,7 @@ export default function Home() {
             </div>
           </div>
         </header>
+        <FloorOwnerTestButton />
 
         <section id="top" className="mx-auto grid max-w-7xl gap-10 px-5 pb-14 pt-14 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:pb-20 lg:pt-20">
           <div>
