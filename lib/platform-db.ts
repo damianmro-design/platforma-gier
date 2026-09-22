@@ -989,6 +989,20 @@ export async function getPartyPlayAccountHistory(
 }
 
 
+export type PodPrzykrywkaAccountStats = {
+  gamesCompleted: number;
+  wins: number;
+  agentGames: number;
+  agentWins: number;
+  oszustGames: number;
+  oszustWins: number;
+  correctFinalVotes: number;
+  perfectCoverWins: number;
+  innocentFinalDefenderWins: number;
+  interrogatedWins: number;
+  hotSeatAppearances: number;
+};
+
 export type MyPartyPlayPlatformStats = {
   summary: PartyPlayAccountSummary;
   history: PartyPlayAccountHistoryItem[];
@@ -996,6 +1010,7 @@ export type MyPartyPlayPlatformStats = {
   historyOffset: number;
   historyLimit: number;
   historyHasMore: boolean;
+  podPrzykrywka: PodPrzykrywkaAccountStats;
 };
 
 export async function getMyPartyPlayPlatformStats(
@@ -1039,10 +1054,12 @@ export async function getMyPartyPlayPlatformStats(
     historyOffset?: number | string;
     historyLimit?: number | string;
     historyHasMore?: boolean;
+    podPrzykrywka?: Record<string, unknown>;
   };
 
   const rawSummary = payload.summary ?? {};
   const rawGames = Array.isArray(rawSummary.games) ? rawSummary.games : [];
+  const rawPodPrzykrywka = payload.podPrzykrywka ?? {};
 
   const summary: PartyPlayAccountSummary = {
     games_completed: Number(rawSummary.games_completed ?? 0),
@@ -1083,6 +1100,20 @@ export async function getMyPartyPlayPlatformStats(
     completed_at: String(row.completed_at ?? ""),
   }));
 
+  const podPrzykrywka: PodPrzykrywkaAccountStats = {
+    gamesCompleted: Number(rawPodPrzykrywka.gamesCompleted ?? 0),
+    wins: Number(rawPodPrzykrywka.wins ?? 0),
+    agentGames: Number(rawPodPrzykrywka.agentGames ?? 0),
+    agentWins: Number(rawPodPrzykrywka.agentWins ?? 0),
+    oszustGames: Number(rawPodPrzykrywka.oszustGames ?? 0),
+    oszustWins: Number(rawPodPrzykrywka.oszustWins ?? 0),
+    correctFinalVotes: Number(rawPodPrzykrywka.correctFinalVotes ?? 0),
+    perfectCoverWins: Number(rawPodPrzykrywka.perfectCoverWins ?? 0),
+    innocentFinalDefenderWins: Number(rawPodPrzykrywka.innocentFinalDefenderWins ?? 0),
+    interrogatedWins: Number(rawPodPrzykrywka.interrogatedWins ?? 0),
+    hotSeatAppearances: Number(rawPodPrzykrywka.hotSeatAppearances ?? 0),
+  };
+
   return {
     summary,
     history,
@@ -1090,6 +1121,7 @@ export async function getMyPartyPlayPlatformStats(
     historyOffset: Number(payload.historyOffset ?? 0),
     historyLimit: Number(payload.historyLimit ?? history.length),
     historyHasMore: Boolean(payload.historyHasMore),
+    podPrzykrywka,
   } as MyPartyPlayPlatformStats;
 }
 
@@ -1226,6 +1258,94 @@ export async function getPartyPlayRankingAggregates(accessToken: string) {
   ) as PartyPlayRankingAggregate[];
 }
 
+
+export async function getPpState(code: string, playerToken?: string | null) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_pp_state", {
+    p_code: code,
+    p_player_token: playerToken ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as import("@/lib/pod-przykrywka").PpGameState | null;
+}
+
+export async function submitPpAnswer(
+  code: string,
+  playerToken: string,
+  answer: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_answer", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_answer: answer,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function submitPpVote(
+  code: string,
+  playerToken: string,
+  targetPlayerId: string,
+  voteType: "suspicion" | "final",
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_vote", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_target_player_id: targetPlayerId,
+    p_vote_type: voteType,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function advancePpPhase(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_pp_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return String(data ?? "");
+}
+
+export async function extendPpPhaseTimer(
+  code: string,
+  hostToken: string,
+  seconds = 60,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("extend_pp_phase_timer", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_seconds: seconds,
+  });
+
+  if (error) throw new Error(error.message);
+  return Number(data ?? 0);
+}
+
+export async function skipPpPlayer(
+  code: string,
+  hostToken: string,
+  playerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("skip_pp_player", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_player_id: playerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
 
 export type AktaNocyAssignment = {
   player_id: string;
