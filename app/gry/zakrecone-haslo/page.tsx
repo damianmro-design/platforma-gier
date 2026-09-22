@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 };
 
 const rules = [
-  ["01", "Zakręć kołem", "Wartość z koła określa, ile punktów daje każda trafiona spółgłoska."],
-  ["02", "Wybierz literę", "Trafiona litera zostaje odkryta. Pudło oddaje kolej następnej osobie."],
-  ["03", "Kup samogłoskę", "Za 200 pkt z bieżącej rundy możesz odkryć A, Ą, E, Ę, I, O, Ó, U lub Y."],
-  ["04", "Rozwiąż hasło", "W swojej kolejce możesz zaryzykować i podać całe hasło. Trafienie daje 1000 pkt bonusu."],
+  ["01", "Zakręć kołem", "Wartość z koła określa punkty za każdą trafioną spółgłoskę. BANKRUT zeruje punkty z rundy, a PAS oddaje kolejkę."],
+  ["02", "Wybierz literę", "Trafiona spółgłoska odkrywa wszystkie jej wystąpienia i grasz dalej. Pudło przekazuje ruch następnej osobie."],
+  ["03", "Kup samogłoskę", "Za 200 pkt z bieżącej rundy możesz wybrać samogłoskę. Koszt płacisz zawsze, a nietrafiona samogłoska kończy Twoją kolejkę."],
+  ["04", "Rozwiąż hasło", "W swojej kolejce możesz podać całe hasło. Poprawna odpowiedź daje 1000 pkt bonusu, błędna oddaje kolejkę."],
 ];
 
 export default function ZakreconeHasloPage() {
