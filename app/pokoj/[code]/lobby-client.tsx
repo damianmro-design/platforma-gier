@@ -60,6 +60,11 @@ export default function LobbyClient({ code }: { code: string }) {
           return;
         }
 
+        if (next.room.gameSlug === "pod-przykrywka") {
+          window.location.assign(`/gra/pod-przykrywka/${code}`);
+          return;
+        }
+
         if (next.room.gameSlug === "akta-nocy") {
           window.location.assign(`/gra/akta-nocy/${code}`);
           return;
@@ -228,10 +233,11 @@ export default function LobbyClient({ code }: { code: string }) {
 
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
   const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
+  const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
   const isTeamGame = data?.room.gameSlug === "co-ludzie-powiedza";
-  const noTeams = isWordGame || isAktaNocy;
-  const minPlayers = isWordGame ? 3 : isAktaNocy ? 5 : 4;
+  const noTeams = isWordGame || isUndercoverGame || isAktaNocy;
+  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
   const maxPlayers = isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
@@ -468,9 +474,11 @@ export default function LobbyClient({ code }: { code: string }) {
             <p className="start-hint">
               {isWordGame
                 ? "Do startu: 3–12 osób i wszyscy oznaczeni jako gotowi."
-                : isAktaNocy
-                  ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
-                  : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                : isUndercoverGame
+                  ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
+                  : isAktaNocy
+                    ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
+                    : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
