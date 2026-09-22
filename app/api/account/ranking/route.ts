@@ -62,6 +62,7 @@ export async function GET(request: Request) {
             gamesCompleted: game.gamesCompleted,
             wins: game.wins,
           })),
+          podPrzykrywka: aggregate?.podPrzykrywka,
         });
 
         const identityName = identity.display_name.trim();
