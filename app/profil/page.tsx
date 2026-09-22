@@ -1,24 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import {
+  PARTYPLAY_AVATARS,
+  PartyPlayAvatar,
+  PartyPlayAvatarLock,
+  isPartyPlayAvatarUnlocked,
+  normalizePartyPlayAvatar,
+} from "@/components/partyplay-avatar";
 
-const AVATARS = [
-  ["lion", "🦁"],
-  ["fox", "🦊"],
-  ["panda", "🐼"],
-  ["tiger", "🐯"],
-  ["koala", "🐨"],
-  ["owl", "🦉"],
-  ["frog", "🐸"],
-  ["penguin", "🐧"],
-  ["bear", "🐻"],
-  ["rabbit", "🐰"],
-  ["monkey", "🐵"],
-  ["cat", "🐱"],
-] as const;
 
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "Co ludzie powiedzą",
@@ -165,16 +158,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [avatar, setAvatar] = useState("lion");
+  const [avatar, setAvatar] = useState("avatar-01");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [polowanie, setPolowanie] = useState<PolowanieCareer | null>(null);
   const [platformStats, setPlatformStats] = useState<PlatformStatsResponse | null>(null);
 
-  const avatarEmoji = useMemo(
-    () => AVATARS.find(([id]) => id === avatar)?.[1] ?? "🎮",
-    [avatar],
-  );
 
   const totalGames =
     Number(polowanie?.games_completed ?? 0) +
@@ -183,6 +172,8 @@ export default function ProfilePage() {
   const totalWins =
     Number(polowanie?.wins ?? 0) +
     Number(platformStats?.summary.wins ?? 0);
+
+  const currentLevel = platformStats?.progression.level.level ?? 1;
 
   useEffect(() => {
     let mounted = true;
@@ -228,7 +219,7 @@ export default function ProfilePage() {
           userData.user.email?.split("@")[0] ||
           "Gracz",
       );
-      setAvatar(row?.avatar || "lion");
+      setAvatar(normalizePartyPlayAvatar(row?.avatar));
 
       const career = (
         Array.isArray(careerData) ? careerData[0] : careerData
@@ -261,6 +252,14 @@ export default function ProfilePage() {
             if (mounted) {
               setPlatformStats(stats);
               if (stats.polowanie) setPolowanie(stats.polowanie);
+              setAvatar((currentAvatar) =>
+                isPartyPlayAvatarUnlocked(
+                  currentAvatar,
+                  stats.progression.level.level,
+                )
+                  ? currentAvatar
+                  : "avatar-01",
+              );
             }
           }
         } catch {
@@ -283,6 +282,11 @@ export default function ProfilePage() {
 
     if (!clean) {
       setError("Wpisz nazwę gracza.");
+      return;
+    }
+
+    if (!isPartyPlayAvatarUnlocked(avatar, currentLevel)) {
+      setError("Ten avatar odblokuje się na wyższym poziomie.");
       return;
     }
 
@@ -370,8 +374,8 @@ export default function ProfilePage() {
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-[#0a0d1c]/92 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <div className="grid h-24 w-24 shrink-0 place-items-center rounded-[1.7rem] border border-violet-300/20 bg-violet-400/10 text-5xl">
-              {avatarEmoji}
+            <div className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-[1.7rem] border border-violet-300/20 bg-violet-400/10 p-1 shadow-[0_0_40px_rgba(139,92,246,.14)]">
+              <PartyPlayAvatar id={avatar} size={86} />
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-black uppercase tracking-[.24em] text-violet-300">
@@ -492,24 +496,67 @@ export default function ProfilePage() {
               className="mt-2 w-full rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-base font-bold outline-none focus:border-violet-300/50"
             />
 
-            <p className="mt-6 text-[9px] font-black uppercase tracking-[.16em] text-zinc-500">
-              Avatar
-            </p>
-            <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-              {AVATARS.map(([id, emoji]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setAvatar(id)}
-                  className={`grid min-h-16 place-items-center rounded-2xl border text-2xl transition ${
-                    avatar === id
-                      ? "border-violet-300/55 bg-violet-400/15"
-                      : "border-white/8 bg-white/[.025] hover:bg-white/[.05]"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
+            <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[.16em] text-zinc-500">
+                  Avatar
+                </p>
+                <p className="mt-1 text-[10px] text-zinc-600">
+                  6 dostępnych od startu, kolejne odblokowują się wraz z poziomem.
+                </p>
+              </div>
+              <span className="rounded-full border border-violet-300/15 bg-violet-300/[.05] px-3 py-1.5 text-[9px] font-black text-violet-200">
+                POZIOM {currentLevel}
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+              {PARTYPLAY_AVATARS.map((item, index) => {
+                const unlocked = isPartyPlayAvatarUnlocked(item.id, currentLevel);
+                const selected = avatar === item.id;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={!unlocked}
+                    onClick={() => unlocked && setAvatar(item.id)}
+                    aria-label={
+                      unlocked
+                        ? `Wybierz avatar ${item.name}`
+                        : `Avatar ${item.name}, odblokuje się na poziomie ${item.unlockLevel}`
+                    }
+                    className={`group relative overflow-hidden rounded-2xl border p-2.5 text-left transition ${
+                      selected
+                        ? "border-cyan-300/70 bg-violet-400/15 shadow-[0_0_30px_rgba(34,211,238,.10)]"
+                        : unlocked
+                          ? "border-white/10 bg-white/[.025] hover:border-violet-300/30 hover:bg-white/[.05]"
+                          : "cursor-not-allowed border-white/[.055] bg-black/20"
+                    }`}
+                  >
+                    <div className="mx-auto flex justify-center">
+                      <PartyPlayAvatar
+                        id={item.id}
+                        size={82}
+                        locked={!unlocked}
+                      />
+                    </div>
+
+                    <div className="mt-2 flex min-h-7 items-center justify-between gap-2">
+                      <span className={`truncate text-[9px] font-black uppercase tracking-[.1em] ${
+                        unlocked ? "text-zinc-400" : "text-zinc-700"
+                      }`}>
+                        {index < 6 ? "START" : `LVL ${item.unlockLevel}`}
+                      </span>
+                      {!unlocked && (
+                        <span className="text-zinc-700">
+                          <PartyPlayAvatarLock />
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {error && (
@@ -744,8 +791,8 @@ export default function ProfilePage() {
                   key={`${item.game_slug}-${item.completed_at}-${index}`}
                   className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/8 bg-black/15 p-3"
                 >
-                  <span className="text-xl">
-                    {AVATARS.find(([id]) => id === item.avatar)?.[1] ?? "🎮"}
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/8 bg-black/15">
+                    <PartyPlayAvatar id={item.avatar} size={38} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <strong className="block truncate text-sm font-black">

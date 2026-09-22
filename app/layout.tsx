@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import GameHomeLink from "./game-home-link";
 
 const geist = Geist({
   variable: "--font-geist",
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl">
-      <body className={geist.variable}>{children}</body>
+      <body className={geist.variable}>{children}<GameHomeLink /></body>
     </html>
   );
 }

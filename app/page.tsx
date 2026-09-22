@@ -1,9 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import { joinRoom } from "./room-actions";
 import AccountMenu from "./account-menu";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
-type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word";
+type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
+type CategoryFilter = "all" | "funny" | "strategic" | "team" | "long";
+type MoodFilter = "laugh" | "think" | "compete" | "cooperate";
+type GameFilterState = {
+  category: CategoryFilter;
+  playerCount: number | null;
+  maxTime: number | null;
+  mood: MoodFilter | null;
+};
 
 type GameCardProps = {
   title: string;
@@ -17,6 +28,12 @@ type GameCardProps = {
   href?: string;
   external?: boolean;
   status: "hit" | "new" | "soon";
+  minPlayers: number;
+  maxPlayers: number;
+  minTime: number;
+  maxTime: number;
+  categories: Array<Exclude<CategoryFilter, "all" | "long">>;
+  moods: MoodFilter[];
 };
 
 const accentMap: Record<Accent, {
@@ -174,14 +191,65 @@ function GameArt({ type }: { type: Art }) {
     );
   }
 
+  if (type === "word") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_30%,rgba(167,139,250,.4),transparent_32%),linear-gradient(145deg,#190b35,#43157a_58%,#111827)]">
+        <div className="absolute left-8 top-10 rotate-[-12deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">PIZZA</div>
+        <div className="absolute right-8 top-14 rotate-[9deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">FILM</div>
+        <div className="absolute bottom-9 left-1/2 -translate-x-1/2 rotate-[2deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">?</div>
+        <p className="text-center text-4xl font-black tracking-[-.06em] text-white drop-shadow-xl">
+          ZAKRĘCONE<br /><span className="text-violet-200">HASŁO</span>
+        </p>
+      </div>
+    );
+  }
+
+  if (type === "duo") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_25%_30%,rgba(244,114,182,.34),transparent_28%),radial-gradient(circle_at_75%_65%,rgba(34,211,238,.28),transparent_30%),linear-gradient(145deg,#250b2f,#4c155b_48%,#083344)]">
+        <div className="absolute left-[16%] top-[24%] h-24 w-24 rounded-full border-2 border-pink-200/40 bg-pink-400/10 blur-[.2px]" />
+        <div className="absolute right-[15%] bottom-[20%] h-24 w-24 rounded-full border-2 border-cyan-200/40 bg-cyan-400/10 blur-[.2px]" />
+        <div className="absolute left-1/2 top-1/2 h-20 w-[2px] -translate-x-1/2 -translate-y-1/2 rotate-[32deg] bg-gradient-to-b from-pink-300 via-white to-cyan-300 opacity-70" />
+        <div className="relative z-10 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[.34em] text-pink-200/70">DLA DWOJGA</p>
+          <p className="mt-2 text-5xl font-black tracking-[-.08em] text-white">TYLKO</p>
+          <p className="-mt-2 text-5xl font-black tracking-[-.08em] text-cyan-200">MY</p>
+          <div className="mt-4 flex justify-center gap-2 text-[10px] font-black">
+            <span className="rounded-full border border-pink-200/20 bg-pink-300/10 px-3 py-1 text-pink-100">JA</span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-white">?</span>
+            <span className="rounded-full border border-cyan-200/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">TY</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "cipher") {
+    return (
+      <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,.30),transparent_28%),linear-gradient(145deg,#04111a,#071f2c_55%,#111827)]">
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(103,232,249,.18)_1px,transparent_1px),linear-gradient(90deg,rgba(103,232,249,.18)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="absolute left-8 top-8 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-3 py-2 font-mono text-xs font-black tracking-[.25em] text-cyan-200">7 4 ? 2</div>
+        <div className="absolute right-7 bottom-8 rotate-[6deg] rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 font-mono text-[10px] font-black text-emerald-200">ACCESS?</div>
+        <div className="relative z-10 rounded-[1.8rem] border border-cyan-300/20 bg-black/40 px-8 py-6 text-center shadow-[0_0_55px_rgba(34,211,238,.12)] backdrop-blur-sm">
+          <p className="font-mono text-[10px] font-black uppercase tracking-[.35em] text-cyan-300/70">MISSION CODE</p>
+          <p className="mt-2 text-5xl font-black tracking-[.12em] text-white">SZYFR</p>
+          <p className="mt-3 font-mono text-xs font-bold tracking-[.28em] text-cyan-100/70">••• 4 8 2 •••</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_30%,rgba(167,139,250,.4),transparent_32%),linear-gradient(145deg,#190b35,#43157a_58%,#111827)]">
-      <div className="absolute left-8 top-10 rotate-[-12deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">PIZZA</div>
-      <div className="absolute right-8 top-14 rotate-[9deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">FILM</div>
-      <div className="absolute bottom-9 left-1/2 -translate-x-1/2 rotate-[2deg] rounded-xl bg-white px-4 py-2 font-black text-violet-800 shadow-xl">?</div>
-      <p className="text-center text-4xl font-black tracking-[-.06em] text-white drop-shadow-xl">
-        ZAKRĘCONE<br /><span className="text-violet-200">HASŁO</span>
-      </p>
+    <div className="relative flex h-56 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_18%,rgba(251,191,36,.30),transparent_24%),linear-gradient(145deg,#241506,#5a2c08_52%,#28130b)]">
+      <div className="absolute left-5 top-8 rotate-[-8deg] rounded-xl border border-amber-200/25 bg-amber-300/10 px-4 py-2 text-xs font-black text-amber-100">1 000</div>
+      <div className="absolute right-6 top-10 rotate-[7deg] rounded-xl border border-orange-200/25 bg-orange-300/10 px-4 py-2 text-xs font-black text-orange-100">5 000</div>
+      <div className="absolute bottom-7 left-8 rounded-full border border-red-300/25 bg-red-400/15 px-4 py-2 text-[10px] font-black text-red-100">ALL IN</div>
+      <div className="relative z-10 text-center">
+        <p className="text-[10px] font-black uppercase tracking-[.32em] text-amber-200/70">LICYTACJA</p>
+        <p className="mt-2 text-5xl font-black tracking-[-.07em] text-white">VA</p>
+        <p className="-mt-2 text-5xl font-black tracking-[-.07em] text-amber-300">BANQUE</p>
+        <div className="mx-auto mt-4 h-1.5 w-28 rounded-full bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 shadow-[0_0_20px_rgba(251,146,60,.5)]" />
+      </div>
     </div>
   );
 }
@@ -245,7 +313,55 @@ function GameCard(props: GameCardProps) {
   return <Link href={props.href} className={className}>{content}</Link>;
 }
 
+function matchesGame(game: GameCardProps, filters: GameFilterState) {
+  if (filters.playerCount != null && (filters.playerCount < game.minPlayers || filters.playerCount > game.maxPlayers)) {
+    return false;
+  }
+
+  if (filters.maxTime != null && game.minTime > filters.maxTime) {
+    return false;
+  }
+
+  if (filters.mood != null && !game.moods.includes(filters.mood)) {
+    return false;
+  }
+
+  if (filters.category === "long") {
+    return game.minTime >= 60;
+  }
+
+  if (filters.category !== "all" && !game.categories.includes(filters.category)) {
+    return false;
+  }
+
+  return true;
+}
+
+function FilteredGameCard({
+  filters,
+  ...props
+}: GameCardProps & { filters: GameFilterState }) {
+  if (!matchesGame(props, filters)) return null;
+  return <GameCard {...props} />;
+}
+
 export default function Home() {
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [playerCount, setPlayerCount] = useState("");
+  const [maxTime, setMaxTime] = useState("");
+  const [mood, setMood] = useState<MoodFilter | "">("");
+
+  const filters: GameFilterState = {
+    category,
+    playerCount: playerCount ? Number(playerCount) : null,
+    maxTime: maxTime ? Number(maxTime) : null,
+    mood: mood || null,
+  };
+
+  const goToGames = () => {
+    document.getElementById("gry")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#050713] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(124,58,237,.22),transparent_28%),radial-gradient(circle_at_88%_15%,rgba(14,165,233,.18),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(236,72,153,.13),transparent_30%)]" />
@@ -358,15 +474,73 @@ export default function Home() {
                 <p className="text-[10px] font-black uppercase tracking-[.22em] text-fuchsia-300">Nie wiesz?</p>
                 <p className="mt-1 text-sm font-black">Znajdź klimat</p>
               </div>
-              {["Jest nas 8 osób", "Mamy 30 min", "Chcemy się pośmiać"].map((label) => (
-                <button key={label} type="button" className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-left text-xs font-bold text-zinc-300">
-                  {label}<span className="text-zinc-600">⌄</span>
-                </button>
-              ))}
-              <a href="#gry" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-5 py-3 text-xs font-black">
+
+              <select
+                aria-label="Liczba graczy"
+                value={playerCount}
+                onChange={(event) => setPlayerCount(event.target.value)}
+                className="rounded-xl border border-white/10 bg-[#080a14] px-4 py-3 text-xs font-bold text-zinc-300 outline-none transition focus:border-violet-400/50"
+              >
+                <option value="">Ile Was jest?</option>
+                <option value="2">2 osoby</option>
+                <option value="4">4 osoby</option>
+                <option value="6">6 osób</option>
+                <option value="8">8 osób</option>
+                <option value="10">10 osób</option>
+                <option value="12">12 osób</option>
+                <option value="14">14 osób</option>
+              </select>
+
+              <select
+                aria-label="Dostępny czas"
+                value={maxTime}
+                onChange={(event) => setMaxTime(event.target.value)}
+                className="rounded-xl border border-white/10 bg-[#080a14] px-4 py-3 text-xs font-bold text-zinc-300 outline-none transition focus:border-violet-400/50"
+              >
+                <option value="">Ile macie czasu?</option>
+                <option value="30">Do 30 min</option>
+                <option value="45">Do 45 min</option>
+                <option value="60">Do 60 min</option>
+                <option value="90">Do 90 min</option>
+              </select>
+
+              <select
+                aria-label="Klimat gry"
+                value={mood}
+                onChange={(event) => setMood(event.target.value as MoodFilter | "")}
+                className="rounded-xl border border-white/10 bg-[#080a14] px-4 py-3 text-xs font-bold text-zinc-300 outline-none transition focus:border-violet-400/50"
+              >
+                <option value="">Jaki klimat?</option>
+                <option value="laugh">Chcemy się pośmiać</option>
+                <option value="think">Chcemy pogłówkować</option>
+                <option value="compete">Chcemy rywalizacji</option>
+                <option value="cooperate">Chcemy współpracować</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={goToGames}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-5 py-3 text-xs font-black transition hover:brightness-110"
+              >
                 Pokaż gry <Arrow />
-              </a>
+              </button>
             </div>
+
+            {(playerCount || maxTime || mood) && (
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlayerCount("");
+                    setMaxTime("");
+                    setMood("");
+                  }}
+                  className="text-[10px] font-black uppercase tracking-[.14em] text-zinc-500 transition hover:text-white"
+                >
+                  Wyczyść dobór
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -378,17 +552,38 @@ export default function Home() {
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">Każdy tytuł ma własny świat, tempo i rodzaj emocji.</p>
             </div>
             <div className="flex flex-wrap gap-2 text-[10px] font-black text-zinc-400">
-              {["Wszystkie", "Śmieszne", "Strategiczne", "Drużynowe", "60+ min"].map((filter, index) => (
-                <button key={filter} type="button" className={`rounded-full border px-3 py-2 ${index === 0 ? "border-violet-400/35 bg-violet-400/10 text-violet-200" : "border-white/10 bg-white/[.025]"}`}>
-                  {filter}
+              {([
+                ["all", "Wszystkie"],
+                ["funny", "Śmieszne"],
+                ["strategic", "Strategiczne"],
+                ["team", "Drużynowe"],
+                ["long", "60+ min"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setCategory(value)}
+                  className={`rounded-full border px-3 py-2 transition ${
+                    category === value
+                      ? "border-violet-400/35 bg-violet-400/10 text-violet-200"
+                      : "border-white/10 bg-white/[.025] hover:bg-white/[.06]"
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="Polowanie na Milionera"
+              minPlayers={6}
+              maxPlayers={14}
+              minTime={60}
+              maxTime={120}
+              categories={["strategic"]}
+              moods={["think", "compete"]}
               eyebrow="Duża gra wieczoru"
               description="Tajne role, zadania, blef, eliminacje i milion, który może zmieniać właściciela."
               players="6–14 graczy"
@@ -401,8 +596,14 @@ export default function Home() {
               status="hit"
             />
 
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="Floor Party"
+              minPlayers={4}
+              maxPlayers={14}
+              minTime={25}
+              maxTime={60}
+              categories={["funny", "team"]}
+              moods={["laugh", "compete", "cooperate"]}
               eyebrow="Szybka energia"
               description="Dynamiczna mieszanka kategorii, obrazków, haseł, wiedzy i teleturniejowych pojedynków."
               players="4–14 graczy"
@@ -415,8 +616,14 @@ export default function Home() {
               status="hit"
             />
 
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="CO LUDZIE POWIEDZĄ"
+              minPlayers={4}
+              maxPlayers={14}
+              minTime={45}
+              maxTime={75}
+              categories={["funny", "team"]}
+              moods={["laugh", "compete", "cooperate"]}
               eyebrow="Grywalna beta"
               description="Przewiduj najpopularniejsze odpowiedzi i sprawdź, czy naprawdę znasz swoją ekipę. Najlepiej działa przy 6–10 osobach."
               players="4–14 graczy"
@@ -428,8 +635,14 @@ export default function Home() {
               status="new"
             />
 
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="Pod Przykrywką"
+              minPlayers={6}
+              maxPlayers={14}
+              minTime={45}
+              maxTime={75}
+              categories={["strategic"]}
+              moods={["think", "compete"]}
               eyebrow="Dedukcja i sabotaż"
               description="Jedna osoba działa przeciw grupie. Obserwuj, zbieraj tropy i odkryj, kto gra podwójną grę."
               players="6–14 graczy"
@@ -441,8 +654,14 @@ export default function Home() {
               status="new"
             />
 
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="Akta Nocy"
+              minPlayers={5}
+              maxPlayers={12}
+              minTime={60}
+              maxTime={120}
+              categories={["strategic", "team"]}
+              moods={["think", "cooperate"]}
               eyebrow="Interaktywne śledztwo"
               description="Role, sekrety, dowody i przesłuchania. Odtwórz przebieg zbrodni i wskaż sprawcę."
               players="5–12 graczy"
@@ -454,8 +673,14 @@ export default function Home() {
               status="soon"
             />
 
-            <GameCard
+            <FilteredGameCard filters={filters}
               title="Zakręcone Hasło"
+              minPlayers={3}
+              maxPlayers={12}
+              minTime={20}
+              maxTime={35}
+              categories={["funny"]}
+              moods={["laugh", "compete"]}
               eyebrow="Lekki teleturniej"
               description="Hasła, litery, koło ryzyka i zwroty akcji. Krótka gra, którą łatwo odpalić na każdej imprezie."
               players="3–12 graczy"
@@ -466,6 +691,62 @@ export default function Home() {
               href="/gry/zakrecone-haslo"
               status="new"
             />
+
+
+            <FilteredGameCard filters={filters}
+              title="TYLKO MY"
+              minPlayers={2}
+              maxPlayers={2}
+              minTime={20}
+              maxTime={30}
+              categories={["funny"]}
+              moods={["laugh", "compete"]}
+              eyebrow="Gra dla 2 osób"
+              description="Sprawdźcie, jak dobrze się znacie. Przewidujcie swoje wybory, szukajcie zgodności i polujcie na momenty telepatii."
+              players="2 graczy"
+              time="20–30 min"
+              tags={["dla dwojga", "relacyjna", "telepatia"]}
+              accent="pink"
+              art="duo"
+              status="soon"
+            />
+
+            <FilteredGameCard filters={filters}
+              title="SZYFR"
+              minPlayers={2}
+              maxPlayers={6}
+              minTime={30}
+              maxTime={45}
+              categories={["strategic", "team"]}
+              moods={["think", "cooperate"]}
+              eyebrow="Kooperacyjna misja"
+              description="Każdy widzi inne informacje. Rozmawiajcie, łączcie tropy i rozwiązujcie kody, zanim skończy się czas."
+              players="2–6 graczy"
+              time="30–45 min"
+              tags={["kooperacyjna", "escape room", "komunikacja"]}
+              accent="cyan"
+              art="cipher"
+              status="soon"
+            />
+
+            <FilteredGameCard filters={filters}
+              title="VA BANQUE"
+              minPlayers={2}
+              maxPlayers={8}
+              minTime={30}
+              maxTime={45}
+              categories={["strategic"]}
+              moods={["think", "compete"]}
+              eyebrow="Licytacja i ryzyko"
+              description="Licytuj kategorię, przejmuj pytania i decyduj, ile jesteś gotów postawić. Wiedza to dopiero połowa gry."
+              players="2–8 graczy"
+              time="30–45 min"
+              tags={["licytacja", "quiz", "ryzyko"]}
+              accent="gold"
+              art="auction"
+              status="soon"
+            />
+
           </div>
         </section>
 
