@@ -31,6 +31,8 @@ function messageFor(error: unknown) {
   if (raw.includes("Letter cannot be selected now")) return "Najpierw zakręć kołem.";
   if (raw.includes("Vowel cannot be bought now")) return "Samogłoskę kupujesz przed zakręceniem kołem.";
   if (raw.includes("Round is not over")) return "Ta runda jeszcze trwa.";
+  if (raw.includes("Wheel is still spinning")) return "Koło jeszcze się kręci. Poczekaj na wynik.";
+  if (raw.includes("No consonants left")) return "Nie ma już dostępnych spółgłosek. Spróbuj odgadnąć hasło.";
 
   return "Nie udało się wykonać tej akcji.";
 }
