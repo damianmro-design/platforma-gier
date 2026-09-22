@@ -378,6 +378,12 @@ function HostView({
               Każdy powinien otworzyć swoje akta na własnym telefonie i przeczytać je w tajemnicy. Prowadzący nie widzi, kto jest sprawcą.
             </p>
 
+            <StageArtwork
+              src="/akta-nocy/hero.webp"
+              alt="Akta Nocy, sprawa Apartament 214"
+              cinematic
+            />
+
             <div className="mt-7">
               <div className="flex items-end justify-between gap-4">
                 <div>
@@ -1246,6 +1252,11 @@ function PlayerView({
               Upewnij się, że nikt nie patrzy na Twój ekran. W środku znajdziesz postać, sekret, oś czasu i informacje, których inni mogą nie znać.
             </p>
 
+            <StageArtwork
+              src="/akta-nocy/case-cover.webp"
+              alt="Okładka akt sprawy Apartament 214"
+            />
+
             <button
               type="button"
               disabled={busy}
@@ -1514,6 +1525,14 @@ function PlayerRevealView({
             </p>
           )}
           <p className="mt-5 text-sm leading-7 text-orange-50/62">{content.body}</p>
+
+          {(reveal.step === 1 || reveal.step === 2) && (
+            <StageArtwork
+              src="/akta-nocy/reveal.webp"
+              alt="Materiały ujawnienia w sprawie Apartament 214"
+              cinematic
+            />
+          )}
 
           {reveal.step === 3 && (
             <StageArtwork
