@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import AktaNocyCoverArtwork from "@/components/akta-nocy-cover-artwork";
 
 type HostProgress = {
   player_id: string;
@@ -454,11 +455,7 @@ function HostView({
               Każdy powinien otworzyć swoje akta na własnym telefonie i przeczytać je w tajemnicy. Prowadzący nie widzi, kto jest sprawcą.
             </p>
 
-            <StageArtwork
-              src="/akta-nocy/hero-v4.webp"
-              alt="Akta Nocy, sprawa Apartament 214"
-              cinematic
-            />
+            <AktaNocyCoverArtwork className="mt-6" />
 
             <div className="mt-7">
               <div className="flex items-end justify-between gap-4">
@@ -1328,10 +1325,7 @@ function PlayerView({
               Upewnij się, że nikt nie patrzy na Twój ekran. W środku znajdziesz postać, sekret, oś czasu i informacje, których inni mogą nie znać.
             </p>
 
-            <StageArtwork
-              src="/akta-nocy/case-cover-v4.webp"
-              alt="Okładka akt sprawy Apartament 214"
-            />
+            <AktaNocyCoverArtwork className="mt-6" />
 
             <button
               type="button"
