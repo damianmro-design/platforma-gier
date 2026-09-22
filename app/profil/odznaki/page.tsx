@@ -123,7 +123,7 @@ export default function PartyPlayBadgesPage() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
                 <small className="text-[8px] font-black uppercase tracking-[.14em] text-zinc-600">
-                  PARTYPLAY
+                  zaGRAj
                 </small>
                 <strong className="mt-1 block text-2xl font-black">
                   {data.progression.partyPlayBadgesEarned}/{data.progression.badges.length}
