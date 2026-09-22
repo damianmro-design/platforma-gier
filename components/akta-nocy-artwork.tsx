@@ -39,7 +39,9 @@ function EvidenceFrame({
   return (
     <svg
       viewBox="0 0 900 1125"
-      className="block h-auto w-full"
+      data-artwork="true"
+      preserveAspectRatio="xMidYMid meet"
+      className="block h-full w-full"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label={label}
@@ -389,7 +391,7 @@ export function AktaNocyEvidenceArtwork({
   className?: string;
 }) {
   return (
-    <div className={`overflow-hidden bg-[#090605] ${className}`}>
+    <div className={`aspect-[4/5] min-h-[320px] overflow-hidden bg-[#090605] ${className}`}>
       {id === "monitoring-gap" && <MonitoringArt />}
       {id === "door-log" && <DoorLogArt />}
       {id === "late-message" && <MessageArt />}
@@ -432,7 +434,9 @@ function StageCanvas({
   return (
     <svg
       viewBox="0 0 1500 850"
-      className="block h-auto w-full"
+      data-artwork="true"
+      preserveAspectRatio="xMidYMid meet"
+      className="block h-full w-full"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label={
@@ -595,7 +599,7 @@ export function AktaNocyStageArtwork({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group relative mt-6 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_18px_60px_rgba(0,0,0,.35)] ${className}`}
+        className={`group relative mt-6 block aspect-[30/17] min-h-[260px] w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_18px_60px_rgba(0,0,0,.35)] ${className}`}
       >
         <StageCanvas kind={kind} />
         <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
