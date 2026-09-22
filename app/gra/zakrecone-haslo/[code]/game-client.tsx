@@ -63,10 +63,42 @@ const DIFFICULTY: Record<number, string> = {
 const WHEEL_GRADIENT =
   "conic-gradient(from -10deg,#8b5cf6 0deg 20deg,#ec4899 20deg 40deg,#22d3ee 40deg 60deg,#f59e0b 60deg 80deg,#7c3aed 80deg 100deg,#10b981 100deg 120deg,#e11d48 120deg 140deg,#3b82f6 140deg 160deg,#a855f7 160deg 180deg,#f97316 180deg 200deg,#06b6d4 200deg 220deg,#8b5cf6 220deg 240deg,#ec4899 240deg 260deg,#22c55e 260deg 280deg,#f59e0b 280deg 300deg,#7c3aed 300deg 320deg,#ef4444 320deg 340deg,#3b82f6 340deg 360deg)";
 
+const WHEEL_SPIN_MS = 6000;
+const WHEEL_REVEAL_MS = 7000;
+
 function wheelRotation(segmentIndex?: number | null) {
   if (segmentIndex == null || segmentIndex < 0) return 0;
   const segmentAngle = 360 / ZH_WHEEL_SEGMENTS.length;
-  return 360 * 4 - segmentIndex * segmentAngle - segmentAngle / 2;
+  return -segmentIndex * segmentAngle - segmentAngle / 2;
+}
+
+function isWheelEvent(event: ZhLastEvent) {
+  return event?.type === "spin" || event?.type === "bankrupt" || event?.type === "pass";
+}
+
+function useWheelSpinning(game: ZhGameState) {
+  const [spinning, setSpinning] = useState(false);
+
+  useEffect(() => {
+    if (!isWheelEvent(game.lastEvent) || game.lastEvent?.segmentIndex == null) {
+      setSpinning(false);
+      return;
+    }
+
+    setSpinning(true);
+    const timer = window.setTimeout(() => setSpinning(false), WHEEL_REVEAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [game.lastEvent?.at, game.lastEvent?.segmentIndex, game.lastEvent?.type]);
+
+  return spinning;
+}
+
+function hasUnusedConsonants(game: ZhGameState) {
+  return ZH_ALPHABET.some((letter) => !ZH_VOWELS.has(letter) && !game.usedLetters.includes(letter));
+}
+
+function hasUnusedVowels(game: ZhGameState) {
+  return [...ZH_VOWELS].some((letter) => !game.usedLetters.includes(letter));
 }
 
 function scoreFor(player: ZhPlayerScore) {
@@ -182,7 +214,8 @@ function ScoreList({ game }: { game: ZhGameState }) {
 
   return (
     <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-      {sorted.map((player, index) => {
+      {sorted.map((player) => {
+        const placement = 1 + sorted.filter((item) => scoreFor(item) > scoreFor(player)).length;
         const active = player.id === game.activePlayerId && game.mode !== "round_over" && game.mode !== "game_over";
         return (
           <article
@@ -193,7 +226,7 @@ function ScoreList({ game }: { game: ZhGameState }) {
                 : "border-white/8 bg-white/[.025]"
             }`}
           >
-            <span className="w-5 text-center text-xs font-black text-zinc-600">{index + 1}</span>
+            <span className="w-5 text-center text-xs font-black text-zinc-600">{placement}</span>
             <PlayerAvatar player={player} small />
             <div className="min-w-0 flex-1">
               <strong className="block truncate text-sm font-black">{player.displayName}</strong>
@@ -210,39 +243,74 @@ function ScoreList({ game }: { game: ZhGameState }) {
 }
 
 function Wheel({ game, spinning = false }: { game: ZhGameState; spinning?: boolean }) {
-  const rotation = wheelRotation(game.wheel?.segmentIndex);
+  const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    if (!isWheelEvent(game.lastEvent) || game.wheel?.segmentIndex == null) return;
+
+    const target = ((wheelRotation(game.wheel.segmentIndex) % 360) + 360) % 360;
+    const frame = window.requestAnimationFrame(() => {
+      setRotation((previous) => {
+        const current = ((previous % 360) + 360) % 360;
+        const delta = (target - current + 360) % 360;
+        return previous + 360 * 4 + delta;
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [game.lastEvent?.at, game.wheel?.segmentIndex]);
+
+  const resultLabel = spinning ? null : game.wheel?.label;
+
   return (
-    <div className="relative mx-auto w-full max-w-[370px]">
-      <div className="absolute left-1/2 top-[-8px] z-20 -translate-x-1/2 text-3xl text-white drop-shadow-lg">▼</div>
+    <div className="relative mx-auto w-full max-w-[420px]">
+      <div className="absolute left-1/2 top-[-10px] z-20 -translate-x-1/2 text-4xl text-white drop-shadow-lg">▼</div>
       <div
-        className="relative aspect-square rounded-full border-[12px] border-white/10 shadow-[0_30px_90px_rgba(0,0,0,.42)] transition-transform duration-[1200ms] ease-out"
+        className="relative aspect-square rounded-full border-[12px] border-white/10 shadow-[0_30px_90px_rgba(0,0,0,.42)]"
         style={{
           background: WHEEL_GRADIENT,
-          transform: `rotate(${spinning ? rotation + 1080 : rotation}deg)`,
+          transform: `rotate(${rotation}deg)`,
+          transitionProperty: "transform",
+          transitionDuration: `${WHEEL_SPIN_MS}ms`,
+          transitionTimingFunction: "cubic-bezier(.08,.72,.08,1)",
         }}
       >
         {ZH_WHEEL_SEGMENTS.map((label, index) => {
           const angle = (360 / ZH_WHEEL_SEGMENTS.length) * index + 10;
+          const special = label === "BANKRUT" || label === "PAS";
           return (
             <span
               key={`${label}-${index}`}
-              className="absolute left-1/2 top-1/2 origin-left text-[8px] font-black text-white/85 sm:text-[9px]"
+              className="absolute left-1/2 top-1/2 origin-left font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.8)]"
               style={{
-                width: "45%",
-                transform: `rotate(${angle}deg) translateX(16%)`,
+                width: "47%",
+                transform: `rotate(${angle}deg) translateX(46%)`,
               }}
             >
-              <span className="inline-block -rotate-90">{label === "BANKRUT" ? "💥" : label === "PAS" ? "↪" : label}</span>
+              <span
+                className={`inline-block -rotate-90 whitespace-nowrap rounded px-1 py-0.5 ${
+                  special ? "text-[8px] sm:text-[9px]" : "text-[10px] sm:text-[11px]"
+                }`}
+              >
+                {label}
+              </span>
             </span>
           );
         })}
         <div className="absolute left-1/2 top-1/2 grid h-[31%] w-[31%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[8px] border-white/15 bg-[#120a25] text-center shadow-2xl">
-          <div style={{ transform: `rotate(${-(spinning ? rotation + 1080 : rotation)}deg)` }} className="transition-transform duration-[1200ms] ease-out">
+          <div
+            style={{
+              transform: `rotate(${-rotation}deg)`,
+              transitionProperty: "transform",
+              transitionDuration: `${WHEEL_SPIN_MS}ms`,
+              transitionTimingFunction: "cubic-bezier(.08,.72,.08,1)",
+            }}
+          >
             <span className="block text-[8px] font-black uppercase tracking-[.16em] text-violet-300">
-              {game.wheel ? "WYNIK" : "KOŁO"}
+              {spinning ? "KOŁO" : game.wheel ? "WYNIK" : "KOŁO"}
             </span>
-            <strong className={`mt-1 block font-black ${game.wheel?.label === "BANKRUT" ? "text-base sm:text-lg" : "text-xl sm:text-2xl"}`}>
-              {game.wheel?.label ?? "START"}
+            <strong className={`mt-1 block font-black ${resultLabel === "BANKRUT" ? "text-sm sm:text-base" : "text-xl sm:text-2xl"}`}>
+              {spinning ? "KRĘCIMY!" : resultLabel ?? "START"}
             </strong>
           </div>
         </div>
@@ -294,9 +362,12 @@ function GameHeader({ room, game }: { room: RoomInfo; game: ZhGameState }) {
 
 function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolean; error: string; onNext: () => void }) {
   const game = data.game;
+  const wheelSpinning = useWheelSpinning(game);
   const roundWinner = game.players.find((player) => player.id === game.roundWinnerId);
   const ranking = [...game.players].sort((a, b) => scoreFor(b) - scoreFor(a));
-  const winner = ranking[0];
+  const topScore = ranking[0] ? scoreFor(ranking[0]) : 0;
+  const winners = ranking.filter((player) => scoreFor(player) === topScore);
+  const winner = winners[0];
 
   if (game.mode === "game_over") {
     return (
@@ -306,10 +377,14 @@ function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolea
           <span className="text-5xl">🏆</span>
           <p className="mt-5 text-[10px] font-black uppercase tracking-[.28em] text-violet-300">KONIEC GRY</p>
           <h1 className="mt-3 text-5xl font-black tracking-[-.06em] sm:text-7xl">
-            {winner?.displayName ?? "Mamy zwycięzcę!"}
+            {winners.length > 1 ? "REMIS!" : winner?.displayName ?? "Mamy zwycięzcę!"}
           </h1>
           <p className="mt-3 text-lg font-bold text-zinc-400">
-            {winner ? `${scoreFor(winner)} punktów` : "Końcowa klasyfikacja"}
+            {winner
+              ? winners.length > 1
+                ? `${winners.map((player) => player.displayName).join(" · ")} · po ${topScore} punktów`
+                : `${scoreFor(winner)} punktów`
+              : "Końcowa klasyfikacja"}
           </p>
           <div className="mx-auto mt-10 max-w-3xl text-left">
             <ScoreList game={game} />
@@ -363,7 +438,19 @@ function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolea
             ) : (
               <>
                 <ActivePlayer game={game} />
-                <EventBanner event={game.lastEvent} />
+                {wheelSpinning ? (
+                  <div className="rounded-2xl border border-violet-300/20 bg-violet-400/[.06] p-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🎡</span>
+                      <div>
+                        <strong className="block text-sm font-black text-white">Koło się kręci…</strong>
+                        <span className="mt-0.5 block text-xs leading-5 text-zinc-400">Wynik poznamy dopiero po zatrzymaniu koła.</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <EventBanner event={game.lastEvent} />
+                )}
               </>
             )}
 
@@ -381,15 +468,17 @@ function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolea
           <aside className="min-w-0 rounded-[1.75rem] border border-white/10 bg-black/25 p-5 sm:p-6">
             <span className="block text-center text-[9px] font-black uppercase tracking-[.2em] text-violet-300">KOŁO RYZYKA</span>
             <div className="mt-6">
-              <Wheel game={game} />
+              <Wheel game={game} spinning={wheelSpinning} />
             </div>
             <div className="mt-6 rounded-2xl border border-white/8 bg-white/[.025] p-4">
               <strong className="block text-sm font-black">
-                {game.mode === "choose_letter"
-                  ? "Czekamy na wybór spółgłoski"
-                  : game.mode === "round_over"
-                    ? "Runda zakończona"
-                    : "Czekamy na ruch gracza"}
+                {wheelSpinning
+                  ? "Koło się kręci…"
+                  : game.mode === "choose_letter"
+                    ? "Czekamy na wybór spółgłoski"
+                    : game.mode === "round_over"
+                      ? "Runda zakończona"
+                      : "Czekamy na ruch gracza"}
               </strong>
               <p className="mt-1 text-xs leading-5 text-zinc-500">
                 Sterowanie odbywa się na telefonie osoby, której jest kolej.
@@ -523,9 +612,12 @@ function PlayerGame({
   send: (body: Record<string, unknown>) => Promise<boolean>;
 }) {
   const game = data.game;
+  const wheelSpinning = useWheelSpinning(game);
   const me = game.players.find((item) => item.id === data.player.id);
   const active = game.players.find((item) => item.id === game.activePlayerId);
   const isMyTurn = game.activePlayerId === data.player.id;
+  const canSpin = hasUnusedConsonants(game);
+  const canBuyVowel = hasUnusedVowels(game);
   const [panel, setPanel] = useState<"main" | "vowel" | "solve">("main");
 
   useEffect(() => {
@@ -546,15 +638,24 @@ function PlayerGame({
   );
 
   if (game.mode === "game_over") {
-    const winner = ranking[0];
-    const myPlace = ranking.findIndex((item) => item.id === data.player.id) + 1;
+    const topScore = ranking[0] ? scoreFor(ranking[0]) : 0;
+    const winners = ranking.filter((item) => scoreFor(item) === topScore);
+    const winner = winners[0];
+    const amIWinner = Boolean(me && scoreFor(me) === topScore);
+    const myPlace = me ? 1 + ranking.filter((item) => scoreFor(item) > scoreFor(me)).length : 0;
     return (
       <main className="min-h-screen bg-[#080512] p-4 text-white">
         <section className="mx-auto max-w-xl rounded-[1.75rem] border border-white/10 bg-[#0d0918] p-5 text-center">
-          <span className="text-5xl">{winner?.id === data.player.id ? "🏆" : "🎉"}</span>
+          <span className="text-5xl">{amIWinner ? "🏆" : "🎉"}</span>
           <p className="mt-4 text-[9px] font-black uppercase tracking-[.2em] text-violet-300">KONIEC GRY</p>
           <h1 className="mt-2 text-3xl font-black tracking-[-.05em]">
-            {winner?.id === data.player.id ? "WYGRYWASZ!" : `Wygrywa ${winner?.displayName ?? "gracz"}`}
+            {amIWinner
+              ? winners.length > 1
+                ? "REMIS NA 1. MIEJSCU!"
+                : "WYGRYWASZ!"
+              : winners.length > 1
+                ? `Wygrywają ${winners.map((item) => item.displayName).join(" i ")}`
+                : `Wygrywa ${winner?.displayName ?? "gracz"}`}
           </h1>
           <p className="mt-2 text-sm text-zinc-400">
             Twoje miejsce: <b className="text-white">{myPlace || "—"}</b> · {scoreFor(me ?? ranking[0])} pkt
@@ -613,6 +714,12 @@ function PlayerGame({
               <strong className="mt-2 block text-xl font-black">Hasło odgadnięte!</strong>
               <p className="mt-1 text-xs text-zinc-400">Czekamy, aż host uruchomi kolejną rundę.</p>
             </div>
+          ) : wheelSpinning ? (
+            <div className="mt-4 rounded-2xl border border-violet-300/20 bg-violet-400/[.06] p-5 text-center">
+              <span className="text-4xl">🎡</span>
+              <strong className="mt-2 block text-lg font-black">Koło się kręci…</strong>
+              <p className="mt-1 text-xs text-zinc-500">Nie zdradzamy wyniku przed zatrzymaniem koła.</p>
+            </div>
           ) : !isMyTurn ? (
             <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] p-5 text-center">
               <span className="text-3xl">{active ? AVATARS[active.avatar] ?? "🎮" : "⏳"}</span>
@@ -668,16 +775,16 @@ function PlayerGame({
             <div className="mt-4 space-y-2">
               <button
                 type="button"
-                disabled={busy}
+                disabled={busy || !canSpin}
                 onClick={() => void send({ action: "spin" })}
                 className="min-h-16 w-full rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 text-base font-black shadow-[0_18px_45px_rgba(139,92,246,.22)] disabled:opacity-50"
               >
-                {busy ? "KRĘCIMY…" : "🎡 ZAKRĘĆ KOŁEM"}
+                {busy ? "KRĘCIMY…" : canSpin ? "🎡 ZAKRĘĆ KOŁEM" : "BRAK SPÓŁGŁOSEK — ZGADNIJ HASŁO"}
               </button>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  disabled={busy || (me?.roundScore ?? 0) < 200}
+                  disabled={busy || !canBuyVowel || (me?.roundScore ?? 0) < 200}
                   onClick={() => setPanel("vowel")}
                   className="min-h-14 rounded-2xl border border-cyan-300/20 bg-cyan-400/[.06] px-2 text-[10px] font-black text-cyan-100 disabled:opacity-30"
                 >
@@ -697,9 +804,11 @@ function PlayerGame({
             </div>
           )}
 
-          <div className="mt-4">
-            <EventBanner event={game.lastEvent} compact />
-          </div>
+          {!wheelSpinning && (
+            <div className="mt-4">
+              <EventBanner event={game.lastEvent} compact />
+            </div>
+          )}
           {error && <div className="mt-3 rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-xs font-bold text-red-200">{error}</div>}
 
           <div className="mt-5 border-t border-white/8 pt-4">
