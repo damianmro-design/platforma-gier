@@ -5,13 +5,15 @@ export default function AktaNocyCoverArtwork({
 }) {
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-orange-200/15 bg-[#0b0705] shadow-[0_20px_60px_rgba(0,0,0,.45)] ${className}`}
+      className={`relative aspect-[16/9] min-h-[220px] overflow-hidden rounded-2xl border border-orange-200/15 bg-[#0b0705] shadow-[0_20px_60px_rgba(0,0,0,.45)] ${className}`}
       aria-label="Akta Nocy, sprawa Apartament 214"
       role="img"
     >
       <svg
         viewBox="0 0 1600 900"
-        className="block h-auto w-full"
+        data-artwork="true"
+        preserveAspectRatio="xMidYMid meet"
+        className="block h-full w-full"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
