@@ -400,7 +400,6 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Awaria była przypadkowa, celowa czy ktoś po prostu wykorzystał lukę, o której wcześniej nie wiedział?",
-    image: "/akta-nocy/evidence-a01-monitoring.webp",
   },
   {
     id: "door-log",
@@ -419,7 +418,6 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Kto mógł mieć dostęp do karty 214 i kto opuszczał pokój o 22:54?",
-    image: "/akta-nocy/evidence-a02-door-log.webp",
   },
   {
     id: "late-message",
@@ -452,7 +450,6 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Kto wiedział o pendrivie i komu najbardziej zależało, żeby zniknął?",
-    image: "/akta-nocy/evidence-a04-drive.webp",
   },
 ];
 
@@ -625,7 +622,6 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Jeżeli wiadomość była zaplanowana wcześniej, kto próbował stworzyć wrażenie, że Marek żył jeszcze po 23:00?",
-    image: "/akta-nocy/evidence-b01-metadata.webp",
   },
   {
     id: "mirror-photo",
@@ -643,7 +639,6 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Która z obecnych osób miała identyfikator prasowy i dlaczego znalazła się wtedy na 2 piętrze?",
-    image: "/akta-nocy/evidence-b02-mirror.webp",
   },
   {
     id: "hallway-audio",
@@ -661,7 +656,6 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czy konflikt z Markiem dotyczył pieniędzy, reputacji, czy zawodowej kariery?",
-    image: "/akta-nocy/evidence-b03-audio.webp",
   },
   {
     id: "medical-window",
@@ -679,7 +673,6 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czyje alibi obejmuje dokładnie ten przedział i kto nie potrafi go potwierdzić?",
-    image: "/akta-nocy/evidence-b04-medical.webp",
   },
   {
     id: "wicher-file",
@@ -697,7 +690,6 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czy zaginiony pendrive zawierał właśnie materiały z tego pliku i kto najbardziej bał się ich publikacji?",
-    image: "/akta-nocy/evidence-b05-wicher.webp",
   },
 ];
 
