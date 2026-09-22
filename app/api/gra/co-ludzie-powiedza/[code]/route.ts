@@ -55,6 +55,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+  const testMode = cookieStore.get(`zagraj_test_mode_${code}`)?.value === "1";
 
   if (room.game_phase === "final" || room.game_phase === "finished") {
     const final = await getClpFinalState(code);
@@ -66,6 +67,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         final,
       });
@@ -80,6 +82,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         player,
         final,
@@ -97,6 +100,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         round7,
       });
@@ -111,6 +115,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         player,
         round7,
@@ -128,6 +133,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         round6,
       });
@@ -142,6 +148,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: { code: room.code, status: room.status, phase: room.game_phase },
         player,
         round6,
@@ -159,6 +166,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -177,6 +185,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -198,6 +207,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -216,6 +226,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -237,6 +248,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -255,6 +267,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -276,6 +289,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -294,6 +308,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -315,6 +330,7 @@ export async function GET(_request: Request, context: RouteContext) {
     if (hostToken) {
       return NextResponse.json({
         role: "host",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -333,6 +349,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
       return NextResponse.json({
         role: "player",
+        testMode,
         room: {
           code: room.code,
           status: room.status,
@@ -349,6 +366,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     return NextResponse.json({
       role: "host",
+        testMode,
       room: {
         code: room.code,
         status: room.status,
@@ -370,6 +388,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     return NextResponse.json({
       role: "player",
+        testMode,
       room: {
         code: room.code,
         status: room.status,

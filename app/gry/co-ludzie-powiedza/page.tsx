@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
+import TestGameButton from "../../test-game-button";
 
 export const metadata: Metadata = {
   title: "CO LUDZIE POWIEDZĄ — zaGRAj",
@@ -96,6 +97,7 @@ export default function CoLudziePowiedzaPage() {
             <span>⏱ 45–75 min</span>
             <span>🏆 2 drużyny</span>
             <span>✓ bez eliminacji</span>
+            <span>🎙 wymagany prowadzący</span>
           </div>
 
           <div className="survey-actions">
@@ -105,6 +107,7 @@ export default function CoLudziePowiedzaPage() {
             </form>
             <a href="#jak-gramy">Zobacz zasady</a>
           </div>
+          <TestGameButton gameSlug="co-ludzie-powiedza" className="mt-4 max-w-sm" />
         </div>
 
         <div className="survey-stage" aria-hidden="true">

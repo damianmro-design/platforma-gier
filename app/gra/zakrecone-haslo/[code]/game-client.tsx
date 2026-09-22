@@ -9,6 +9,7 @@ import {
   type ZhLastEvent,
   type ZhPlayerScore,
 } from "@/lib/zakrecone-haslo";
+import { useTestBotAutopilot } from "@/app/test-bot-autopilot";
 
 type RoomInfo = {
   code: string;
@@ -26,12 +27,15 @@ type Player = {
 
 type HostState = {
   role: "host";
+  testMode?: boolean;
   room: RoomInfo;
   game: ZhGameState;
 };
 
 type PlayerState = {
   role: "player";
+  testMode?: boolean;
+  canAutoAdvance?: boolean;
   room: RoomInfo;
   player: Player;
   game: ZhGameState;
@@ -712,7 +716,7 @@ function PlayerGame({
             <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/[.06] p-5 text-center">
               <span className="text-3xl">🎉</span>
               <strong className="mt-2 block text-xl font-black">Hasło odgadnięte!</strong>
-              <p className="mt-1 text-xs text-zinc-400">Czekamy, aż host uruchomi kolejną rundę.</p>
+              <p className="mt-1 text-xs text-zinc-400">Kolejna runda uruchomi się automatycznie.</p>
             </div>
           ) : wheelSpinning ? (
             <div className="mt-4 rounded-2xl border border-violet-300/20 bg-violet-400/[.06] p-5 text-center">
@@ -828,6 +832,8 @@ export default function GameClient({ code }: { code: string }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  useTestBotAutopilot(Boolean(data?.testMode), code);
+
   const load = useCallback(async () => {
     try {
       const response = await fetch(`/api/gra/zakrecone-haslo/${code}`, { cache: "no-store" });
@@ -849,6 +855,28 @@ export default function GameClient({ code }: { code: string }) {
     const timer = window.setInterval(() => void load(), 1100);
     return () => window.clearInterval(timer);
   }, [load]);
+
+  useEffect(() => {
+    if (
+      !data ||
+      data.role !== "player" ||
+      data.testMode ||
+      !data.canAutoAdvance ||
+      data.game.mode !== "round_over"
+    ) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void fetch(`/api/gra/zakrecone-haslo/${code}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "next" }),
+      }).then(() => load());
+    }, 3500);
+
+    return () => window.clearTimeout(timer);
+  }, [code, data, load]);
 
   async function send(body: Record<string, unknown>) {
     setBusy(true);

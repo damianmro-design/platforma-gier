@@ -19,6 +19,7 @@ import { HostRound5, PlayerRound5 } from "./round5";
 import { HostRound6, PlayerRound6 } from "./round6";
 import { HostRound7, PlayerRound7 } from "./round7";
 import { HostFinal, PlayerFinal } from "./final";
+import { useTestBotAutopilot } from "@/app/test-bot-autopilot";
 
 type RoomState = {
   code: string;
@@ -36,6 +37,7 @@ type Player = {
 
 type HostWarmupState = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   progress: Array<{
     player_id: string;
@@ -47,6 +49,7 @@ type HostWarmupState = {
 
 type PlayerWarmupState = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   answers: Array<{
@@ -57,12 +60,14 @@ type PlayerWarmupState = {
 
 type HostRound1State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round1: ClpRound1State;
 };
 
 type PlayerRound1State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round1: ClpRound1State;
@@ -70,12 +75,14 @@ type PlayerRound1State = {
 
 type HostRound2State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round2: ClpRound2State;
 };
 
 type PlayerRound2State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round2: ClpRound2State;
@@ -83,12 +90,14 @@ type PlayerRound2State = {
 
 type HostRound3State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round3: ClpRound3State;
 };
 
 type PlayerRound3State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round3: ClpRound3State;
@@ -96,12 +105,14 @@ type PlayerRound3State = {
 
 type HostRound4State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round4: ClpRound4State;
 };
 
 type PlayerRound4State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round4: ClpRound4State;
@@ -109,12 +120,14 @@ type PlayerRound4State = {
 
 type HostRound5State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round5: ClpRound5State;
 };
 
 type PlayerRound5State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round5: ClpRound5State;
@@ -122,12 +135,14 @@ type PlayerRound5State = {
 
 type HostRound6State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round6: ClpRound6State;
 };
 
 type PlayerRound6State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round6: ClpRound6State;
@@ -135,12 +150,14 @@ type PlayerRound6State = {
 
 type HostRound7State = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   round7: ClpRound7State;
 };
 
 type PlayerRound7State = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   round7: ClpRound7State;
@@ -148,12 +165,14 @@ type PlayerRound7State = {
 
 type HostFinalState = {
   role: "host";
+  testMode?: boolean;
   room: RoomState;
   final: ClpFinalState;
 };
 
 type PlayerFinalState = {
   role: "player";
+  testMode?: boolean;
   room: RoomState;
   player: Player;
   final: ClpFinalState;
@@ -198,6 +217,8 @@ export default function GameClient({ code }: { code: string }) {
   const [data, setData] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  useTestBotAutopilot(Boolean(data?.testMode), code);
 
   const load = useCallback(async () => {
     try {

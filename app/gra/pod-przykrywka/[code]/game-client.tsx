@@ -8,6 +8,7 @@ import type {
   PpRole,
   PpVoteCount,
 } from "@/lib/pod-przykrywka";
+import { useTestBotAutopilot } from "@/app/test-bot-autopilot";
 
 type RoomInfo = {
   code: string;
@@ -17,12 +18,14 @@ type RoomInfo = {
 
 type HostResponse = {
   role: "host";
+  testMode?: boolean;
   room: RoomInfo;
   game: PpGameState;
 };
 
 type PlayerResponse = {
   role: "player";
+  testMode?: boolean;
   room: RoomInfo;
   player: {
     id: string;
@@ -1294,6 +1297,8 @@ function PlayerGame({
 
 export default function GameClient({ code }: { code: string }) {
   const [data, setData] = useState<ResponseState | null>(null);
+
+  useTestBotAutopilot(Boolean(data?.testMode), code);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 

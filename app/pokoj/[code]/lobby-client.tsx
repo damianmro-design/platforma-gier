@@ -2,6 +2,12 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import {
+  PARTYPLAY_AVATARS,
+  PartyPlayAvatar,
+  normalizePartyPlayAvatar,
+} from "@/components/partyplay-avatar";
+import { getPlatformGameConfig } from "@/lib/game-config";
 
 type Player = {
   id: string;
@@ -23,27 +29,12 @@ type LobbyState = {
   isHost: boolean;
 };
 
-const AVATARS = [
-  ["lion", "🦁"],
-  ["fox", "🦊"],
-  ["panda", "🐼"],
-  ["tiger", "🐯"],
-  ["koala", "🐨"],
-  ["owl", "🦉"],
-  ["frog", "🐸"],
-  ["penguin", "🐧"],
-  ["bear", "🐻"],
-  ["rabbit", "🐰"],
-  ["monkey", "🐵"],
-  ["cat", "🐱"],
-] as const;
-
-const AVATAR_EMOJI = Object.fromEntries(AVATARS) as Record<string, string>;
+const STARTER_AVATARS = PARTYPLAY_AVATARS.filter((item) => item.unlockLevel === 1);
 
 export default function LobbyClient({ code }: { code: string }) {
   const [data, setData] = useState<LobbyState | null>(null);
   const [name, setName] = useState("");
-  const [avatar, setAvatar] = useState("lion");
+  const [avatar, setAvatar] = useState("avatar-01");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
   const [accountSignedIn, setAccountSignedIn] = useState(false);
@@ -113,12 +104,10 @@ export default function LobbyClient({ code }: { code: string }) {
         userData.user.email?.split("@")[0] ||
         "";
 
-      const profileAvatar = String(profile?.avatar ?? "").trim();
+      const profileAvatar = normalizePartyPlayAvatar(String(profile?.avatar ?? "").trim());
 
       if (profileName) setName(profileName.slice(0, 20));
-      if (AVATARS.some(([id]) => id === profileAvatar)) {
-        setAvatar(profileAvatar);
-      }
+      setAvatar(profileAvatar);
     };
 
     void loadAccount();
@@ -193,6 +182,8 @@ export default function LobbyClient({ code }: { code: string }) {
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
   const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy;
+  const gameConfig = getPlatformGameConfig(data?.room.gameSlug ?? "");
+  const requiresHost = gameConfig?.requiresHost ?? true;
   const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
   const maxPlayers = isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
@@ -277,31 +268,46 @@ export default function LobbyClient({ code }: { code: string }) {
             </p>
           )}
 
-          <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
-          <input
-            id="playerName"
-            className="player-name-input"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={20}
-            autoComplete="off"
-            placeholder="np. Damian"
-          />
+          {accountSignedIn ? (
+            <div className="mt-5 flex items-center gap-4 rounded-2xl border border-violet-300/20 bg-violet-300/[.06] p-4">
+              <PartyPlayAvatar id={avatar} size={64} />
+              <div className="min-w-0">
+                <span className="block text-[9px] font-black uppercase tracking-[.16em] text-violet-300">
+                  PROFIL zaGRAj
+                </span>
+                <strong className="mt-1 block truncate text-lg font-black">{name || "Gracz"}</strong>
+                <small className="mt-1 block text-zinc-500">Nazwa i avatar są pobierane automatycznie z konta.</small>
+              </div>
+            </div>
+          ) : (
+            <>
+              <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
+              <input
+                id="playerName"
+                className="player-name-input"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={20}
+                autoComplete="off"
+                placeholder="np. Damian"
+              />
 
-          <p className="avatar-label">Wybierz avatar</p>
-          <div className="avatar-grid">
-            {AVATARS.map(([id, emoji]) => (
-              <button
-                key={id}
-                type="button"
-                className={avatar === id ? "avatar-choice active" : "avatar-choice"}
-                onClick={() => setAvatar(id)}
-                aria-label={id}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
+              <p className="avatar-label">Wybierz avatar</p>
+              <div className="avatar-grid">
+                {STARTER_AVATARS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={avatar === item.id ? "avatar-choice active" : "avatar-choice"}
+                    onClick={() => setAvatar(item.id)}
+                    aria-label={item.name}
+                  >
+                    <PartyPlayAvatar id={item.id} size={52} />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <button className="join-player-button" type="submit" disabled={busy}>
             {busy
@@ -313,7 +319,7 @@ export default function LobbyClient({ code }: { code: string }) {
         </form>
       ) : (
         <section className="my-player-panel">
-          <div className="my-player-avatar">{AVATAR_EMOJI[me.avatar] ?? "🎮"}</div>
+          <div className="my-player-avatar"><PartyPlayAvatar id={me.avatar} size={52} /></div>
           <div>
             <span>GRASZ JAKO</span>
             <strong>{me.display_name}</strong>
@@ -366,8 +372,11 @@ export default function LobbyClient({ code }: { code: string }) {
       {data.isHost && (
         <section className="host-controls">
           <div>
-            <span className="lobby-label">STEROWANIE HOSTA</span>
-            <h3>Ty kontrolujesz start</h3>
+            <span className="lobby-label">{requiresHost ? "STEROWANIE PROWADZĄCEGO" : "START ROZGRYWKI"}</span>
+            <h3>{requiresHost ? "Wymagany prowadzący" : "Po starcie wszyscy grają"}</h3>
+            {!requiresHost && (
+              <p className="mt-1 text-xs text-zinc-500">Zakręcone Hasło prowadzi się automatycznie, osoba tworząca pokój może normalnie dołączyć jako gracz.</p>
+            )}
           </div>
           <div className="host-buttons">
             {!isIndividualGame && (
@@ -415,7 +424,7 @@ function PlayerTile({
 }) {
   return (
     <article className={current ? "player-tile current" : "player-tile"}>
-      <span className="tile-avatar">{AVATAR_EMOJI[player.avatar] ?? "🎮"}</span>
+      <span className="tile-avatar"><PartyPlayAvatar id={player.avatar} size={38} /></span>
       <strong>{player.display_name}</strong>
       <small className={player.ready ? "player-ready yes" : "player-ready"}>
         {player.ready ? "✓ GOTOWY" : "czeka"}

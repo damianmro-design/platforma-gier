@@ -1,5 +1,7 @@
 "use client";
 
+import { useTestBotAutopilot } from "@/app/test-bot-autopilot";
+
 import {
   useCallback,
   useEffect,
@@ -167,6 +169,7 @@ type RoleCard = {
 
 type HostState = {
   role: "host";
+  testMode?: boolean;
   room: {
     code: string;
     status: string;
@@ -186,6 +189,7 @@ type HostState = {
 
 type PlayerState = {
   role: "player";
+  testMode?: boolean;
   room: {
     code: string;
     status: string;
@@ -239,6 +243,8 @@ function isEvidencePhase(phase: string | null) {
 
 export default function AktaNocyGameClient({ code }: { code: string }) {
   const [data, setData] = useState<GameState | null>(null);
+
+  useTestBotAutopilot(Boolean(data?.testMode), code);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dossierVisible, setDossierVisible] = useState(false);

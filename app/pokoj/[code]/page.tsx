@@ -2,11 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { lookupPlatformRoom } from "@/lib/platform-db";
 import LobbyClient from "./lobby-client";
+import RoomInvite from "./room-invite";
+import { getPlatformGameConfig } from "@/lib/game-config";
 
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "CO LUDZIE POWIEDZĄ",
   "zakrecone-haslo": "ZAKRĘCONE HASŁO",
   "akta-nocy": "AKTA NOCY",
+  "pod-przykrywka": "POD PRZYKRYWKĄ",
 };
 
 type RoomPageProps = {
@@ -38,6 +41,8 @@ export default async function RoomPage({ params }: RoomPageProps) {
     notFound();
   }
 
+  const config = getPlatformGameConfig(room.game_slug);
+
   return (
     <main className="room-shell room-shell-live">
       <div className="room-live-container">
@@ -54,12 +59,22 @@ export default async function RoomPage({ params }: RoomPageProps) {
         </header>
 
         <section className="room-live-title">
+          <div className="mb-3 flex flex-wrap gap-2">
+            <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-zinc-300">
+              {config?.requiresHost ? "🎙 Wymagany prowadzący" : "⚡ Bez prowadzącego"}
+            </span>
+            <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-zinc-500">
+              📱 Telefony graczy
+            </span>
+          </div>
           <h1>Zbierz ekipę i zaczynamy.</h1>
           <p>
-            Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy
-            pojawiają się tutaj automatycznie.
+            Najszybciej dołączyć przez kod QR lub link. Kod pokoju nadal działa
+            jako zapasowa metoda wejścia.
           </p>
         </section>
+
+        <RoomInvite code={room.code} />
 
         <LobbyClient code={room.code} />
 

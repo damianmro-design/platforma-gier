@@ -49,6 +49,42 @@ export async function getPartyPlayUserFromAccessToken(
 }
 
 
+export type PartyPlayProfileIdentity = {
+  userId: string;
+  email: string;
+  displayName: string;
+  avatar: string;
+};
+
+export async function getPartyPlayProfileIdentityFromAccessToken(
+  accessToken: string,
+): Promise<PartyPlayProfileIdentity | null> {
+  const user = await getPartyPlayUserFromAccessToken(accessToken);
+  if (!user) return null;
+
+  const supabase = createPartyPlayAuthorizedClient(accessToken);
+  const { data, error } = await supabase.rpc("get_my_partyplay_profile");
+
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+
+  const displayName =
+    String(row?.display_name ?? "").trim() ||
+    String(user.user_metadata?.full_name ?? "").trim() ||
+    user.email?.split("@")[0] ||
+    "Gracz";
+
+  const avatar = String(row?.avatar ?? "").trim() || "avatar-01";
+
+  return {
+    userId: user.id,
+    email: user.email?.trim().toLowerCase() ?? "",
+    displayName: displayName.slice(0, 20),
+    avatar,
+  };
+}
+
+
 export type PolowanieCareerSummary = {
   display_name: string;
   games_completed: number;
