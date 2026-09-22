@@ -455,7 +455,7 @@ function HostView({
             </p>
 
             <StageArtwork
-              src="/akta-nocy/hero-v2.webp"
+              src="/akta-nocy/hero-v3.webp"
               alt="Akta Nocy, sprawa Apartament 214"
               cinematic
             />
@@ -1329,7 +1329,7 @@ function PlayerView({
             </p>
 
             <StageArtwork
-              src="/akta-nocy/case-cover-v2.webp"
+              src="/akta-nocy/case-cover-v3.webp"
               alt="Okładka akt sprawy Apartament 214"
             />
 
