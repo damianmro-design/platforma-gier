@@ -364,12 +364,20 @@ export default function ProfilePage() {
           >
             ← zaGRAj
           </Link>
-          <button
-            onClick={() => void logout()}
-            className="rounded-xl border border-white/10 bg-white/[.035] px-4 py-2.5 text-xs font-black text-zinc-400"
-          >
-            Wyloguj
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/ranking"
+              className="rounded-xl border border-amber-300/20 bg-amber-300/[.06] px-4 py-2.5 text-xs font-black text-amber-200 transition hover:bg-amber-300/[.1]"
+            >
+              🏆 Ranking
+            </Link>
+            <button
+              onClick={() => void logout()}
+              className="rounded-xl border border-white/10 bg-white/[.035] px-4 py-2.5 text-xs font-black text-zinc-400"
+            >
+              Wyloguj
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-[#0a0d1c]/92 p-6 shadow-2xl backdrop-blur-xl sm:p-8">

@@ -42,12 +42,20 @@ export default function AccountMenu() {
 
   if (signedIn) {
     return (
-      <Link
-        href="/profil"
-        className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-4 py-2.5 text-xs font-black text-violet-100 transition hover:bg-violet-400/15"
-      >
-        Mój profil
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link
+          href="/ranking"
+          className="rounded-xl border border-amber-300/20 bg-amber-300/[.06] px-4 py-2.5 text-xs font-black text-amber-200 transition hover:bg-amber-300/[.1]"
+        >
+          🏆 Ranking
+        </Link>
+        <Link
+          href="/profil"
+          className="rounded-xl border border-violet-300/25 bg-violet-400/10 px-4 py-2.5 text-xs font-black text-violet-100 transition hover:bg-violet-400/15"
+        >
+          Mój profil
+        </Link>
+      </div>
     );
   }
 

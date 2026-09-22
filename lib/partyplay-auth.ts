@@ -170,3 +170,37 @@ export async function getPolowanieHistoryCountFromAccessToken(
   if (error) return 0;
   return Number(data ?? 0);
 }
+
+
+export type PartyPlayRankingIdentity = {
+  ranking_key: string;
+  is_current_user: boolean;
+  display_name: string;
+  avatar: string;
+  profile_avatar_set: boolean;
+  polowanie_games: number;
+  polowanie_wins: number;
+  polowanie_badges: number;
+};
+
+export async function getPartyPlayRankingIdentitySourceFromAccessToken(
+  accessToken: string,
+) {
+  const supabase = createPartyPlayAuthorizedClient(accessToken);
+  const { data, error } = await supabase.rpc(
+    "get_partyplay_ranking_identity_source",
+  );
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    ranking_key: String(row.ranking_key ?? ""),
+    is_current_user: Boolean(row.is_current_user),
+    display_name: String(row.display_name ?? "Gracz"),
+    avatar: String(row.avatar ?? "avatar-01"),
+    profile_avatar_set: Boolean(row.profile_avatar_set),
+    polowanie_games: Number(row.polowanie_games ?? 0),
+    polowanie_wins: Number(row.polowanie_wins ?? 0),
+    polowanie_badges: Number(row.polowanie_badges ?? 0),
+  })) as PartyPlayRankingIdentity[];
+}

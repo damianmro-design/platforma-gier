@@ -1203,6 +1203,72 @@ export async function nextZhRound(code: string, hostToken: string) {
   return data as "playing" | "game_over" | null;
 }
 
+
+export type PartyPlayRankingAggregate = {
+  rankingKey: string;
+  displayName: string;
+  avatar: string;
+  games: PartyPlayGameSummary[];
+  podPrzykrywka: PodPrzykrywkaAccountStats;
+};
+
+export async function getPartyPlayRankingAggregates(accessToken: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": accessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const { data, error } = await supabase.rpc(
+    "get_partyplay_ranking_aggregates",
+  );
+
+  if (error) throw new Error(error.message);
+
+  return (Array.isArray(data) ? data : []).map(
+    (row: Record<string, unknown>) => ({
+      rankingKey: String(row.rankingKey ?? ""),
+      displayName: String(row.displayName ?? "Gracz"),
+      avatar: String(row.avatar ?? "avatar-01"),
+      podPrzykrywka: {
+        gamesCompleted: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.gamesCompleted ?? 0),
+        wins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.wins ?? 0),
+        agentGames: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.agentGames ?? 0),
+        agentWins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.agentWins ?? 0),
+        oszustGames: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.oszustGames ?? 0),
+        oszustWins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.oszustWins ?? 0),
+        correctFinalVotes: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.correctFinalVotes ?? 0),
+        perfectCoverWins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.perfectCoverWins ?? 0),
+        innocentFinalDefenderWins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.innocentFinalDefenderWins ?? 0),
+        interrogatedWins: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.interrogatedWins ?? 0),
+        hotSeatAppearances: Number((row.podPrzykrywka as Record<string, unknown> | undefined)?.hotSeatAppearances ?? 0),
+      },
+      games: (Array.isArray(row.games) ? row.games : []).map(
+        (game: Record<string, unknown>) => ({
+          gameSlug: String(game.gameSlug ?? ""),
+          gamesCompleted: Number(game.gamesCompleted ?? 0),
+          wins: Number(game.wins ?? 0),
+          totalScore: Number(game.totalScore ?? 0),
+          bestPlacement:
+            game.bestPlacement == null ? null : Number(game.bestPlacement),
+        }),
+      ),
+    }),
+  ) as PartyPlayRankingAggregate[];
+}
+
 export async function getPpState(code: string, playerToken?: string | null) {
   const supabase = getClient();
   const { data, error } = await supabase.rpc("get_pp_state", {
