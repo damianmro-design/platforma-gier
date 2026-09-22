@@ -8,6 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import AktaNocyCoverArtwork from "@/components/akta-nocy-cover-artwork";
+import {
+  AktaNocyEvidenceArtwork,
+  AktaNocyStageArtwork,
+} from "@/components/akta-nocy-artwork";
 
 type HostProgress = {
   player_id: string;
@@ -746,10 +750,7 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Gracze wybierają 7 wydarzeń spośród 9, ustawiają je w kolejności i wskazują, kto ich zdaniem odpowiada za śmierć Marka. Nie pokazuj jeszcze żadnego rozwiązania.
           </p>
-          <StageArtwork
-            src="/akta-nocy/reconstruction.webp"
-            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
-          />
+          <AktaNocyStageArtwork kind="reconstruction" />
         </section>
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_.75fr]">
@@ -942,10 +943,7 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Każdy gracz na własnym telefonie wybiera 1 osobę, 1 motyw i 1 najważniejszy dowód. Odpowiedź zostaje natychmiast zamknięta.
           </p>
-          <StageArtwork
-            src="/akta-nocy/accusation.webp"
-            alt="Karta oskarżenia w sprawie Apartament 214"
-          />
+          <AktaNocyStageArtwork kind="accusation" />
         </section>
 
         <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5 sm:p-6">
@@ -1040,19 +1038,11 @@ function HostView({
           </p>
 
           {reveal.step === 3 && (
-            <StageArtwork
-              src="/akta-nocy/reveal-culprit.webp"
-              alt="Ujawnienie sprawcy sprawy Apartament 214"
-              cinematic
-            />
+            <AktaNocyStageArtwork kind="culprit" />
           )}
 
           {reveal.step === 4 && (
-            <StageArtwork
-              src="/akta-nocy/case-closed.webp"
-              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
-              cinematic
-            />
+            <AktaNocyStageArtwork kind="closed" />
           )}
 
           {reveal.step === 3 && reveal.culprit && (
@@ -1457,10 +1447,7 @@ function PlayerAccusationView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Wybierz 1 osobę, 1 motyw i 1 najważniejszy dowód. Po zatwierdzeniu odpowiedź zostanie zamknięta i nie będzie można jej edytować.
           </p>
-          <StageArtwork
-            src="/akta-nocy/accusation.webp"
-            alt="Karta oskarżenia w sprawie Apartament 214"
-          />
+          <AktaNocyStageArtwork kind="accusation" />
         </section>
 
         <ChoiceSection label="Kogo oskarżasz?">
@@ -1597,27 +1584,15 @@ function PlayerRevealView({
           <p className="mt-5 text-sm leading-7 text-orange-50/62">{content.body}</p>
 
           {(reveal.step === 1 || reveal.step === 2) && (
-            <StageArtwork
-              src="/akta-nocy/reveal.webp"
-              alt="Materiały ujawnienia w sprawie Apartament 214"
-              cinematic
-            />
+            <AktaNocyStageArtwork kind="reveal" />
           )}
 
           {reveal.step === 3 && (
-            <StageArtwork
-              src="/akta-nocy/reveal-culprit.webp"
-              alt="Ujawnienie sprawcy sprawy Apartament 214"
-              cinematic
-            />
+            <AktaNocyStageArtwork kind="culprit" />
           )}
 
           {reveal.step === 4 && (
-            <StageArtwork
-              src="/akta-nocy/case-closed.webp"
-              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
-              cinematic
-            />
+            <AktaNocyStageArtwork kind="closed" />
           )}
 
           {reveal.step === 3 && reveal.culprit && (
@@ -1862,10 +1837,7 @@ function PlayerReconstructionView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Spośród 9 wydarzeń wybierz dokładnie 7, które Twoim zdaniem naprawdę należą do przebiegu nocy. Dwa są fałszywymi tropami.
           </p>
-          <StageArtwork
-            src="/akta-nocy/reconstruction.webp"
-            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
-          />
+          <AktaNocyStageArtwork kind="reconstruction" />
         </section>
 
         <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5">
@@ -2287,22 +2259,19 @@ function EvidenceCards({
                 {item.source}{item.time ? ` · ${item.time}` : ""}
               </p>
 
-              {item.image && (
-                <button
-                  type="button"
-                  onClick={() => setPreview(item)}
-                  className="group relative mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
-                >
-                  <img
-                    src={item.image}
-                    alt={`Materiał dowodowy ${item.no}: ${item.title}`}
-                    className="max-h-[480px] w-full object-contain transition duration-300 group-hover:scale-[1.015]"
-                  />
-                  <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
-                    powiększ dokument
-                  </span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setPreview(item)}
+                className="group relative mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
+              >
+                <AktaNocyEvidenceArtwork
+                  id={item.id}
+                  className="transition duration-300 group-hover:scale-[1.008]"
+                />
+                <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
+                  powiększ dokument
+                </span>
+              </button>
 
               <p className="mt-4 text-sm leading-7 text-orange-50/67">{item.summary}</p>
 
@@ -2326,29 +2295,28 @@ function EvidenceCards({
         })}
       </div>
 
-      {preview?.image && (
+      {preview && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={`Podgląd dowodu ${preview.no}`}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 backdrop-blur-sm sm:p-8"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-sm sm:p-8"
           onClick={() => setPreview(null)}
         >
           <button
             type="button"
             onClick={() => setPreview(null)}
-            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-xs font-black text-white"
+            className="fixed right-4 top-4 z-[130] rounded-full border border-white/15 bg-black/75 px-4 py-2 text-xs font-black text-white"
           >
             ZAMKNIJ ×
           </button>
           <div
-            className="max-h-full max-w-5xl"
+            className="my-auto w-full max-w-3xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <img
-              src={preview.image}
-              alt={`Powiększony materiał dowodowy ${preview.no}: ${preview.title}`}
-              className="max-h-[88vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.8)]"
+            <AktaNocyEvidenceArtwork
+              id={preview.id}
+              className="rounded-xl shadow-[0_35px_120px_rgba(0,0,0,.8)]"
             />
             <p className="mt-3 text-center text-xs font-bold text-orange-50/55">
               {preview.no} · {preview.title}
@@ -2434,67 +2402,6 @@ function DossierSection({
       </span>
       <div className="mt-3 text-sm leading-7 text-orange-50/62">{children}</div>
     </section>
-  );
-}
-
-function StageArtwork({
-  src,
-  alt,
-  cinematic = false,
-}: {
-  src: string;
-  alt: string;
-  cinematic?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={`group relative mt-6 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 shadow-[0_18px_60px_rgba(0,0,0,.35)] ${
-          cinematic ? "sm:rounded-[1.5rem]" : ""
-        }`}
-      >
-        <img
-          src={src}
-          alt={alt}
-          className={`w-full object-cover transition duration-500 group-hover:scale-[1.012] ${
-            cinematic
-              ? "max-h-[640px] object-contain"
-              : "max-h-[480px] object-contain"
-          }`}
-        />
-        <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
-          powiększ
-        </span>
-      </button>
-
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={alt}
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/92 p-3 backdrop-blur-md sm:p-8"
-          onClick={() => setOpen(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/75 px-4 py-2 text-xs font-black text-white"
-          >
-            ZAMKNIJ ×
-          </button>
-          <img
-            src={src}
-            alt={alt}
-            onClick={(event) => event.stopPropagation()}
-            className="max-h-[92vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.82)]"
-          />
-        </div>
-      )}
-    </>
   );
 }
 
