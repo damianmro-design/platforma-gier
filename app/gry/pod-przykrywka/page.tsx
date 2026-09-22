@@ -6,13 +6,13 @@ import TestGameButton from "@/components/test-game-button";
 export const metadata: Metadata = {
   title: "Pod Przykrywką — zaGRAj",
   description:
-    "Psychologiczna gra dedukcyjna dla 6–14 osób. Jedna osoba sabotuje grupę, pozostali próbują ją rozpoznać.",
+    "Gra dedukcyjna dla 6–14 osób. Agenci znają tajne hasła, a Oszust widzi tylko kategorię i musi blefować.",
 };
 
 const flow = [
   ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Oszustem."],
-  ["02", "5 misji", "Wszyscy odpowiadają, ale 3 z 5 rund losowo zmieniają zasady: pojawiają się Anonimowe Akta, Cicha Runda i Gorące Krzesło. Oszust nadal dostaje własny ukryty cel."],
-  ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Szukacie niespójności i bronicie swoich decyzji."],
+  ["02", "Tajne hasła", "W każdej z 5 misji Agenci poznają tajne hasło i pytanie. Oszust zna tylko kategorię oraz to samo pytanie i musi odpowiedzieć tak, jakby znał hasło."],
+  ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Agenci nie mogą zdradzić hasła wprost. Szukacie osoby, której odpowiedzi są zbyt ogólne albo wyglądają na zgadywanie."],
   ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
   ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
   ["06", "Obrona i finał", "Po 5 misjach 2 najbardziej podejrzane osoby mają po 30 sekund obrony. Potem każdy głosuje na dowolnego gracza. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
@@ -46,8 +46,8 @@ export default function PodPrzykrywkaPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
-            W grupie ukrywa się Oszust. Przez 5 psychologicznych misji próbuje odpowiadać wiarygodnie,
-            jednocześnie realizując ukryte cele. Reszta obserwuje odpowiedzi, dyskutuje i buduje listę podejrzanych.
+            W grupie ukrywa się Oszust. W każdej misji Agenci poznają tajne hasło, a Oszust widzi tylko jego kategorię i to samo pytanie.
+            Musi blefować tak, jakby znał odpowiedź. Reszta porównuje tropy, dyskutuje i buduje listę podejrzanych.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
@@ -122,8 +122,8 @@ export default function PodPrzykrywkaPage() {
       <section className="relative z-10 mx-auto grid max-w-7xl gap-5 px-5 py-14 sm:px-8 md:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🕵️</span>
-          <h3 className="mt-4 text-xl font-black">Oszust gra na 2 poziomach</h3>
-          <p className="mt-2 text-sm leading-6 text-zinc-500">Dostaje ukryty cel do każdej misji, a po punkcie kontrolnym również tajny rozkaz do wykonania podczas dyskusji.</p>
+          <h3 className="mt-4 text-xl font-black">Oszust nie zna hasła</h3>
+          <p className="mt-2 text-sm leading-6 text-zinc-500">Widzi tylko kategorię i pytanie. Musi wymyślić odpowiedź, która pasuje do nieznanego hasła. Po punkcie kontrolnym dostaje też tajny rozkaz do dyskusji.</p>
         </article>
         <article className="rounded-3xl border border-white/9 bg-white/[.025] p-6">
           <span className="text-3xl">🎲</span>
