@@ -73,6 +73,20 @@ export type PolowanieCareer = {
   badges_count: number;
 };
 
+export type PodPrzykrywkaStats = {
+  gamesCompleted: number;
+  wins: number;
+  agentGames: number;
+  agentWins: number;
+  oszustGames: number;
+  oszustWins: number;
+  correctFinalVotes: number;
+  perfectCoverWins: number;
+  innocentFinalDefenderWins: number;
+  interrogatedWins: number;
+  hotSeatAppearances: number;
+};
+
 export type PolowanieBadge = {
   badgeCode: string;
   title: string;
@@ -101,6 +115,7 @@ export type PartyPlayStatsResponse = {
   polowanie: PolowanieCareer | null;
   polowanieBadges: PolowanieBadge[];
   progression: PartyPlayProgression;
+  podPrzykrywka: PodPrzykrywkaStats;
 };
 
 export async function fetchPartyPlayStats(
