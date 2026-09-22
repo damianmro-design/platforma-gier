@@ -216,7 +216,7 @@ function buildAccusationSummary(
       item,
     ]),
   );
-  const motiveByKey = new Map(
+  const motiveByKey = new Map<string, string>(
     AKTA_NOCY_MOTIVE_OPTIONS.map((item) => [item.key, item.label]),
   );
 
