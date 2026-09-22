@@ -13,6 +13,9 @@ export default function LegalFooter() {
         <Link href="/contact" className="transition hover:text-violet-300">
           Kontakt
         </Link>
+        <a href="mailto:hej@zagraj.fun" className="transition hover:text-violet-300">
+          hej@zagraj.fun
+        </a>
       </div>
       <p className="mt-4 text-[9px] leading-4 text-zinc-700">
         zaGRAj to platforma gier towarzyskich. Elementy punktowe, poziomy, XP,

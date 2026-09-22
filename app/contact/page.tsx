@@ -1,4 +1,4 @@
-import { LEGAL_CONFIG, hasLegalContactConfigured } from "@/lib/legal-config";
+import { LEGAL_CONFIG } from "@/lib/legal-config";
 import LegalPageShell, { LegalSection } from "../legal-page-shell";
 
 export const metadata = {
@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 export default function ContactPage() {
-  const configured = hasLegalContactConfigured();
+  const operatorConfigured = !LEGAL_CONFIG.operatorName.startsWith("[UZUPEŁNIJ");
 
   return (
     <LegalPageShell
@@ -15,25 +15,24 @@ export default function ContactPage() {
       intro="Masz problem z kontem zaGRAj, konkretną grą, chcesz zgłosić błąd, poprosić o usunięcie danych albo przesłać reklamację? Skontaktuj się z administratorem platformy."
     >
       <LegalSection title="Kontakt do administratora">
-        <p>
-          <strong className="text-zinc-200">{LEGAL_CONFIG.operatorName}</strong>
-        </p>
-        {configured ? (
+        {operatorConfigured ? (
           <p>
-            E-mail:{" "}
-            <a
-              className="font-bold text-violet-300 underline decoration-violet-500/40 underline-offset-4"
-              href={`mailto:${LEGAL_CONFIG.contactEmail}`}
-            >
-              {LEGAL_CONFIG.contactEmail}
-            </a>
+            <strong className="text-zinc-200">{LEGAL_CONFIG.operatorName}</strong>
           </p>
         ) : (
-          <div className="rounded-2xl border border-red-500/25 bg-red-500/10 p-4 text-red-200">
-            Przed publicznym udostępnieniem platformy uzupełnij
-            NEXT_PUBLIC_LEGAL_OPERATOR_NAME i NEXT_PUBLIC_CONTACT_EMAIL w Vercel.
+          <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-amber-100">
+            Dane operatora platformy wymagają jeszcze uzupełnienia przed publicznym startem.
           </div>
         )}
+        <p>
+          E-mail:{" "}
+          <a
+            className="font-bold text-violet-300 underline decoration-violet-500/40 underline-offset-4"
+            href={`mailto:${LEGAL_CONFIG.contactEmail}`}
+          >
+            {LEGAL_CONFIG.contactEmail}
+          </a>
+        </p>
       </LegalSection>
 
       <LegalSection title="W czym możemy pomóc">

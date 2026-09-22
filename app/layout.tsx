@@ -9,6 +9,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://zagraj.fun"),
   title: "zaGRAj — gry imprezowe",
   description:
     "Nowoczesna platforma z grami imprezowymi, teleturniejami i grami społecznymi dla znajomych.",
