@@ -29,6 +29,13 @@ export const PARTYPLAY_GAMES: PartyPlayGameMeta[] = [
     connectedToProgress: true,
   },
   {
+    slug: "pod-przykrywka",
+    label: "Pod Przykrywką",
+    shortLabel: "Pod Przykrywką",
+    icon: "🕵️",
+    connectedToProgress: true,
+  },
+  {
     slug: "floor-party",
     label: "Floor Party",
     shortLabel: "Floor Party",
