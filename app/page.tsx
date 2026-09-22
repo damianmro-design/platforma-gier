@@ -370,12 +370,12 @@ export default function Home() {
       <div className="relative z-10">
         <header className="sticky top-0 z-30 border-b border-white/8 bg-[#050713]/76 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
-            <a href="#top" className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-400 text-xl shadow-[0_10px_30px_rgba(139,92,246,.32)]">♛</span>
-              <div>
-                <p className="text-xl font-black tracking-[-.05em]">PartyPlay</p>
-                <p className="-mt-1 text-[8px] font-black uppercase tracking-[.24em] text-zinc-500">nazwa robocza</p>
-              </div>
+            <a href="#top" className="flex items-center" aria-label="zaGRAj">
+              <img
+                src="/zagraj-logo.webp"
+                alt="zaGRAj"
+                className="h-10 w-auto sm:h-11"
+              />
             </a>
 
             <nav className="hidden items-center gap-7 text-sm font-bold text-zinc-400 md:flex">
@@ -768,7 +768,7 @@ export default function Home() {
         </section>
 
         <footer className="border-t border-white/7 px-5 py-8 text-center text-xs text-zinc-600">
-          <p><span className="font-black text-zinc-400">PartyPlay</span> · nazwa robocza platformy · 2026</p>
+          <p><span className="font-black text-zinc-400">zaGRAj</span> · gry imprezowe · 2026</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-bold uppercase tracking-[.12em]">
             <Link href="/privacy" className="transition hover:text-violet-300">Polityka prywatności</Link>
             <Link href="/terms" className="transition hover:text-violet-300">Regulamin</Link>

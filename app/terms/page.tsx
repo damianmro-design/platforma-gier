@@ -2,15 +2,15 @@ import { LEGAL_CONFIG } from "@/lib/legal-config";
 import LegalPageShell, { LegalSection } from "../legal-page-shell";
 
 export const metadata = {
-  title: "Regulamin | PartyPlay",
+  title: "Regulamin | zaGRAj",
 };
 
 export default function TermsPage() {
   return (
     <LegalPageShell
       eyebrow="Zasady korzystania"
-      title="Regulamin PartyPlay"
-      intro="Regulamin określa zasady korzystania z platformy gier towarzyskich PartyPlay, wspólnego konta użytkownika oraz poszczególnych gier dostępnych w serwisie."
+      title="Regulamin zaGRAj"
+      intro="Regulamin określa zasady korzystania z platformy gier towarzyskich zaGRAj, wspólnego konta użytkownika oraz poszczególnych gier dostępnych w serwisie."
     >
       <LegalSection title="1. Usługodawca i kontakt">
         <p>
@@ -23,9 +23,9 @@ export default function TermsPage() {
         <p>Regulamin obowiązuje od {LEGAL_CONFIG.effectiveDate}.</p>
       </LegalSection>
 
-      <LegalSection title="2. Na czym polega PartyPlay">
+      <LegalSection title="2. Na czym polega zaGRAj">
         <p>
-          PartyPlay jest platformą internetowych gier towarzyskich. Umożliwia m.in.
+          zaGRAj jest platformą internetowych gier towarzyskich. Umożliwia m.in.
           tworzenie pokojów, dołączanie z telefonu, rozgrywkę na wspólnym ekranie,
           korzystanie z konta gracza, historii, statystyk, XP, poziomów i odznak.
         </p>
@@ -37,15 +37,15 @@ export default function TermsPage() {
 
       <LegalSection title="3. Wspólne konto i profile poszczególnych gier">
         <p>
-          Jedno konto PartyPlay może być używane w wielu grach. Obecne konta utworzone
-          wcześniej w „Polowaniu na Milionera” mogą działać jako konta PartyPlay bez
+          Jedno konto zaGRAj może być używane w wielu grach. Obecne konta utworzone
+          wcześniej w „Polowaniu na Milionera” mogą działać jako konta zaGRAj bez
           konieczności zakładania nowego konta.
         </p>
         <p>
           Wspólne konto nie zastępuje funkcji charakterystycznych dla konkretnej gry.
           Na przykład użytkownik może nadal korzystać z rankingu, Punktów Łowcy i
           odznak „Polowania na Milionera”, a jednocześnie posiadać ogólny poziom,
-          XP i historię PartyPlay.
+          XP i historię zaGRAj.
         </p>
       </LegalSection>
 
@@ -69,7 +69,7 @@ export default function TermsPage() {
         </p>
         <p>
           Funkcje długoterminowe, takie jak wspólna historia, XP, poziomy i część
-          osiągnięć, mogą wymagać zalogowanego konta PartyPlay.
+          osiągnięć, mogą wymagać zalogowanego konta zaGRAj.
         </p>
       </LegalSection>
 
@@ -89,7 +89,7 @@ export default function TermsPage() {
       <LegalSection title="7. XP, poziomy, odznaki i wyniki">
         <p>
           XP, poziomy, odznaki, rankingi i wyniki są elementami funkcji rozrywkowych
-          PartyPlay i mogą być obliczane automatycznie na podstawie zakończonych gier
+          zaGRAj i mogą być obliczane automatycznie na podstawie zakończonych gier
           i osiągnięć.
         </p>
         <p>
@@ -104,7 +104,7 @@ export default function TermsPage() {
         <p>
           Nazwy, punkty, wirtualne kwoty, „milion”, XP, poziomy, odznaki, koperty
           i inne elementy finansowe lub nagrodowe są elementami fabuły i mechaniki.
-          Samo zwycięstwo w PartyPlay nie tworzy prawa do wypłaty pieniędzy,
+          Samo zwycięstwo w zaGRAj nie tworzy prawa do wypłaty pieniędzy,
           nagrody rzeczowej ani innego świadczenia od usługodawcy.
         </p>
         <p>
@@ -153,7 +153,7 @@ export default function TermsPage() {
 
       <LegalSection title="12. Dostępność i rozwój platformy">
         <p>
-          PartyPlay jest rozwijane i może być czasowo niedostępne z powodu aktualizacji,
+          zaGRAj jest rozwijane i może być czasowo niedostępne z powodu aktualizacji,
           awarii usług zewnętrznych, problemów sieciowych lub innych zdarzeń niezależnych
           od usługodawcy.
         </p>
@@ -165,7 +165,7 @@ export default function TermsPage() {
 
       <LegalSection title="13. Zakończenie korzystania i usunięcie konta">
         <p>
-          Użytkownik może zakończyć korzystanie z PartyPlay w każdej chwili przez
+          Użytkownik może zakończyć korzystanie z zaGRAj w każdej chwili przez
           wylogowanie i zaprzestanie korzystania z platformy.
         </p>
         <p>
@@ -195,7 +195,7 @@ export default function TermsPage() {
       <LegalSection title="16. Prawa do platformy i materiałów">
         <p>
           Nazwy, oprawa wizualna, kod, grafiki, filmy, audio, teksty, sposób prezentacji
-          oraz inne materiały PartyPlay i poszczególnych gier są chronione na zasadach
+          oraz inne materiały zaGRAj i poszczególnych gier są chronione na zasadach
           wynikających z właściwych przepisów oraz praw przysługujących usługodawcy
           lub jego licencjodawcom.
         </p>
@@ -203,7 +203,7 @@ export default function TermsPage() {
 
       <LegalSection title="17. Zmiany regulaminu">
         <p>
-          Regulamin może zostać zaktualizowany wraz ze zmianą funkcji PartyPlay,
+          Regulamin może zostać zaktualizowany wraz ze zmianą funkcji zaGRAj,
           katalogu gier lub przepisów. Aktualna wersja jest udostępniana bezpłatnie
           pod adresem /terms w sposób pozwalający na jej odczyt i zapis.
         </p>

@@ -6,7 +6,7 @@ import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 
 export default function PartyPlayAuthImportPage() {
   const router = useRouter();
-  const [message, setMessage] = useState("Przenosimy Twoją sesję do PartyPlay…");
+  const [message, setMessage] = useState("Przenosimy Twoją sesję do zaGRAj…");
 
   useEffect(() => {
     const run = async () => {
@@ -26,7 +26,7 @@ export default function PartyPlayAuthImportPage() {
       );
 
       if (!accessToken || !refreshToken) {
-        setMessage("Nie udało się przenieść sesji. Zaloguj się do PartyPlay.");
+        setMessage("Nie udało się przenieść sesji. Zaloguj się do zaGRAj.");
         return;
       }
 
@@ -37,7 +37,7 @@ export default function PartyPlayAuthImportPage() {
       });
 
       if (error || !data.user || data.user.is_anonymous === true) {
-        setMessage("Sesja wygasła. Zaloguj się ponownie do PartyPlay.");
+        setMessage("Sesja wygasła. Zaloguj się ponownie do zaGRAj.");
         return;
       }
 
@@ -51,7 +51,7 @@ export default function PartyPlayAuthImportPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-[#050713] p-5 text-white">
       <div className="text-center">
-        <span className="text-4xl">✦</span>
+        <img src="/zagraj-logo.webp" alt="zaGRAj" className="mx-auto h-12 w-auto" />
         <p className="mt-4 max-w-sm text-sm font-black leading-6 text-violet-200">
           {message}
         </p>

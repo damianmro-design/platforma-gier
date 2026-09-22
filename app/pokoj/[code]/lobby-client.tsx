@@ -268,12 +268,12 @@ export default function LobbyClient({ code }: { code: string }) {
       ) : !me ? (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
-          <h2>{accountSignedIn ? "Twój profil PartyPlay jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
+          <h2>{accountSignedIn ? "Twój profil zaGRAj jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
           {accountSignedIn ? (
             <p>Dane zostały uzupełnione z Twojego konta. Możesz je zmienić tylko na potrzeby tej rozgrywki.</p>
           ) : (
             <p>
-              Możesz wejść jako gość albo <a href={`/login?next=/pokoj/${code}`} className="font-black text-violet-300">zalogować się do PartyPlay</a>.
+              Możesz wejść jako gość albo <a href={`/login?next=/pokoj/${code}`} className="font-black text-violet-300">zalogować się do zaGRAj</a>.
             </p>
           )}
 
@@ -307,7 +307,7 @@ export default function LobbyClient({ code }: { code: string }) {
             {busy
               ? "Dołączanie…"
               : accountSignedIn
-                ? "Dołącz jako konto PartyPlay"
+                ? "Dołącz jako konto zaGRAj"
                 : "Dołącz jako gość"}
           </button>
         </form>

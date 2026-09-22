@@ -15,7 +15,7 @@ export default function LegalFooter() {
         </Link>
       </div>
       <p className="mt-4 text-[9px] leading-4 text-zinc-700">
-        PartyPlay to platforma gier towarzyskich. Elementy punktowe, poziomy, XP,
+        zaGRAj to platforma gier towarzyskich. Elementy punktowe, poziomy, XP,
         wirtualne nagrody i fabularne kwoty w grach nie mają wartości pieniężnej,
         chyba że organizator konkretnego wydarzenia wyraźnie postanowi inaczej
         na własną odpowiedzialność.

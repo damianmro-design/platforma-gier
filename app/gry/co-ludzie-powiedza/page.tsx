@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createRoom } from "../../room-actions";
 
 export const metadata: Metadata = {
-  title: "CO LUDZIE POWIEDZĄ — PartyPlay",
+  title: "CO LUDZIE POWIEDZĄ — zaGRAj",
   description:
     "Drużynowy teleturniej imprezowy oparty na ankietach, przewidywaniu większości i znajomości własnej ekipy.",
 };
@@ -64,12 +64,12 @@ export default function CoLudziePowiedzaPage() {
 
       <header className="survey-nav">
         <div className="container survey-nav-row">
-          <Link href="/" className="brand" aria-label="Wróć na stronę główną">
-            <span className="brand-mark">♛</span>
-            <span>
-              <strong>PartyPlay</strong>
-              <small>nazwa robocza</small>
-            </span>
+          <Link href="/" className="brand" aria-label="Wróć na stronę główną zaGRAj">
+            <img
+              src="/zagraj-logo.webp"
+              alt="zaGRAj"
+              style={{ height: "40px", width: "auto" }}
+            />
           </Link>
           <Link href="/#gry" className="nav-cta">
             ← Wszystkie gry

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createRoom } from "../../room-actions";
 
 export const metadata: Metadata = {
-  title: "Zakręcone Hasło — PartyPlay",
+  title: "Zakręcone Hasło — zaGRAj",
   description:
     "Szybki teleturniej słowny z kołem ryzyka, literami, punktami i hasłami o rosnącym poziomie trudności.",
 };
@@ -22,12 +22,8 @@ export default function ZakreconeHasloPage() {
 
       <header className="relative z-10 border-b border-white/10 bg-black/15 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-fuchsia-500 via-violet-500 to-cyan-400 text-xl">♛</span>
-            <div>
-              <strong className="block text-lg font-black tracking-[-.04em]">PartyPlay</strong>
-              <small className="block text-[8px] font-black uppercase tracking-[.24em] text-zinc-500">nazwa robocza</small>
-            </div>
+          <Link href="/" className="flex items-center" aria-label="Wróć do zaGRAj">
+            <img src="/zagraj-logo.webp" alt="zaGRAj" className="h-10 w-auto" />
           </Link>
           <Link href="/#gry" className="rounded-xl border border-white/10 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-300">
             ← Wszystkie gry

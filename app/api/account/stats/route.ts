@@ -110,7 +110,7 @@ export async function GET(request: Request) {
     });
   } catch {
     return NextResponse.json(
-      { error: "Nie udało się pobrać statystyk PartyPlay." },
+      { error: "Nie udało się pobrać statystyk zaGRAj." },
       { status: 500 },
     );
   }

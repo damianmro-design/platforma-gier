@@ -126,7 +126,7 @@ export default function PartyPlayHistoryPage() {
             href="/profil"
             className="text-xs font-black text-zinc-500 transition hover:text-white"
           >
-            ← Profil PartyPlay
+            ← Profil zaGRAj
           </Link>
           <span className="text-[9px] font-black uppercase tracking-[.2em] text-violet-300">
             HISTORIA
@@ -138,10 +138,10 @@ export default function PartyPlayHistoryPage() {
             TWOJE ROZGRYWKI
           </span>
           <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">
-            Historia PartyPlay
+            Historia zaGRAj
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-            W jednym miejscu widzisz zakończone gry z PartyPlay oraz rankingowe
+            W jednym miejscu widzisz zakończone gry z zaGRAj oraz rankingowe
             rozgrywki Polowania na Milionera przypisane do tego samego konta.
           </p>
 

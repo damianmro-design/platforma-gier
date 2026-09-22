@@ -204,7 +204,7 @@ export default function ProfilePage() {
       if (!mounted) return;
 
       if (profileError) {
-        setError("Nie udało się pobrać profilu PartyPlay.");
+        setError("Nie udało się pobrać profilu zaGRAj.");
         setLoading(false);
         return;
       }
@@ -306,7 +306,7 @@ export default function ProfilePage() {
       return;
     }
 
-    setMessage("Profil PartyPlay został zapisany.");
+    setMessage("Profil zaGRAj został zapisany.");
     setSaving(false);
   }
 
@@ -346,7 +346,7 @@ export default function ProfilePage() {
     return (
       <main className="grid min-h-screen place-items-center bg-[#050713] text-white">
         <p className="text-sm font-black text-violet-200">
-          Ładujemy profil PartyPlay…
+          Ładujemy profil zaGRAj…
         </p>
       </main>
     );
@@ -362,7 +362,7 @@ export default function ProfilePage() {
             href="/"
             className="text-xs font-black text-zinc-500 transition hover:text-white"
           >
-            ← PartyPlay
+            ← zaGRAj
           </Link>
           <button
             onClick={() => void logout()}
@@ -379,7 +379,7 @@ export default function ProfilePage() {
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-black uppercase tracking-[.24em] text-violet-300">
-                KONTO PARTYPLAY
+                KONTO zaGRAj
               </span>
               <h1 className="mt-2 truncate text-4xl font-black tracking-[-.055em]">
                 {displayName || "Twój profil"}
@@ -393,7 +393,7 @@ export default function ProfilePage() {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-[.18em] text-violet-300">
-                    POZIOM PARTYPLAY
+                    POZIOM zaGRAj
                   </span>
                   <div className="mt-2 flex items-baseline gap-3">
                     <strong className="text-4xl font-black tracking-[-.05em]">
@@ -437,7 +437,7 @@ export default function ProfilePage() {
                   <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.wins}</strong>
                 </div>
                 <div className="rounded-xl border border-white/8 bg-black/15 p-3">
-                  <small className="text-[8px] font-black text-zinc-600">ODZNAKI PARTYPLAY</small>
+                  <small className="text-[8px] font-black text-zinc-600">ODZNAKI zaGRAj</small>
                   <strong className="mt-1 block text-lg font-black">{platformStats.progression.xpBreakdown.partyPlayBadges}</strong>
                 </div>
                 <div className="rounded-xl border border-white/8 bg-black/15 p-3">
@@ -636,7 +636,7 @@ export default function ProfilePage() {
 
           <section className="rounded-3xl border border-violet-300/15 bg-violet-300/[.04] p-5">
             <span className="text-[9px] font-black uppercase tracking-[.18em] text-violet-300">
-              POZOSTAŁE GRY PARTYPLAY
+              POZOSTAŁE GRY zaGRAj
             </span>
             <div className="mt-4 space-y-2">
               {(platformStats?.summary.games ?? []).length ? (
@@ -702,7 +702,7 @@ export default function ProfilePage() {
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
-                  ODZNAKI PARTYPLAY
+                  ODZNAKI zaGRAj
                 </span>
                 <h2 className="mt-1 text-xl font-black">
                   {platformStats.progression.partyPlayBadgesEarned}/{platformStats.progression.badges.length} zdobytych
@@ -773,7 +773,7 @@ export default function ProfilePage() {
                 OSTATNIE ROZGRYWKI
               </span>
               <h2 className="mt-1 text-xl font-black">
-                Historia PartyPlay
+                Historia zaGRAj
               </h2>
             </div>
             <Link

@@ -2,7 +2,7 @@ import { LEGAL_CONFIG } from "@/lib/legal-config";
 import LegalPageShell, { LegalSection } from "../legal-page-shell";
 
 export const metadata = {
-  title: "Polityka prywatności | PartyPlay",
+  title: "Polityka prywatności | zaGRAj",
 };
 
 export default function PrivacyPage() {
@@ -10,7 +10,7 @@ export default function PrivacyPage() {
     <LegalPageShell
       eyebrow="Prywatność i dane"
       title="Polityka prywatności"
-      intro="Poniżej wyjaśniamy, jakie dane są przetwarzane w PartyPlay, jak wspólne konto łączy różne gry oraz jakie prawa przysługują użytkownikom."
+      intro="Poniżej wyjaśniamy, jakie dane są przetwarzane w zaGRAj, jak wspólne konto łączy różne gry oraz jakie prawa przysługują użytkownikom."
     >
       <LegalSection title="1. Administrator danych">
         <p>
@@ -26,17 +26,17 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Wspólne konto PartyPlay">
+      <LegalSection title="2. Wspólne konto zaGRAj">
         <p>
-          Konto PartyPlay może być używane w wielu grach dostępnych na platformie,
+          Konto zaGRAj może być używane w wielu grach dostępnych na platformie,
           w tym w „Polowaniu na Milionera”, „Co ludzie powiedzą”, „Zakręconym Haśle”
-          oraz kolejnych grach dodawanych do PartyPlay.
+          oraz kolejnych grach dodawanych do zaGRAj.
         </p>
         <p>
           Użytkownik loguje się jednym kontem, ale poszczególne gry mogą zachowywać
           własne rankingi, osiągnięcia, statystyki i funkcje specyficzne dla danej gry.
           Przykładowo ranking i odznaki „Polowania na Milionera” pozostają częścią tej gry,
-          a PartyPlay może równolegle pokazywać ogólne podsumowanie konta.
+          a zaGRAj może równolegle pokazywać ogólne podsumowanie konta.
         </p>
       </LegalSection>
 
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
           <li>adres e-mail oraz dane techniczne konta i logowania;</li>
           <li>nazwa wyświetlana, awatar i identyfikatory techniczne konta oraz gracza;</li>
           <li>dane o dołączeniu do pokoju, gotowości, drużynie i przebiegu rozgrywki;</li>
-          <li>wyniki, miejsca, zwycięstwa, historia gier, XP, poziom i odznaki PartyPlay;</li>
+          <li>wyniki, miejsca, zwycięstwa, historia gier, XP, poziom i odznaki zaGRAj;</li>
           <li>statystyki i osiągnięcia właściwe dla konkretnej gry;</li>
           <li>
             w grach, które tego wymagają, odpowiedzi ankietowe, głosy, wskazówki,
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Długoterminowa historia, XP, poziomy, wspólne odznaki i statystyki między
-          grami są przypisywane wyłącznie do stałego, zalogowanego konta PartyPlay.
+          grami są przypisywane wyłącznie do stałego, zalogowanego konta zaGRAj.
         </p>
       </LegalSection>
 
@@ -121,8 +121,8 @@ export default function PrivacyPage() {
           rankingi i odznaki tej gry.
         </p>
         <p>
-          Połączenie konta z PartyPlay nie usuwa ani nie zastępuje tych funkcji.
-          PartyPlay może odczytywać wybrane podsumowania, aby pokazać łączną historię
+          Połączenie konta z zaGRAj nie usuwa ani nie zastępuje tych funkcji.
+          zaGRAj może odczytywać wybrane podsumowania, aby pokazać łączną historię
           użytkownika, natomiast szczegółowe dane gry pozostają obsługiwane przez
           system „Polowania na Milionera”.
         </p>
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="10. Cookies i pamięć przeglądarki">
         <p>
-          PartyPlay korzysta z mechanizmów technicznych potrzebnych do logowania,
+          zaGRAj korzysta z mechanizmów technicznych potrzebnych do logowania,
           utrzymania sesji, odzyskania gracza, bezpieczeństwa i działania rozgrywki.
           Obecna wersja nie wykorzystuje cookies reklamowych ani marketingowych.
         </p>
@@ -181,7 +181,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="12. Automatyczne obliczenia w grach">
         <p>
-          PartyPlay i poszczególne gry automatycznie obliczają wyniki, miejsca,
+          zaGRAj i poszczególne gry automatycznie obliczają wyniki, miejsca,
           postęp, XP, poziomy, rankingi i osiągnięcia zgodnie z mechaniką gry.
           Są to funkcje rozrywkowe i nie mają wywoływać skutków prawnych ani
           porównywalnie istotnych skutków dla użytkownika.
@@ -190,7 +190,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="13. Zmiany polityki">
         <p>
-          Polityka może być aktualizowana wraz z rozwojem PartyPlay, np. po dodaniu
+          Polityka może być aktualizowana wraz z rozwojem zaGRAj, np. po dodaniu
           nowych gier, płatności, analityki lub dostawców. Aktualna wersja będzie
           dostępna pod adresem /privacy wraz z datą obowiązywania.
         </p>

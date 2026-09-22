@@ -65,7 +65,7 @@ export default function PartyPlayBadgesPage() {
   const filters = useMemo(
     () => [
       { slug: "all", label: "Wszystkie" },
-      { slug: "global", label: "Ogólne PartyPlay" },
+      { slug: "global", label: "Ogólne zaGRAj" },
       ...PARTYPLAY_GAMES.filter((game) => game.connectedToProgress).map(
         (game) => ({
           slug: game.slug,
@@ -100,7 +100,7 @@ export default function PartyPlayBadgesPage() {
             href="/profil"
             className="text-xs font-black text-zinc-500 transition hover:text-white"
           >
-            ← Profil PartyPlay
+            ← Profil zaGRAj
           </Link>
           <span className="text-[9px] font-black uppercase tracking-[.2em] text-violet-300">
             OSIĄGNIĘCIA
@@ -115,7 +115,7 @@ export default function PartyPlayBadgesPage() {
             Odznaki
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-            PartyPlay ma własne osiągnięcia między grami, a odznaki Polowania
+            zaGRAj ma własne osiągnięcia między grami, a odznaki Polowania
             na Milionera nadal pozostają osobną kolekcją tej gry.
           </p>
 
@@ -184,7 +184,7 @@ export default function PartyPlayBadgesPage() {
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <span className="text-[9px] font-black uppercase tracking-[.18em] text-zinc-600">
-                    ODZNAKI PARTYPLAY
+                    ODZNAKI zaGRAj
                   </span>
                   <h2 className="mt-1 text-xl font-black">
                     {partyPlayBadges.filter((badge) => badge.earned).length}/{partyPlayBadges.length} w tym widoku
@@ -273,7 +273,7 @@ export default function PartyPlayBadgesPage() {
                   </h2>
                   <p className="mt-2 text-xs leading-5 text-zinc-500">
                     To osobna kolekcja Polowania. Nie zastępują jej ogólne
-                    odznaki PartyPlay.
+                    odznaki zaGRAj.
                   </p>
                 </div>
 

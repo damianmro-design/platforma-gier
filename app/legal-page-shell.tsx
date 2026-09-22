@@ -22,11 +22,9 @@ export default function LegalPageShell({
             href="/"
             className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-500 transition hover:text-violet-300"
           >
-            ← PartyPlay
+            ← zaGRAj
           </Link>
-          <span className="text-[9px] font-black uppercase tracking-[0.25em] text-violet-300/70">
-            PartyPlay
-          </span>
+          <img src="/zagraj-logo.webp" alt="zaGRAj" className="h-7 w-auto" />
         </div>
 
         <header className="mt-10 rounded-[2rem] border border-white/10 bg-[#0a0d1c]/92 p-7 shadow-2xl backdrop-blur-xl sm:p-10">

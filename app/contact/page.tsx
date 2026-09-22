@@ -2,7 +2,7 @@ import { LEGAL_CONFIG, hasLegalContactConfigured } from "@/lib/legal-config";
 import LegalPageShell, { LegalSection } from "../legal-page-shell";
 
 export const metadata = {
-  title: "Kontakt | PartyPlay",
+  title: "Kontakt | zaGRAj",
 };
 
 export default function ContactPage() {
@@ -12,7 +12,7 @@ export default function ContactPage() {
     <LegalPageShell
       eyebrow="Pomoc i kontakt"
       title="Kontakt"
-      intro="Masz problem z kontem PartyPlay, konkretną grą, chcesz zgłosić błąd, poprosić o usunięcie danych albo przesłać reklamację? Skontaktuj się z administratorem platformy."
+      intro="Masz problem z kontem zaGRAj, konkretną grą, chcesz zgłosić błąd, poprosić o usunięcie danych albo przesłać reklamację? Skontaktuj się z administratorem platformy."
     >
       <LegalSection title="Kontakt do administratora">
         <p>
@@ -38,7 +38,7 @@ export default function ContactPage() {
 
       <LegalSection title="W czym możemy pomóc">
         <ul className="list-disc space-y-2 pl-5">
-          <li>logowanie, rejestracja i wspólne konto PartyPlay;</li>
+          <li>logowanie, rejestracja i wspólne konto zaGRAj;</li>
           <li>problemy z utworzeniem pokoju lub przebiegiem gry;</li>
           <li>statystyki, historię, XP, poziomy i odznaki;</li>
           <li>zgłoszenie błędu technicznego;</li>

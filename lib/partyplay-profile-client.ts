@@ -127,7 +127,7 @@ export async function fetchPartyPlayStats(
   );
 
   if (!response.ok) {
-    throw new Error("Nie udało się pobrać danych profilu PartyPlay.");
+    throw new Error("Nie udało się pobrać danych profilu zaGRAj.");
   }
 
   return (await response.json()) as PartyPlayStatsResponse;

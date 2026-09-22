@@ -54,7 +54,7 @@ export const PARTYPLAY_LEVELS = [
   { level: 4, title: "Strateg", minXp: 1100 },
   { level: 5, title: "Showman", minXp: 1800 },
   { level: 6, title: "Mistrz", minXp: 2700 },
-  { level: 7, title: "Gwiazda PartyPlay", minXp: 3800 },
+  { level: 7, title: "Gwiazda zaGRAj", minXp: 3800 },
   { level: 8, title: "Weteran", minXp: 5200 },
   { level: 9, title: "Elita", minXp: 7000 },
   { level: 10, title: "Legenda", minXp: 9000 },
@@ -62,7 +62,7 @@ export const PARTYPLAY_LEVELS = [
   { level: 12, title: "Arcymistrz", minXp: 14500 },
   { level: 13, title: "Hall of Fame", minXp: 18000 },
   { level: 14, title: "Nietykalny", minXp: 22000 },
-  { level: 15, title: "Legenda PartyPlay", minXp: 27000 },
+  { level: 15, title: "Legenda zaGRAj", minXp: 27000 },
 ] as const;
 
 function safeNumber(value: number | null | undefined) {
@@ -161,7 +161,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:games_5",
       title: "Stały gracz",
-      description: "Ukończ 5 gier PartyPlay.",
+      description: "Ukończ 5 gier zaGRAj.",
       icon: "🔥",
       current: totalGames,
       target: 5,
@@ -169,7 +169,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:games_10",
       title: "Weteran wieczoru",
-      description: "Ukończ 10 gier PartyPlay.",
+      description: "Ukończ 10 gier zaGRAj.",
       icon: "🎲",
       current: totalGames,
       target: 10,
@@ -177,7 +177,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:games_25",
       title: "Maratończyk",
-      description: "Ukończ 25 gier PartyPlay.",
+      description: "Ukończ 25 gier zaGRAj.",
       icon: "⚡",
       current: totalGames,
       target: 25,
@@ -185,7 +185,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:games_50",
       title: "Nie gasimy światła",
-      description: "Ukończ 50 gier PartyPlay.",
+      description: "Ukończ 50 gier zaGRAj.",
       icon: "🌙",
       current: totalGames,
       target: 50,
@@ -209,7 +209,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:variety_3",
       title: "Wszystkiego po trochu",
-      description: "Zagraj w co najmniej 3 różne gry PartyPlay.",
+      description: "Zagraj w co najmniej 3 różne gry zaGRAj.",
       icon: "🧩",
       current: distinctGamesPlayed,
       target: 3,
@@ -217,7 +217,7 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
     makeBadge({
       code: "global:wins_variety_3",
       title: "Uniwersalny mistrz",
-      description: "Wygraj w co najmniej 3 różnych grach PartyPlay.",
+      description: "Wygraj w co najmniej 3 różnych grach zaGRAj.",
       icon: "🌟",
       current: distinctGamesWon,
       target: 3,

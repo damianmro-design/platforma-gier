@@ -61,7 +61,7 @@ export default function RegistrationPage() {
     }
 
     setSuccess(
-      "Konto zostało utworzone. Sprawdź skrzynkę e-mail i potwierdź adres, a potem zaloguj się do PartyPlay.",
+      "Konto zostało utworzone. Sprawdź skrzynkę e-mail i potwierdź adres, a potem zaloguj się do zaGRAj.",
     );
     setPassword("");
     setPasswordConfirm("");
@@ -74,16 +74,16 @@ export default function RegistrationPage() {
 
       <section className="relative z-10 mx-auto max-w-md">
         <Link href="/" className="text-xs font-black text-zinc-500 transition hover:text-white">
-          ← Wróć do PartyPlay
+          ← Wróć do zaGRAj
         </Link>
 
         <div className="mt-8 rounded-[2rem] border border-white/10 bg-[#0a0d1c]/92 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <span className="text-[10px] font-black uppercase tracking-[.24em] text-violet-300">
-            KONTO PARTYPLAY
+            KONTO zaGRAj
           </span>
           <h1 className="mt-3 text-4xl font-black tracking-[-.06em]">Utwórz konto</h1>
           <p className="mt-3 text-sm leading-6 text-zinc-500">
-            Jedno konto będzie działało w Polowaniu na Milionera i grach PartyPlay.
+            Jedno konto będzie działało w Polowaniu na Milionera i grach zaGRAj.
           </p>
 
           <form onSubmit={register} className="mt-6 space-y-3">

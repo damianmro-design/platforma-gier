@@ -4,7 +4,7 @@ import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
 import { createRoom } from "../../room-actions";
 
 export const metadata: Metadata = {
-  title: "Akta Nocy — PartyPlay",
+  title: "Akta Nocy — zaGRAj",
   description:
     "Interaktywna gra śledcza: role, sekrety, dowody, przesłuchania i rekonstrukcja zbrodni.",
 };
@@ -20,16 +20,8 @@ export default function AktaNocyPage() {
       <div className="relative z-10">
         <header className="border-b border-orange-100/10 bg-[#070504]/80 backdrop-blur-xl">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-            <Link href="/" className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-orange-200/15 bg-orange-950/60 text-xl">
-                ♛
-              </span>
-              <div>
-                <p className="text-lg font-black tracking-[-.04em]">PartyPlay</p>
-                <p className="-mt-1 text-[8px] font-black uppercase tracking-[.24em] text-orange-100/35">
-                  Akta Nocy
-                </p>
-              </div>
+            <Link href="/" className="flex items-center" aria-label="Wróć do zaGRAj">
+              <img src="/zagraj-logo.webp" alt="zaGRAj" className="h-10 w-auto" />
             </Link>
             <Link
               href="/#gry"

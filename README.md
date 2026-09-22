@@ -1,4 +1,4 @@
-# Platforma gier — roboczo PartyPlay
+# zaGRAj
 
 Nadrzędna platforma do webowych gier imprezowych dla znajomych.
 
@@ -39,4 +39,4 @@ Poszczególne gry mogą pozostać osobnymi aplikacjami i repozytoriami. Platform
 
 Kolorowy, nowoczesny party hub z ciemną bazą, indywidualnymi kolorami gier, dużymi kartami, krótkim onboardingiem i teleturniejową energią.
 
-Nazwa PartyPlay jest na razie robocza.
+Nazwa platformy: **zaGRAj**.
