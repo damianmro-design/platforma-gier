@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 export type AktaNocyEvidenceArtworkId =
   | "monitoring-gap"
@@ -32,7 +32,7 @@ function EvidenceFrame({
   label,
   number,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   label: string;
   number: string;
 }) {
@@ -114,7 +114,7 @@ function Title({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-function SmallText({ x, y, children, bold = false }: { x: number; y: number; children: React.ReactNode; bold?: boolean }) {
+function SmallText({ x, y, children, bold = false }: { x: number; y: number; children: ReactNode; bold?: boolean }) {
   return (
     <text x={x} y={y} fill={INK} fontFamily="Arial, sans-serif" fontWeight={bold ? "800" : "500"} fontSize="16">
       {children}
