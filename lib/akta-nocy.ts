@@ -59,7 +59,7 @@ export const AKTA_NOCY_CASES: NightCase[] = [
     slug: "apartament-214",
     number: "001",
     title: "Apartament 214",
-    setting: "Hotel Nocturne, noc po zamkniętej gali",
+    setting: "Hotel Noctis, noc po zamkniętej gali",
     players: "5–12 graczy",
     duration: "75–105 min",
     difficulty: "średnia",
@@ -98,7 +98,7 @@ export const APARTAMENT_214_ROLES: AktaNocyRole[] = [
     id: "manager",
     name: "Nora Kwiecień",
     shortLabel: "Menedżerka hotelu",
-    publicBio: "Odpowiadasz za Hotel Nocturne i przebieg zamkniętej gali. Zależy Ci, żeby skandal nie zniszczył reputacji obiektu.",
+    publicBio: "Odpowiadasz za Hotel Noctis i przebieg zamkniętej gali. Zależy Ci, żeby skandal nie zniszczył reputacji obiektu.",
     privateSecret: "Od kilku dni wiedziałaś, że zamek w apartamencie 214 czasami nie zapisuje poprawnie każdego otwarcia. Nie zgłosiłaś tego właścicielom.",
     objective: "Chroń hotel przed skandalem, ale nie blokuj śledztwa, jeśli ktoś przedstawi twardy dowód.",
     openingStatement: "Powiedz, że około 22:40 widziałaś Marka żywego i zdenerwowanego. Nie wspominaj od razu o usterce zamka.",
@@ -381,6 +381,7 @@ export type AktaNocyEvidence = {
   summary: string;
   details: string[];
   question: string;
+  image?: string;
 };
 
 export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
@@ -399,6 +400,7 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Awaria była przypadkowa, celowa czy ktoś po prostu wykorzystał lukę, o której wcześniej nie wiedział?",
+    image: "/akta-nocy/evidence-a01-monitoring.webp",
   },
   {
     id: "door-log",
@@ -449,6 +451,7 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Kto wiedział o pendrivie i komu najbardziej zależało, żeby zniknął?",
+    image: "/akta-nocy/evidence-a04-drive.webp",
   },
 ];
 
@@ -621,6 +624,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Jeżeli wiadomość była zaplanowana wcześniej, kto próbował stworzyć wrażenie, że Marek żył jeszcze po 23:00?",
+    image: "/akta-nocy/evidence-b01-metadata.webp",
   },
   {
     id: "mirror-photo",
@@ -689,6 +693,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czy zaginiony pendrive zawierał właśnie materiały z tego pliku i kto najbardziej bał się ich publikacji?",
+    image: "/akta-nocy/evidence-b05-wicher.webp",
   },
 ];
 
