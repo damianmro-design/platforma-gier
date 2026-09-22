@@ -16,6 +16,7 @@ import {
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "Co ludzie powiedzą",
   "zakrecone-haslo": "Zakręcone Hasło",
+  "pod-przykrywka": "Pod Przykrywką",
   "floor-party": "Floor Party",
   "polowanie-na-milionera": "Polowanie na Milionera",
 };
@@ -107,6 +108,20 @@ type PartyPlayProgression = {
   badges: GlobalBadge[];
 };
 
+type PodPrzykrywkaStats = {
+  gamesCompleted: number;
+  wins: number;
+  agentGames: number;
+  agentWins: number;
+  oszustGames: number;
+  oszustWins: number;
+  correctFinalVotes: number;
+  perfectCoverWins: number;
+  innocentFinalDefenderWins: number;
+  interrogatedWins: number;
+  hotSeatAppearances: number;
+};
+
 type PlatformStatsResponse = {
   summary: PlatformSummary;
   history: HistoryItem[];
@@ -122,6 +137,7 @@ type PlatformStatsResponse = {
     progressTarget: number;
   }>;
   progression: PartyPlayProgression;
+  podPrzykrywka: PodPrzykrywkaStats;
 };
 
 function gameLabel(slug: string) {
@@ -672,6 +688,38 @@ export default function ProfilePage() {
             </div>
           </section>
         </div>
+
+        {platformStats?.podPrzykrywka &&
+          platformStats.podPrzykrywka.gamesCompleted > 0 && (
+            <section className="mt-5 rounded-3xl border border-cyan-300/15 bg-cyan-300/[.035] p-5">
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-cyan-300">
+                STATYSTYKI POD PRZYKRYWKĄ
+              </span>
+              <h2 className="mt-1 text-xl font-black">Twoja kartoteka</h2>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                {[
+                  ["GRY", platformStats.podPrzykrywka.gamesCompleted],
+                  ["WYGRANE", platformStats.podPrzykrywka.wins],
+                  ["JAKO OSZUST", platformStats.podPrzykrywka.oszustWins],
+                  ["JAKO AGENT", platformStats.podPrzykrywka.agentWins],
+                  ["TRAFNE FINAŁY", platformStats.podPrzykrywka.correctFinalVotes],
+                  ["GORĄCE KRZESŁO", platformStats.podPrzykrywka.hotSeatAppearances],
+                ].map(([label, value]) => (
+                  <div
+                    key={String(label)}
+                    className="rounded-2xl border border-white/8 bg-black/15 p-3"
+                  >
+                    <small className="text-[8px] font-black text-zinc-600">
+                      {label}
+                    </small>
+                    <strong className="mt-1 block text-2xl font-black">
+                      {value}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
         {platformStats?.progression && (
           <section className="mt-5 rounded-3xl border border-white/8 bg-white/[.025] p-5">
