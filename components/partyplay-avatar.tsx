@@ -248,7 +248,7 @@ export function PartyPlayAvatar({
       aria-label={avatar.name}
       title={avatar.name}
     >
-      <svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-hidden="true">
+      <svg viewBox="0 0 100 100" role="img" aria-hidden="true" style={{ width: "100%", height: "100%", flex: "1 1 auto" }}>
         <defs>
           <linearGradient id={g1} x1="18" y1="18" x2="82" y2="82" gradientUnits="userSpaceOnUse">
             <stop stopColor="#22d3ee" />
