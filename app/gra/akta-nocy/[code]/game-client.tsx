@@ -2380,7 +2380,7 @@ function Roster({ progress }: { progress: HostProgress[] }) {
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                {avatar(player.avatar, player.displayName)}
+                {avatar(player.avatar, player.display_name)}
               </span>
               <strong className="truncate text-sm text-orange-50/85">
                 {player.display_name}
