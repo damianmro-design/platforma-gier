@@ -7,7 +7,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type HostProgress = {
   player_id: string;
@@ -211,11 +210,96 @@ type PlayerState = {
 
 type GameState = HostState | PlayerState;
 
-function avatar(id: string, size = 36) {
-  return <PartyPlayAvatar id={id} size={size} />;
+function AktaNocyAvatar({
+  seed,
+  size = 36,
+}: {
+  seed: string;
+  size?: number;
+}) {
+  const variant = [...seed].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 6;
+
+  const mark = (() => {
+    switch (variant) {
+      case 0:
+        return (
+          <>
+            <path d="M50 20c-17 0-29 13-29 30 0 8 3 15 8 21" />
+            <path d="M50 29c-12 0-21 9-21 21 0 9 5 16 12 21" />
+            <path d="M50 38c-7 0-12 5-12 12 0 8 5 13 12 18" />
+            <path d="M50 20c17 0 29 13 29 30 0 13-7 24-18 30" />
+            <path d="M50 29c12 0 21 9 21 21 0 10-6 19-15 23" />
+            <path d="M50 38c7 0 12 5 12 12 0 6-3 11-8 15" />
+          </>
+        );
+      case 1:
+        return (
+          <>
+            <rect x="19" y="24" width="62" height="52" rx="8" />
+            <path d="M28 38h24M28 48h15" />
+            <text x="62" y="62" textAnchor="middle" fontSize="18" fontWeight="900" fill="currentColor" stroke="none">
+              214
+            </text>
+          </>
+        );
+      case 2:
+        return (
+          <>
+            <path d="M22 39h43l13 9v17H35L22 56Z" />
+            <circle cx="43" cy="52" r="8" />
+            <path d="M28 65 18 78M56 65l10 13" />
+          </>
+        );
+      case 3:
+        return (
+          <>
+            <path d="M20 31h24l8 8h28v35H20Z" />
+            <path d="M28 49h43M28 58h35M28 67h26" />
+          </>
+        );
+      case 4:
+        return (
+          <>
+            <circle cx="38" cy="45" r="14" />
+            <circle cx="38" cy="45" r="5" />
+            <path d="M50 55 77 79M64 67l7-7M70 73l7-7" />
+          </>
+        );
+      default:
+        return (
+          <>
+            <rect x="21" y="23" width="58" height="54" rx="9" />
+            <path d="M29 54h7l4-15 7 27 7-34 7 28 5-13 5 7h6" />
+            <circle cx="69" cy="35" r="3" fill="currentColor" stroke="none" />
+          </>
+        );
+    }
+  })();
+
+  return (
+    <span
+      className="inline-grid shrink-0 place-items-center overflow-hidden rounded-xl border border-amber-200/15 bg-[radial-gradient(circle_at_35%_30%,rgba(141,83,46,.28),rgba(14,8,7,.96)_68%)] text-amber-200 shadow-[inset_0_0_18px_rgba(0,0,0,.45),0_5px_18px_rgba(0,0,0,.28)]"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      <svg
+        viewBox="0 0 100 100"
+        className="h-[76%] w-[76%]"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {mark}
+      </svg>
+    </span>
+  );
 }
 
-
+function avatar(id: string, size = 36) {
+  return <AktaNocyAvatar seed={id} size={size} />;
+}
 
 function isEvidenceAPhase(phase: string | null) {
   return Boolean(phase?.startsWith("dowody_a_"));
@@ -371,7 +455,7 @@ function HostView({
             </p>
 
             <StageArtwork
-              src="/akta-nocy/hero.webp"
+              src="/akta-nocy/hero-v2.webp"
               alt="Akta Nocy, sprawa Apartament 214"
               cinematic
             />
@@ -1245,7 +1329,7 @@ function PlayerView({
             </p>
 
             <StageArtwork
-              src="/akta-nocy/case-cover.webp"
+              src="/akta-nocy/case-cover-v2.webp"
               alt="Okładka akt sprawy Apartament 214"
             />
 
