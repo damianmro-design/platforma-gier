@@ -1,10 +1,18 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
+  getPartyPlayUserFromAccessToken,
+  getPolowanieCareerFromAccessToken,
+} from "@/lib/partyplay-auth";
+import { calculatePartyPlayProgress } from "@/lib/partyplay-progress";
+import { isPartyPlayAvatarUnlocked } from "@/lib/partyplay-avatars";
+import {
   assignPlatformTeams,
   getPlatformPlayer,
   getPlatformRecoveryCode,
+  getMyPartyPlayPlatformStats,
   joinPlatformRoom,
+  joinPlatformRoomAccount,
   recoverPlatformPlayer,
   listPlatformLobby,
   lookupPlatformRoom,
@@ -81,7 +89,46 @@ export async function POST(request: Request, context: RouteContext) {
 
       const name = String(body.name ?? "").trim().slice(0, 20);
       const avatar = String(body.avatar ?? "");
-      const player = await joinPlatformRoom(code, name, avatar);
+      const partyPlayAccessToken = String(body.partyPlayAccessToken ?? "").trim();
+      const partyPlayUser = partyPlayAccessToken
+        ? await getPartyPlayUserFromAccessToken(partyPlayAccessToken)
+        : null;
+
+      let player;
+
+      if (partyPlayUser && partyPlayAccessToken) {
+        const [polowanie, platformStats] = await Promise.all([
+          getPolowanieCareerFromAccessToken(partyPlayAccessToken),
+          getMyPartyPlayPlatformStats(partyPlayAccessToken, { historyLimit: 1 }),
+        ]);
+
+        const progression = calculatePartyPlayProgress({
+          polowanieGames: polowanie?.games_completed ?? 0,
+          polowanieWins: polowanie?.wins ?? 0,
+          polowanieBadges: polowanie?.badges_count ?? 0,
+          platformGames: platformStats.summary.games.map((game) => ({
+            gameSlug: game.gameSlug,
+            gamesCompleted: Number(game.gamesCompleted ?? 0),
+            wins: Number(game.wins ?? 0),
+          })),
+        });
+
+        if (!isPartyPlayAvatarUnlocked(avatar, progression.level.level)) {
+          return NextResponse.json(
+            { error: "Ten avatar nie jest jeszcze odblokowany na Twoim poziomie." },
+            { status: 403 },
+          );
+        }
+
+        player = await joinPlatformRoomAccount(
+          code,
+          name,
+          avatar,
+          partyPlayAccessToken,
+        );
+      } else {
+        player = await joinPlatformRoom(code, name, avatar);
+      }
 
       const response = NextResponse.json({ ok: true, player });
       response.cookies.set(names.player, player.player_token, {
@@ -161,11 +208,16 @@ export async function POST(request: Request, context: RouteContext) {
       const room = await lookupPlatformRoom(code);
       const ok = await startPlatformRoom(code, hostToken);
       if (!ok) {
-        const errorMessage = room?.game_slug === "akta-nocy"
-          ? "Do startu Akt Nocy potrzeba 5–12 graczy i wszyscy muszą być gotowi."
-          : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
+        const message =
+          room?.game_slug === "zakrecone-haslo"
+            ? "Do startu potrzeba 3–12 graczy i wszyscy muszą być gotowi."
+            : room?.game_slug === "pod-przykrywka"
+              ? "Do startu potrzeba 6–14 graczy i wszyscy muszą być gotowi."
+              : room?.game_slug === "akta-nocy"
+              ? "Do startu Akt Nocy potrzeba 5–12 graczy i wszyscy muszą być gotowi."
+              : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
 
-        return NextResponse.json({ error: errorMessage }, { status: 400 });
+        return NextResponse.json({ error: message }, { status: 400 });
       }
 
       return NextResponse.json({ ok: true });
@@ -174,10 +226,12 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : "Nieznany błąd.";
-    const message = rawMessage.includes("Name already taken")
-      ? "Ta nazwa jest już zajęta w tym pokoju."
+    const message = rawMessage.includes("PartyPlay account already joined")
+      ? "To konto PartyPlay jest już używane przez gracza w tym pokoju."
+      : rawMessage.includes("Name already taken")
+        ? "Ta nazwa jest już zajęta w tym pokoju."
       : rawMessage.includes("Room is full")
-        ? "Pokój osiągnął maksymalną liczbę graczy dla tej gry."
+        ? "Pokój jest pełny."
         : rawMessage.includes("Invalid name")
           ? "Wpisz imię od 1 do 20 znaków."
           : "Nie udało się wykonać tej akcji.";

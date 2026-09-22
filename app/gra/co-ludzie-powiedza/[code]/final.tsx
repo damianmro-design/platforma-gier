@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClpFinalState } from "@/lib/platform-db";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -9,10 +10,6 @@ type Player = {
   team: "A" | "B" | null;
 };
 
-const AVATARS: Record<string, string> = {
-  lion:"🦁", fox:"🦊", panda:"🐼", tiger:"🐯", koala:"🐨", owl:"🦉",
-  frog:"🐸", penguin:"🐧", bear:"🐻", rabbit:"🐰", monkey:"🐵", cat:"🐱",
-};
 
 export function HostFinal({
   code,
@@ -195,7 +192,7 @@ export function PlayerFinal({
           ) : isPredictor ? (
             <section className="clp-final-picker">
               <div className="clp-final-your-turn">
-                <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+                <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
                 <div><small>DOGRYWKA</small><strong>Wybierz procent od 0 do 100.</strong></div>
               </div>
               <div className="clp-final-percent-grid">
@@ -255,7 +252,7 @@ export function PlayerFinal({
         ) : isPredictor ? (
           <section className="clp-final-picker">
             <div className="clp-final-your-turn">
-              <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+              <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
               <div>
                 <small>TY ZATWIERDZASZ</small>
                 <strong>Wybierzcie odpowiedź, która Waszym zdaniem była najwyżej.</strong>
@@ -343,7 +340,7 @@ function FinalRep({
 }) {
   return (
     <article className={"clp-final-rep team-" + team.toLowerCase()}>
-      <span>{player ? AVATARS[player.avatar] ?? "🎮" : "🎮"}</span>
+      <span><PartyPlayAvatar id={player?.avatar} size={38} /></span>
       <div>
         <small>DRUŻYNA {team}</small>
         <strong>{player?.display_name ?? "—"}</strong>
@@ -385,7 +382,7 @@ function WaitCard({
 }) {
   return (
     <div className="clp-final-wait-card">
-      <span>{predictor ? AVATARS[predictor.avatar] ?? "🎮" : "🎮"}</span>
+      <span><PartyPlayAvatar id={predictor?.avatar} size={38} /></span>
       <strong>{predictor ? predictor.display_name + " " + text : "Czekamy na reprezentanta"}</strong>
       <p>Naradźcie się razem. Tylko wskazana osoba może zatwierdzić odpowiedź.</p>
     </div>
@@ -438,7 +435,7 @@ function PlayerWinner({ player, final }: { player: Player; final: ClpFinalState 
 function PhoneFooter({ player }: { player: Player }) {
   return (
     <footer className="clp-phone-footer">
-      <span>{AVATARS[player.avatar] ?? "🎮"}</span>
+      <span><PartyPlayAvatar id={player.avatar} size={38} /></span>
       <strong>{player.display_name}</strong>
       <small>DRUŻYNA {player.team}</small>
     </footer>

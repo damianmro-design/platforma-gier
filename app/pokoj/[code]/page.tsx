@@ -5,6 +5,8 @@ import LobbyClient from "./lobby-client";
 
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "CO LUDZIE POWIEDZĄ",
+  "zakrecone-haslo": "ZAKRĘCONE HASŁO",
+  "pod-przykrywka": "POD PRZYKRYWKĄ",
   "akta-nocy": "AKTA NOCY",
 };
 
