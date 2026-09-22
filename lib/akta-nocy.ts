@@ -419,6 +419,7 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     ],
     question:
       "Kto mógł mieć dostęp do karty 214 i kto opuszczał pokój o 22:54?",
+    image: "/akta-nocy/evidence-a02-door-log.webp",
   },
   {
     id: "late-message",
