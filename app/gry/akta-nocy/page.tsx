@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
 import { createRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
+import AktaNocyCoverArtwork from "@/components/akta-nocy-cover-artwork";
 
 export const metadata: Metadata = {
   title: "Akta Nocy — zaGRAj",
@@ -85,13 +86,7 @@ export default function AktaNocyPage() {
           <div className="relative">
             <div className="absolute -inset-10 rounded-full bg-red-900/20 blur-3xl" />
             <div className="relative rotate-[1.3deg] rounded-[1.75rem] border border-orange-200/15 bg-[#1a0b08]/95 p-5 shadow-[0_36px_100px_rgba(0,0,0,.65)] sm:p-7">
-              <div className="mb-5 overflow-hidden rounded-2xl border border-orange-200/15 bg-black/35">
-                <img
-                  src="/akta-nocy/case-cover-v4.webp"
-                  alt="Akta sprawy Apartament 214"
-                  className="aspect-[4/3] w-full object-cover"
-                />
-              </div>
+              <AktaNocyCoverArtwork className="mb-5" />
               <div className="rounded-2xl border border-orange-200/15 bg-[#2a100b] p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
