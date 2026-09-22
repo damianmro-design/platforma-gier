@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { joinRoom } from "./room-actions";
+import AccountMenu from "./account-menu";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word";
@@ -267,9 +268,12 @@ export default function Home() {
               <a href="#wybierz" className="transition hover:text-white">Znajdź grę</a>
             </nav>
 
-            <a href="#dolacz" className="rounded-xl border border-white/12 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-200 transition hover:bg-white/[.08]">
-              Mam kod
-            </a>
+            <div className="flex items-center gap-2">
+              <a href="#dolacz" className="rounded-xl border border-white/12 bg-white/[.04] px-4 py-2.5 text-xs font-black text-zinc-200 transition hover:bg-white/[.08]">
+                Mam kod
+              </a>
+              <AccountMenu />
+            </div>
           </div>
         </header>
 
@@ -433,7 +437,8 @@ export default function Home() {
               tags={["psychologiczna", "sabotaż", "tajna rola"]}
               accent="cyan"
               art="agent"
-              status="soon"
+              href="/gry/pod-przykrywka"
+              status="new"
             />
 
             <GameCard
@@ -458,7 +463,8 @@ export default function Home() {
               tags={["słowna", "szybka", "teleturniej"]}
               accent="violet"
               art="word"
-              status="soon"
+              href="/gry/zakrecone-haslo"
+              status="new"
             />
           </div>
         </section>
@@ -482,6 +488,11 @@ export default function Home() {
 
         <footer className="border-t border-white/7 px-5 py-8 text-center text-xs text-zinc-600">
           <p><span className="font-black text-zinc-400">PartyPlay</span> · nazwa robocza platformy · 2026</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[10px] font-bold uppercase tracking-[.12em]">
+            <Link href="/privacy" className="transition hover:text-violet-300">Polityka prywatności</Link>
+            <Link href="/terms" className="transition hover:text-violet-300">Regulamin</Link>
+            <Link href="/contact" className="transition hover:text-violet-300">Kontakt</Link>
+          </div>
         </footer>
       </div>
     </main>

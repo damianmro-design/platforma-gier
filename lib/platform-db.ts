@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { ZhGameState } from "@/lib/zakrecone-haslo";
 
 const DEFAULT_SUPABASE_URL = "https://glcjetxskjnlbeegirln.supabase.co";
 const DEFAULT_SUPABASE_PUBLISHABLE_KEY =
@@ -75,6 +76,26 @@ export async function joinPlatformRoom(code: string, displayName: string, avatar
     p_code: code,
     p_display_name: displayName,
     p_avatar: avatar,
+  });
+
+  if (error) throw new Error(error.message);
+  const player = Array.isArray(data) ? data[0] : data;
+  if (!player?.player_token) throw new Error("Nie udało się dołączyć do pokoju.");
+  return player as JoinedPlayer;
+}
+
+export async function joinPlatformRoomAccount(
+  code: string,
+  displayName: string,
+  avatar: string,
+  partyPlayUserId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("join_platform_room_account", {
+    p_code: code,
+    p_display_name: displayName,
+    p_avatar: avatar,
+    p_partyplay_user_id: partyPlayUserId,
   });
 
   if (error) throw new Error(error.message);
@@ -871,6 +892,388 @@ export async function submitClpFinalTiebreak(
 
   if (error) throw new Error(error.message);
   return data as ClpFinalState["lastEvent"];
+}
+
+
+export type PartyPlayGameSummary = {
+  gameSlug: string;
+  gamesCompleted: number;
+  wins: number;
+  totalScore: number;
+  bestPlacement: number | null;
+};
+
+export type PartyPlayAccountSummary = {
+  games_completed: number;
+  wins: number;
+  total_score: number;
+  best_placement: number | null;
+  last_played_at: string | null;
+  games: PartyPlayGameSummary[];
+};
+
+export type PartyPlayAccountHistoryItem = {
+  game_slug: string;
+  display_name: string;
+  avatar: string;
+  team: "A" | "B" | null;
+  final_score: number | null;
+  placement: number | null;
+  won: boolean;
+  completed_at: string;
+};
+
+export async function getPartyPlayAccountSummary(partyPlayUserId: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_partyplay_account_summary", {
+    p_partyplay_user_id: partyPlayUserId,
+  });
+
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    return {
+      games_completed: 0,
+      wins: 0,
+      total_score: 0,
+      best_placement: null,
+      last_played_at: null,
+      games: [],
+    } as PartyPlayAccountSummary;
+  }
+
+  return {
+    ...row,
+    games_completed: Number(row.games_completed ?? 0),
+    wins: Number(row.wins ?? 0),
+    total_score: Number(row.total_score ?? 0),
+    best_placement:
+      row.best_placement == null ? null : Number(row.best_placement),
+    games: Array.isArray(row.games) ? row.games : [],
+  } as PartyPlayAccountSummary;
+}
+
+export async function getPartyPlayAccountHistory(
+  partyPlayUserId: string,
+  limit = 20,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_partyplay_account_history", {
+    p_partyplay_user_id: partyPlayUserId,
+    p_limit: limit,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    ...row,
+    final_score: row.final_score == null ? null : Number(row.final_score),
+    placement: row.placement == null ? null : Number(row.placement),
+    won: Boolean(row.won),
+  })) as PartyPlayAccountHistoryItem[];
+}
+
+
+export type PodPrzykrywkaAccountStats = {
+  gamesCompleted: number;
+  wins: number;
+  agentGames: number;
+  agentWins: number;
+  oszustGames: number;
+  oszustWins: number;
+  correctFinalVotes: number;
+  perfectCoverWins: number;
+  innocentFinalDefenderWins: number;
+  interrogatedWins: number;
+  hotSeatAppearances: number;
+};
+
+export type MyPartyPlayPlatformStats = {
+  summary: PartyPlayAccountSummary;
+  history: PartyPlayAccountHistoryItem[];
+  historyTotal: number;
+  historyOffset: number;
+  historyLimit: number;
+  historyHasMore: boolean;
+  podPrzykrywka: PodPrzykrywkaAccountStats;
+};
+
+export async function getMyPartyPlayPlatformStats(
+  accessToken: string,
+  options?: {
+    historyLimit?: number;
+    historyOffset?: number;
+    gameSlug?: string | null;
+  },
+) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": accessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const { data, error } = await supabase.rpc("get_my_partyplay_platform_stats", {
+    p_history_limit: Math.min(Math.max(options?.historyLimit ?? 10, 1), 50),
+    p_history_offset: Math.max(options?.historyOffset ?? 0, 0),
+    p_game_slug: options?.gameSlug?.trim() || null,
+  });
+
+  if (error) throw new Error(error.message);
+
+  const payload = (data ?? {}) as {
+    summary?: Record<string, unknown>;
+    history?: Array<Record<string, unknown>>;
+    historyTotal?: number | string;
+    historyOffset?: number | string;
+    historyLimit?: number | string;
+    historyHasMore?: boolean;
+    podPrzykrywka?: Record<string, unknown>;
+  };
+
+  const rawSummary = payload.summary ?? {};
+  const rawGames = Array.isArray(rawSummary.games) ? rawSummary.games : [];
+  const rawPodPrzykrywka = payload.podPrzykrywka ?? {};
+
+  const summary: PartyPlayAccountSummary = {
+    games_completed: Number(rawSummary.games_completed ?? 0),
+    wins: Number(rawSummary.wins ?? 0),
+    total_score: Number(rawSummary.total_score ?? 0),
+    best_placement:
+      rawSummary.best_placement == null ? null : Number(rawSummary.best_placement),
+    last_played_at:
+      rawSummary.last_played_at == null ? null : String(rawSummary.last_played_at),
+    games: rawGames.map((game) => {
+      const item = game as Record<string, unknown>;
+      return {
+        gameSlug: String(item.gameSlug ?? ""),
+        gamesCompleted: Number(item.gamesCompleted ?? 0),
+        wins: Number(item.wins ?? 0),
+        totalScore: Number(item.totalScore ?? 0),
+        bestPlacement:
+          item.bestPlacement == null ? null : Number(item.bestPlacement),
+      };
+    }),
+  };
+
+  const history: PartyPlayAccountHistoryItem[] = (
+    Array.isArray(payload.history) ? payload.history : []
+  ).map((row) => ({
+    game_slug: String(row.game_slug ?? ""),
+    display_name: String(row.display_name ?? ""),
+    avatar: String(row.avatar ?? ""),
+    team:
+      row.team === "A" || row.team === "B"
+        ? row.team
+        : null,
+    final_score:
+      row.final_score == null ? null : Number(row.final_score),
+    placement:
+      row.placement == null ? null : Number(row.placement),
+    won: Boolean(row.won),
+    completed_at: String(row.completed_at ?? ""),
+  }));
+
+  return {
+    summary,
+    history,
+    historyTotal: Number(payload.historyTotal ?? history.length),
+    historyOffset: Number(payload.historyOffset ?? 0),
+    historyLimit: Number(payload.historyLimit ?? history.length),
+    historyHasMore: Boolean(payload.historyHasMore),
+    podPrzykrywka: {
+      gamesCompleted: Number(rawPodPrzykrywka.gamesCompleted ?? 0),
+      wins: Number(rawPodPrzykrywka.wins ?? 0),
+      agentGames: Number(rawPodPrzykrywka.agentGames ?? 0),
+      agentWins: Number(rawPodPrzykrywka.agentWins ?? 0),
+      oszustGames: Number(rawPodPrzykrywka.oszustGames ?? 0),
+      oszustWins: Number(rawPodPrzykrywka.oszustWins ?? 0),
+      correctFinalVotes: Number(rawPodPrzykrywka.correctFinalVotes ?? 0),
+      perfectCoverWins: Number(rawPodPrzykrywka.perfectCoverWins ?? 0),
+      innocentFinalDefenderWins: Number(rawPodPrzykrywka.innocentFinalDefenderWins ?? 0),
+      interrogatedWins: Number(rawPodPrzykrywka.interrogatedWins ?? 0),
+      hotSeatAppearances: Number(rawPodPrzykrywka.hotSeatAppearances ?? 0),
+    },
+  } as MyPartyPlayPlatformStats;
+}
+
+
+export async function getZhState(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_zh_state", {
+    p_code: code,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as ZhGameState | null;
+}
+
+export async function spinZh(code: string, playerToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("spin_zh", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhLetter(
+  code: string,
+  playerToken: string,
+  letter: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_letter", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_letter: letter,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhVowel(
+  code: string,
+  playerToken: string,
+  letter: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_vowel", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_letter: letter,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function submitZhSolve(
+  code: string,
+  playerToken: string,
+  guess: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_zh_solve", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_guess: guess,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function nextZhRound(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("next_zh_round", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data as "playing" | "game_over" | null;
+}
+
+export async function getPpState(code: string, playerToken?: string | null) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_pp_state", {
+    p_code: code,
+    p_player_token: playerToken ?? null,
+  });
+
+  if (error) throw new Error(error.message);
+  return (data ?? null) as import("@/lib/pod-przykrywka").PpGameState | null;
+}
+
+export async function submitPpAnswer(
+  code: string,
+  playerToken: string,
+  answer: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_answer", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_answer: answer,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function submitPpVote(
+  code: string,
+  playerToken: string,
+  targetPlayerId: string,
+  voteType: "suspicion" | "final",
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_pp_vote", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_target_player_id: targetPlayerId,
+    p_vote_type: voteType,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function advancePpPhase(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_pp_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return String(data ?? "");
+}
+
+export async function extendPpPhaseTimer(
+  code: string,
+  hostToken: string,
+  seconds = 60,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("extend_pp_phase_timer", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_seconds: seconds,
+  });
+
+  if (error) throw new Error(error.message);
+  return Number(data ?? 0);
+}
+
+export async function skipPpPlayer(
+  code: string,
+  hostToken: string,
+  playerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("skip_pp_player", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_player_id: playerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
 }
 
 export type AktaNocyAssignment = {

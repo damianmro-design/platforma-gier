@@ -1,10 +1,12 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
   getPlatformPlayer,
   getPlatformRecoveryCode,
   joinPlatformRoom,
+  joinPlatformRoomAccount,
   recoverPlatformPlayer,
   listPlatformLobby,
   lookupPlatformRoom,
@@ -81,7 +83,14 @@ export async function POST(request: Request, context: RouteContext) {
 
       const name = String(body.name ?? "").trim().slice(0, 20);
       const avatar = String(body.avatar ?? "");
-      const player = await joinPlatformRoom(code, name, avatar);
+      const partyPlayAccessToken = String(body.partyPlayAccessToken ?? "").trim();
+      const partyPlayUser = partyPlayAccessToken
+        ? await getPartyPlayUserFromAccessToken(partyPlayAccessToken)
+        : null;
+
+      const player = partyPlayUser
+        ? await joinPlatformRoomAccount(code, name, avatar, partyPlayUser.id)
+        : await joinPlatformRoom(code, name, avatar);
 
       const response = NextResponse.json({ ok: true, player });
       response.cookies.set(names.player, player.player_token, {
@@ -161,11 +170,16 @@ export async function POST(request: Request, context: RouteContext) {
       const room = await lookupPlatformRoom(code);
       const ok = await startPlatformRoom(code, hostToken);
       if (!ok) {
-        const errorMessage = room?.game_slug === "akta-nocy"
-          ? "Do startu Akt Nocy potrzeba 5–12 graczy i wszyscy muszą być gotowi."
-          : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
+        const message =
+          room?.game_slug === "zakrecone-haslo"
+            ? "Do startu potrzeba 3–12 graczy i wszyscy muszą być gotowi."
+            : room?.game_slug === "pod-przykrywka"
+              ? "Do startu potrzeba 6–14 graczy i wszyscy muszą być gotowi."
+              : room?.game_slug === "akta-nocy"
+                ? "Do startu Akt Nocy potrzeba 5–12 graczy i wszyscy muszą być gotowi."
+                : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
 
-        return NextResponse.json({ error: errorMessage }, { status: 400 });
+        return NextResponse.json({ error: message }, { status: 400 });
       }
 
       return NextResponse.json({ ok: true });
@@ -174,8 +188,10 @@ export async function POST(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : "Nieznany błąd.";
-    const message = rawMessage.includes("Name already taken")
-      ? "Ta nazwa jest już zajęta w tym pokoju."
+    const message = rawMessage.includes("PartyPlay account already joined")
+      ? "To konto PartyPlay jest już używane przez gracza w tym pokoju."
+      : rawMessage.includes("Name already taken")
+        ? "Ta nazwa jest już zajęta w tym pokoju."
       : rawMessage.includes("Room is full")
         ? "Pokój osiągnął maksymalną liczbę graczy dla tej gry."
         : rawMessage.includes("Invalid name")

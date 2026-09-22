@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 
 type Player = {
   id: string;
@@ -45,6 +46,7 @@ export default function LobbyClient({ code }: { code: string }) {
   const [avatar, setAvatar] = useState("lion");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
+  const [accountSignedIn, setAccountSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +59,16 @@ export default function LobbyClient({ code }: { code: string }) {
       if (next.room.status === "active" && (next.isHost || next.currentPlayerId)) {
         if (next.room.gameSlug === "co-ludzie-powiedza") {
           window.location.assign(`/gra/co-ludzie-powiedza/${code}`);
+          return;
+        }
+
+        if (next.room.gameSlug === "zakrecone-haslo") {
+          window.location.assign(`/gra/zakrecone-haslo/${code}`);
+          return;
+        }
+
+        if (next.room.gameSlug === "pod-przykrywka") {
+          window.location.assign(`/gra/pod-przykrywka/${code}`);
           return;
         }
 
@@ -77,6 +89,44 @@ export default function LobbyClient({ code }: { code: string }) {
     const timer = window.setInterval(() => void loadLobby(), 1400);
     return () => window.clearInterval(timer);
   }, [loadLobby]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAccount = async () => {
+      const supabase = createPartyPlayAuthClient();
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (!mounted || !userData.user || userData.user.is_anonymous === true) {
+        return;
+      }
+
+      setAccountSignedIn(true);
+
+      const { data: profileData } = await supabase.rpc("get_my_partyplay_profile");
+      if (!mounted) return;
+
+      const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+      const profileName =
+        String(profile?.display_name ?? "").trim() ||
+        String(userData.user.user_metadata?.full_name ?? "").trim() ||
+        userData.user.email?.split("@")[0] ||
+        "";
+
+      const profileAvatar = String(profile?.avatar ?? "").trim();
+
+      if (profileName) setName(profileName.slice(0, 20));
+      if (AVATARS.some(([id]) => id === profileAvatar)) {
+        setAvatar(profileAvatar);
+      }
+    };
+
+    void loadAccount();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function send(body: Record<string, unknown>) {
     setBusy(true);
@@ -112,7 +162,15 @@ export default function LobbyClient({ code }: { code: string }) {
       return;
     }
 
-    await send({ action: "join", name, avatar });
+    const supabase = createPartyPlayAuthClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    await send({
+      action: "join",
+      name,
+      avatar,
+      partyPlayAccessToken: sessionData.session?.access_token ?? null,
+    });
   }
 
   async function recover(event: FormEvent) {
@@ -130,24 +188,29 @@ export default function LobbyClient({ code }: { code: string }) {
   }
 
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
-  const teamA = data?.players.filter((player) => player.team === "A") ?? [];
-  const teamB = data?.players.filter((player) => player.team === "B") ?? [];
-  const waiting = data?.players.filter((player) => !player.team) ?? [];
-  const allReady = Boolean(data?.players.length && data.players.every((player) => player.ready));
-  const allAssigned = Boolean(data?.players.length && data.players.every((player) => player.team));
+  const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
+  const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
-  const maxPlayers = isAktaNocy ? 12 : 14;
-  const canStartAktaNocy = Boolean(
+  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy;
+  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
+  const maxPlayers = isWordGame || isAktaNocy ? 12 : 14;
+  const teamA = data?.players.filter((player) => player.team === "A") ?? [];
+  const teamB = data?.players.filter((player) => player.team === "B") ?? [];
+  const waiting = isIndividualGame
+    ? data?.players ?? []
+    : data?.players.filter((player) => !player.team) ?? [];
+  const allReady = Boolean(data?.players.length && data.players.every((player) => player.ready));
+  const allAssigned = isIndividualGame
+    ? true
+    : Boolean(data?.players.length && data.players.every((player) => player.team));
+  const canStart = Boolean(
     data?.isHost &&
-      data.players.length >= 5 &&
-      data.players.length <= 12 &&
-      allReady,
+    data.players.length >= minPlayers &&
+    data.players.length <= maxPlayers &&
+    allReady &&
+    allAssigned,
   );
-  const canStartClassic = Boolean(
-    data?.isHost && data.players.length >= 4 && allReady && allAssigned,
-  );
-  const canStart = isAktaNocy ? canStartAktaNocy : canStartClassic;
 
   const readyCount = useMemo(
     () => data?.players.filter((player) => player.ready).length ?? 0,
@@ -205,7 +268,14 @@ export default function LobbyClient({ code }: { code: string }) {
       ) : !me ? (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
-          <h2>Jak mamy Cię wyświetlać?</h2>
+          <h2>{accountSignedIn ? "Twój profil PartyPlay jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
+          {accountSignedIn ? (
+            <p>Dane zostały uzupełnione z Twojego konta. Możesz je zmienić tylko na potrzeby tej rozgrywki.</p>
+          ) : (
+            <p>
+              Możesz wejść jako gość albo <a href={`/login?next=/pokoj/${code}`} className="font-black text-violet-300">zalogować się do PartyPlay</a>.
+            </p>
+          )}
 
           <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
           <input
@@ -234,7 +304,11 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
 
           <button className="join-player-button" type="submit" disabled={busy}>
-            {busy ? "Dołączanie…" : "Dołącz do pokoju"}
+            {busy
+              ? "Dołączanie…"
+              : accountSignedIn
+                ? "Dołącz jako konto PartyPlay"
+                : "Dołącz jako gość"}
           </button>
         </form>
       ) : (
@@ -296,7 +370,7 @@ export default function LobbyClient({ code }: { code: string }) {
             <h3>Ty kontrolujesz start</h3>
           </div>
           <div className="host-buttons">
-            {!isAktaNocy && (
+            {!isIndividualGame && (
               <button
                 type="button"
                 className="shuffle-button"
@@ -317,9 +391,13 @@ export default function LobbyClient({ code }: { code: string }) {
           </div>
           {!canStart && (
             <p className="start-hint">
-              {isAktaNocy
-                ? "Do startu: 5–12 osób i wszyscy gotowi."
-                : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+              {isWordGame
+                ? "Do startu: 3–12 osób i wszyscy oznaczeni jako gotowi."
+                : isUndercoverGame
+                  ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
+                  : isAktaNocy
+                    ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
+                    : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
