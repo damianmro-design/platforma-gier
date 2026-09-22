@@ -29,6 +29,7 @@ type HostState = {
   role: "host";
   room: RoomInfo;
   game: ZhGameState;
+  canAutoAdvance?: boolean;
 };
 
 type PlayerState = {
@@ -36,6 +37,7 @@ type PlayerState = {
   room: RoomInfo;
   player: Player;
   game: ZhGameState;
+  canAutoAdvance?: boolean;
 };
 
 type GameState = HostState | PlayerState;
@@ -864,14 +866,14 @@ export default function GameClient({ code }: { code: string }) {
   }
 
   useEffect(() => {
-    if (!data || data.role !== "host" || data.game.mode !== "round_over" || busy) return;
+    if (!data || !data.canAutoAdvance || data.game.mode !== "round_over" || busy) return;
 
     const timer = window.setTimeout(() => {
       void send({ action: "next" });
     }, 4500);
 
     return () => window.clearTimeout(timer);
-    // Przejście między rundami nie wymaga prowadzącego.
+    // Przejście między rundami nie wymaga prowadzącego. Twórca pokoju może jednocześnie grać.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data?.role, data?.game.mode, data?.game.roundNumber, busy]);
 

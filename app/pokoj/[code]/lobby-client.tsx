@@ -128,7 +128,7 @@ export default function LobbyClient({ code }: { code: string }) {
       !data ||
       data.currentPlayerId ||
       data.room.status !== "lobby" ||
-      (data.isHost && !data.room.isTest) ||
+      (data.isHost && !data.room.isTest && data.room.gameSlug !== "zakrecone-haslo") ||
       autoJoinAttempted.current
     ) {
       return;

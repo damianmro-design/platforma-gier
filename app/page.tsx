@@ -5,6 +5,8 @@ import { useState } from "react";
 import { joinRoom } from "./room-actions";
 import AccountMenu from "./account-menu";
 import FloorOwnerTestButton from "@/components/floor-owner-test-button";
+import PolowanieOwnerTestButton from "@/components/polowanie-owner-test-button";
+import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
@@ -29,6 +31,7 @@ type GameCardProps = {
   href?: string;
   external?: boolean;
   status: "hit" | "new" | "soon";
+  authHandoff?: "polowanie";
   minPlayers: number;
   maxPlayers: number;
   minTime: number;
@@ -255,6 +258,27 @@ function GameArt({ type }: { type: Art }) {
   );
 }
 
+async function openPolowanieWithAccount(href: string) {
+  const supabase = createPartyPlayAuthClient();
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+
+  if (!session) {
+    window.location.assign(href);
+    return;
+  }
+
+  const hash = new URLSearchParams({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    next: "/",
+  });
+
+  window.location.assign(
+    `${href.replace(/\/$/, "")}/auth/import#${hash.toString()}`,
+  );
+}
+
 function GameCard(props: GameCardProps) {
   const accent = accentMap[props.accent];
   const statusLabel =
@@ -308,7 +332,22 @@ function GameCard(props: GameCardProps) {
   }
 
   if (props.external) {
-    return <a href={props.href} className={className}>{content}</a>;
+    return (
+      <a
+        href={props.href}
+        className={className}
+        onClick={
+          props.authHandoff === "polowanie"
+            ? (event) => {
+                event.preventDefault();
+                void openPolowanieWithAccount(props.href!);
+              }
+            : undefined
+        }
+      >
+        {content}
+      </a>
+    );
   }
 
   return <Link href={props.href} className={className}>{content}</Link>;
@@ -393,7 +432,10 @@ export default function Home() {
             </div>
           </div>
         </header>
-        <FloorOwnerTestButton />
+        <div className="space-y-3">
+          <PolowanieOwnerTestButton />
+          <FloorOwnerTestButton />
+        </div>
 
         <section id="top" className="mx-auto grid max-w-7xl gap-10 px-5 pb-14 pt-14 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:pb-20 lg:pt-20">
           <div>
@@ -590,11 +632,12 @@ export default function Home() {
               description="Tajne role, zadania, blef, eliminacje i milion, który może zmieniać właściciela."
               players="6–14 graczy"
               time="60–120 min"
-              tags={["strategia", "reality show", "wymagany prowadzący"]}
+              tags={["strategia", "reality show", "ekran lub prowadzący"]}
               accent="gold"
               art="millionaire"
               href="https://polowanienamilionera.pl"
               external
+              authHandoff="polowanie"
               status="hit"
             />
 

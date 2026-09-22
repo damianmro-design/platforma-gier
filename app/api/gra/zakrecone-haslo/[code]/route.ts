@@ -57,14 +57,6 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
   }
 
-  if (hostToken) {
-    return NextResponse.json({
-      role: "host",
-      room: { code: room.code, status: room.status, phase: room.game_phase },
-      game,
-    });
-  }
-
   if (playerToken) {
     const player = await getPlatformPlayer(code, playerToken);
 
@@ -77,6 +69,16 @@ export async function GET(_request: Request, context: RouteContext) {
       room: { code: room.code, status: room.status, phase: room.game_phase },
       player,
       game,
+      canAutoAdvance: Boolean(hostToken),
+    });
+  }
+
+  if (hostToken) {
+    return NextResponse.json({
+      role: "host",
+      room: { code: room.code, status: room.status, phase: room.game_phase },
+      game,
+      canAutoAdvance: true,
     });
   }
 
