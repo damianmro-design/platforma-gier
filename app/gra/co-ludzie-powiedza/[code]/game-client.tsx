@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   CLP_WARMUP_QUESTIONS,
   CLP_WARMUP_TOTAL,
@@ -179,20 +180,11 @@ type GameState =
   | HostFinalState
   | PlayerFinalState;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
+function avatar(id: string, size = 36) {
+  return <PartyPlayAvatar id={id} size={size} />;
+}
+
+
 
 export default function GameClient({ code }: { code: string }) {
   const [data, setData] = useState<GameState | null>(null);
@@ -558,7 +550,7 @@ function HostRound1({
 
           {round.answerer && !between && (
             <div className="clp-answerer">
-              <span>{AVATARS[round.answerer.avatar] ?? "🎮"}</span>
+              <span>{avatar(round.answerer.avatar)}</span>
               <div>
                 <small>TERAZ ODPOWIADA</small>
                 <strong>{round.answerer.display_name}</strong>
@@ -695,7 +687,7 @@ function PlayerRound1({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
+          <span>{avatar(data.player.avatar)}</span>
           <strong>{data.player.display_name}</strong>
           <small>DRUŻYNA {data.player.team}</small>
         </footer>
@@ -860,7 +852,7 @@ function HostWarmup({
                 }
               >
                 <span className="clp-progress-avatar">
-                  {AVATARS[player.avatar] ?? "🎮"}
+                  {avatar(player.avatar)}
                 </span>
                 <div>
                   <strong>{player.display_name}</strong>
@@ -969,7 +961,7 @@ function PlayerWarmup({
         {error && <div className="clp-error">{error}</div>}
 
         <footer className="clp-phone-footer">
-          <span>{AVATARS[data.player.avatar] ?? "🎮"}</span>
+          <span>{avatar(data.player.avatar)}</span>
           <strong>{data.player.display_name}</strong>
           <small>
             {data.player.team === "A" ? "DRUŻYNA A" : "DRUŻYNA B"}

@@ -12,6 +12,7 @@ import {
   lookupPlatformRoom,
   setPlatformPlayerReady,
   startPlatformRoom,
+  isPlatformTestRoomHost,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -43,10 +44,11 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostToken = cookieStore.get(names.host)?.value ?? null;
   const playerToken = cookieStore.get(names.player)?.value ?? null;
 
-  const [players, currentPlayer, recoveryCode] = await Promise.all([
+  const [players, currentPlayer, recoveryCode, isTest] = await Promise.all([
     listPlatformLobby(code),
     playerToken ? getPlatformPlayer(code, playerToken) : Promise.resolve(null),
     playerToken ? getPlatformRecoveryCode(code, playerToken) : Promise.resolve(null),
+    hostToken ? isPlatformTestRoomHost(code, hostToken) : Promise.resolve(false),
   ]);
 
   return NextResponse.json({
@@ -54,6 +56,7 @@ export async function GET(_request: Request, context: RouteContext) {
       code: room.code,
       gameSlug: room.game_slug,
       status: room.status,
+      isTest,
     },
     players,
     currentPlayerId: currentPlayer?.id ?? null,
@@ -89,7 +92,7 @@ export async function POST(request: Request, context: RouteContext) {
         : null;
 
       const player = partyPlayUser
-        ? await joinPlatformRoomAccount(code, name, avatar, partyPlayUser.id)
+        ? await joinPlatformRoomAccount(code, name, avatar, partyPlayAccessToken)
         : await joinPlatformRoom(code, name, avatar);
 
       const response = NextResponse.json({ ok: true, player });
@@ -189,7 +192,7 @@ export async function POST(request: Request, context: RouteContext) {
   } catch (error) {
     const rawMessage = error instanceof Error ? error.message : "Nieznany błąd.";
     const message = rawMessage.includes("PartyPlay account already joined")
-      ? "To konto PartyPlay jest już używane przez gracza w tym pokoju."
+      ? "To konto zaGRAj jest już używane przez gracza w tym pokoju."
       : rawMessage.includes("Name already taken")
         ? "Ta nazwa jest już zajęta w tym pokoju."
       : rawMessage.includes("Room is full")

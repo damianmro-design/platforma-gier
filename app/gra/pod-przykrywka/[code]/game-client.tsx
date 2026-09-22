@@ -2,6 +2,7 @@
 
 import type { FormEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import type {
   PpGameState,
   PpPlayer,
@@ -34,24 +35,8 @@ type PlayerResponse = {
 
 type ResponseState = HostResponse | PlayerResponse;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-  hidden: "❔",
-};
-
 function avatar(id: string) {
-  return AVATARS[id] ?? "🎮";
+  return <PartyPlayAvatar id={id} size={36} />;
 }
 
 function votePlayerId(item: PpVoteCount) {

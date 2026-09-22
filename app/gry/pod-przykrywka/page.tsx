@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
+import TestGameButton from "@/components/test-game-button";
 
 export const metadata: Metadata = {
   title: "Pod Przykrywką — zaGRAj",
@@ -50,7 +51,7 @@ export default function PodPrzykrywkaPage() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
-            {["👥 6–14 graczy", "⏱ 45–75 min", "🕵️ 1 Oszust", "📱 telefon każdego gracza"].map((item) => (
+            {["👥 6–14 graczy", "⏱ 45–75 min", "🕵️ 1 Oszust", "📱 telefon każdego gracza", "🎤 wymagany prowadzący"].map((item) => (
               <span key={item} className="rounded-full border border-white/10 bg-white/[.04] px-3 py-2 text-zinc-300">{item}</span>
             ))}
           </div>
@@ -69,6 +70,7 @@ export default function PodPrzykrywkaPage() {
               Jak gramy?
             </a>
           </div>
+          <TestGameButton gameSlug="pod-przykrywka" className="mt-4" />
         </div>
 
         <div className="relative mx-auto w-full max-w-xl">

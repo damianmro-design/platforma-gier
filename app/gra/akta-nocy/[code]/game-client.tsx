@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type HostProgress = {
   player_id: string;
@@ -210,20 +211,11 @@ type PlayerState = {
 
 type GameState = HostState | PlayerState;
 
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
+function avatar(id: string, size = 36) {
+  return <PartyPlayAvatar id={id} size={size} />;
+}
+
+
 
 function isEvidenceAPhase(phase: string | null) {
   return Boolean(phase?.startsWith("dowody_a_"));
@@ -552,7 +544,7 @@ function HostView({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                    {AVATARS[item.avatar] ?? "●"}
+                    {avatar(item.avatar)}
                   </span>
                   <div className="min-w-0">
                     <span className="text-[9px] font-black uppercase tracking-[.2em] text-red-300/75">
@@ -714,7 +706,7 @@ function HostView({
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
-                      {AVATARS[player.avatar] ?? "●"}
+                      {avatar(player.avatar)}
                     </span>
                     <strong className="truncate text-sm">{player.displayName}</strong>
                   </div>
@@ -907,7 +899,7 @@ function HostView({
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/30 text-lg">
-                    {AVATARS[player.avatar] ?? "●"}
+                    {avatar(player.avatar)}
                   </span>
                   <strong className="truncate text-sm">{player.displayName}</strong>
                 </div>
@@ -989,7 +981,7 @@ function HostView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-black/30 text-xl">
-                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                  {avatar(reveal.culprit.avatar)}
                 </span>
                 <strong className="text-2xl">{reveal.culprit.displayName}</strong>
               </div>
@@ -1557,7 +1549,7 @@ function PlayerRevealView({
               </span>
               <div className="mt-2 flex items-center gap-3">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-black/30 text-xl">
-                  {AVATARS[reveal.culprit.avatar] ?? "●"}
+                  {avatar(reveal.culprit.avatar)}
                 </span>
                 <strong className="text-xl">{reveal.culprit.displayName}</strong>
               </div>
@@ -2304,7 +2296,7 @@ function Roster({ progress }: { progress: HostProgress[] }) {
           >
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-black/30 text-xl">
-                {AVATARS[player.avatar] ?? "●"}
+                {avatar(player.avatar)}
               </span>
               <strong className="truncate text-sm text-orange-50/85">
                 {player.display_name}

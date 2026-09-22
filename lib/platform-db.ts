@@ -88,14 +88,29 @@ export async function joinPlatformRoomAccount(
   code: string,
   displayName: string,
   avatar: string,
-  partyPlayUserId: string,
+  partyPlayAccessToken: string,
 ) {
-  const supabase = getClient();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? DEFAULT_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    DEFAULT_SUPABASE_PUBLISHABLE_KEY;
+  const supabase = createClient(url, key, {
+    global: {
+      headers: {
+        "x-partyplay-auth": partyPlayAccessToken,
+      },
+    },
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+
   const { data, error } = await supabase.rpc("join_platform_room_account", {
     p_code: code,
     p_display_name: displayName,
     p_avatar: avatar,
-    p_partyplay_user_id: partyPlayUserId,
   });
 
   if (error) throw new Error(error.message);
@@ -1574,3 +1589,50 @@ export async function getAktaNocyAccusationResults(
   return (data ?? []) as AktaNocyAccusationResultRow[];
 }
 
+
+
+export async function prepareTestRoom(
+  code: string,
+  hostToken: string,
+  botCount: number,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("prepare_test_room", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_bot_count: botCount,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function isPlatformTestRoomHost(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("is_test_room_host", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function getTestPlayerToken(
+  code: string,
+  hostToken: string,
+  playerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_test_player_token", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_player_id: playerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return data ? String(data) : null;
+}

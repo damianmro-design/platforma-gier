@@ -588,7 +588,7 @@ export default function Home() {
               description="Tajne role, zadania, blef, eliminacje i milion, który może zmieniać właściciela."
               players="6–14 graczy"
               time="60–120 min"
-              tags={["strategia", "reality show", "tajne role"]}
+              tags={["strategia", "reality show", "wymagany prowadzący"]}
               accent="gold"
               art="millionaire"
               href="https://polowanienamilionera.pl"
@@ -608,7 +608,7 @@ export default function Home() {
               description="Dynamiczna mieszanka kategorii, obrazków, haseł, wiedzy i teleturniejowych pojedynków."
               players="4–14 graczy"
               time="25–60 min"
-              tags={["dynamiczna", "różnorodna", "teleturniej"]}
+              tags={["dynamiczna", "teleturniej", "wymagany prowadzący"]}
               accent="pink"
               art="floor"
               href="https://floor-party.vercel.app"
@@ -628,7 +628,7 @@ export default function Home() {
               description="Przewiduj najpopularniejsze odpowiedzi i sprawdź, czy naprawdę znasz swoją ekipę. Najlepiej działa przy 6–10 osobach."
               players="4–14 graczy"
               time="45–75 min"
-              tags={["ankiety", "drużynowa", "bez eliminacji"]}
+              tags={["ankiety", "drużynowa", "wymagany prowadzący"]}
               accent="yellow"
               art="people"
               href="/gry/co-ludzie-powiedza"
@@ -647,7 +647,7 @@ export default function Home() {
               description="Jedna osoba działa przeciw grupie. Obserwuj, zbieraj tropy i odkryj, kto gra podwójną grę."
               players="6–14 graczy"
               time="45–75 min"
-              tags={["psychologiczna", "sabotaż", "tajna rola"]}
+              tags={["psychologiczna", "tajna rola", "wymagany prowadzący"]}
               accent="cyan"
               art="agent"
               href="/gry/pod-przykrywka"
@@ -666,7 +666,7 @@ export default function Home() {
               description="Role, sekrety, dowody i przesłuchania. Odtwórz przebieg zbrodni i wskaż sprawcę."
               players="5–12 graczy"
               time="60–120 min"
-              tags={["murder mystery", "fabularna", "dedukcja"]}
+              tags={["murder mystery", "dedukcja", "wymagany prowadzący"]}
               accent="red"
               art="crime"
               href="/gry/akta-nocy"
@@ -685,7 +685,7 @@ export default function Home() {
               description="Hasła, litery, koło ryzyka i zwroty akcji. Krótka gra, którą łatwo odpalić na każdej imprezie."
               players="3–12 graczy"
               time="20–35 min"
-              tags={["słowna", "szybka", "teleturniej"]}
+              tags={["słowna", "szybka", "bez prowadzącego"]}
               accent="violet"
               art="word"
               href="/gry/zakrecone-haslo"

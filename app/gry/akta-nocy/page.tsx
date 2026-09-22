@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
 import { createRoom } from "../../room-actions";
+import TestGameButton from "@/components/test-game-button";
 
 export const metadata: Metadata = {
   title: "Akta Nocy — zaGRAj",
@@ -54,7 +55,7 @@ export default function AktaNocyPage() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold text-orange-50/70">
-              {["👥 5–12 graczy", "⏱ 60–120 min", "🔎 dedukcja", "🎭 tajne role", "📁 fabularna"].map((item) => (
+              {["👥 5–12 graczy", "⏱ 60–120 min", "🔎 dedukcja", "🎭 tajne role", "📁 fabularna", "🎤 wymagany prowadzący"].map((item) => (
                 <span key={item} className="rounded-full border border-orange-100/10 bg-black/20 px-3 py-2">
                   {item}
                 </span>
@@ -78,6 +79,7 @@ export default function AktaNocyPage() {
                 Jak wygląda rozgrywka
               </a>
             </div>
+            <TestGameButton gameSlug="akta-nocy" className="mt-4" />
           </div>
 
           <div className="relative">

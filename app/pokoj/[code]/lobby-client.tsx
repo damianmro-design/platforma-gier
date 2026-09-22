@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import { PartyPlayAvatar, PARTYPLAY_STARTER_AVATARS, normalizePartyPlayAvatar } from "@/components/partyplay-avatar";
 
 type Player = {
   id: string;
@@ -16,6 +17,7 @@ type LobbyState = {
     code: string;
     gameSlug: string;
     status: "lobby" | "active" | "finished";
+    isTest?: boolean;
   };
   players: Player[];
   currentPlayerId: string | null;
@@ -23,30 +25,17 @@ type LobbyState = {
   isHost: boolean;
 };
 
-const AVATARS = [
-  ["lion", "🦁"],
-  ["fox", "🦊"],
-  ["panda", "🐼"],
-  ["tiger", "🐯"],
-  ["koala", "🐨"],
-  ["owl", "🦉"],
-  ["frog", "🐸"],
-  ["penguin", "🐧"],
-  ["bear", "🐻"],
-  ["rabbit", "🐰"],
-  ["monkey", "🐵"],
-  ["cat", "🐱"],
-] as const;
-
-const AVATAR_EMOJI = Object.fromEntries(AVATARS) as Record<string, string>;
-
 export default function LobbyClient({ code }: { code: string }) {
   const [data, setData] = useState<LobbyState | null>(null);
   const [name, setName] = useState("");
-  const [avatar, setAvatar] = useState("lion");
+  const [avatar, setAvatar] = useState("avatar-01");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
   const [accountSignedIn, setAccountSignedIn] = useState(false);
+  const [accountProfileReady, setAccountProfileReady] = useState(false);
+  const autoJoinAttempted = useRef(false);
+  const [inviteUrl, setInviteUrl] = useState("");
+  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -98,6 +87,7 @@ export default function LobbyClient({ code }: { code: string }) {
       const { data: userData } = await supabase.auth.getUser();
 
       if (!mounted || !userData.user || userData.user.is_anonymous === true) {
+        if (mounted) setAccountProfileReady(true);
         return;
       }
 
@@ -113,12 +103,11 @@ export default function LobbyClient({ code }: { code: string }) {
         userData.user.email?.split("@")[0] ||
         "";
 
-      const profileAvatar = String(profile?.avatar ?? "").trim();
+      const profileAvatar = normalizePartyPlayAvatar(String(profile?.avatar ?? "").trim());
 
       if (profileName) setName(profileName.slice(0, 20));
-      if (AVATARS.some(([id]) => id === profileAvatar)) {
-        setAvatar(profileAvatar);
-      }
+      setAvatar(profileAvatar);
+      setAccountProfileReady(true);
     };
 
     void loadAccount();
@@ -127,6 +116,92 @@ export default function LobbyClient({ code }: { code: string }) {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    setInviteUrl(window.location.href);
+  }, []);
+
+  useEffect(() => {
+    if (
+      !accountProfileReady ||
+      !accountSignedIn ||
+      !data ||
+      data.currentPlayerId ||
+      data.room.status !== "lobby" ||
+      (data.isHost && !data.room.isTest) ||
+      autoJoinAttempted.current
+    ) {
+      return;
+    }
+
+    autoJoinAttempted.current = true;
+
+    const autoJoin = async () => {
+      const supabase = createPartyPlayAuthClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token || !name.trim()) {
+        autoJoinAttempted.current = false;
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/pokoj/${code}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "join",
+            name,
+            avatar,
+            partyPlayAccessToken: token,
+          }),
+        });
+
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          setError(result.error ?? "Nie udało się automatycznie dołączyć do pokoju.");
+          autoJoinAttempted.current = false;
+          return;
+        }
+
+        await loadLobby();
+      } catch {
+        setError("Nie udało się automatycznie dołączyć do pokoju.");
+        autoJoinAttempted.current = false;
+      }
+    };
+
+    void autoJoin();
+  }, [
+    accountProfileReady,
+    accountSignedIn,
+    avatar,
+    code,
+    data,
+    loadLobby,
+    name,
+  ]);
+
+  async function copyInvite() {
+    if (!inviteUrl) return;
+    await navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  async function shareInvite() {
+    if (!inviteUrl) return;
+    if (navigator.share) {
+      await navigator.share({
+        title: "Dołącz do gry w zaGRAj",
+        text: `Kod pokoju: ${code}`,
+        url: inviteUrl,
+      });
+      return;
+    }
+    await copyInvite();
+  }
 
   async function send(body: Record<string, unknown>) {
     setBusy(true);
@@ -217,6 +292,16 @@ export default function LobbyClient({ code }: { code: string }) {
     [data?.players],
   );
 
+  useEffect(() => {
+    if (!data || !isWordGame || !canStart || busy) return;
+    const timer = window.setTimeout(() => {
+      void send({ action: "start" });
+    }, 1800);
+    return () => window.clearTimeout(timer);
+    // Automatyczny start dotyczy wyłącznie Zakręconego Hasła.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.room.status, isWordGame, canStart, busy]);
+
   if (!data) {
     return <div className="lobby-loading">Łączenie z pokojem…</div>;
   }
@@ -270,50 +355,58 @@ export default function LobbyClient({ code }: { code: string }) {
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
           <h2>{accountSignedIn ? "Twój profil zaGRAj jest gotowy" : "Jak mamy Cię wyświetlać?"}</h2>
           {accountSignedIn ? (
-            <p>Dane zostały uzupełnione z Twojego konta. Możesz je zmienić tylko na potrzeby tej rozgrywki.</p>
+            <p>Łączymy Cię automatycznie z nazwą i avatarem zapisanymi na Twoim koncie zaGRAj.</p>
           ) : (
             <p>
               Możesz wejść jako gość albo <a href={`/login?next=/pokoj/${code}`} className="font-black text-violet-300">zalogować się do zaGRAj</a>.
             </p>
           )}
 
-          <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
-          <input
-            id="playerName"
-            className="player-name-input"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={20}
-            autoComplete="off"
-            placeholder="np. Damian"
-          />
+          {accountSignedIn ? (
+            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-violet-300/15 bg-violet-300/[.05] p-4">
+              <PartyPlayAvatar id={avatar} size={58} />
+              <div>
+                <span className="block text-[9px] font-black uppercase tracking-[.15em] text-violet-300">TWÓJ PROFIL</span>
+                <strong className="mt-1 block text-base font-black">{name || "Ładowanie…"}</strong>
+              </div>
+            </div>
+          ) : (
+            <>
+              <label className="player-name-label" htmlFor="playerName">Twoje imię</label>
+              <input
+                id="playerName"
+                className="player-name-input"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={20}
+                autoComplete="off"
+                placeholder="np. Damian"
+              />
 
-          <p className="avatar-label">Wybierz avatar</p>
-          <div className="avatar-grid">
-            {AVATARS.map(([id, emoji]) => (
-              <button
-                key={id}
-                type="button"
-                className={avatar === id ? "avatar-choice active" : "avatar-choice"}
-                onClick={() => setAvatar(id)}
-                aria-label={id}
-              >
-                {emoji}
+              <p className="avatar-label">Wybierz avatar</p>
+              <div className="avatar-grid">
+                {PARTYPLAY_STARTER_AVATARS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={avatar === item.id ? "avatar-choice active" : "avatar-choice"}
+                    onClick={() => setAvatar(item.id)}
+                    aria-label={item.name}
+                  >
+                    <PartyPlayAvatar id={item.id} size={48} />
+                  </button>
+                ))}
+              </div>
+
+              <button className="join-player-button" type="submit" disabled={busy}>
+                {busy ? "Dołączanie…" : "Dołącz jako gość"}
               </button>
-            ))}
-          </div>
-
-          <button className="join-player-button" type="submit" disabled={busy}>
-            {busy
-              ? "Dołączanie…"
-              : accountSignedIn
-                ? "Dołącz jako konto zaGRAj"
-                : "Dołącz jako gość"}
-          </button>
+            </>
+          )}
         </form>
       ) : (
         <section className="my-player-panel">
-          <div className="my-player-avatar">{AVATAR_EMOJI[me.avatar] ?? "🎮"}</div>
+          <div className="my-player-avatar"><PartyPlayAvatar id={me.avatar} size={52} /></div>
           <div>
             <span>GRASZ JAKO</span>
             <strong>{me.display_name}</strong>
@@ -364,10 +457,42 @@ export default function LobbyClient({ code }: { code: string }) {
       </section>
 
       {data.isHost && (
-        <section className="host-controls">
+        <>
+          <section className="host-controls">
+            <div className="w-full">
+              <span className="lobby-label">ZAPROŚ GRACZY</span>
+              <h3>Kod, QR albo gotowy link</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
+                {inviteUrl && (
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(inviteUrl)}`}
+                    alt="Kod QR do pokoju"
+                    className="h-36 w-36 rounded-2xl border border-white/10 bg-white p-2"
+                  />
+                )}
+                <div className="min-w-0">
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <small className="block text-[8px] font-black uppercase tracking-[.16em] text-zinc-500">KOD POKOJU</small>
+                    <strong className="mt-1 block text-3xl font-black tracking-[.18em] text-violet-200">{code}</strong>
+                    <p className="mt-2 break-all text-[10px] text-zinc-500">{inviteUrl}</p>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => void copyInvite()} className="rounded-xl border border-white/10 bg-white/[.04] px-3 py-3 text-xs font-black text-zinc-300">
+                      {copied ? "✓ Skopiowano" : "Kopiuj link"}
+                    </button>
+                    <button type="button" onClick={() => void shareInvite()} className="rounded-xl border border-violet-300/20 bg-violet-300/[.07] px-3 py-3 text-xs font-black text-violet-200">
+                      Wyślij znajomym
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="host-controls">
           <div>
-            <span className="lobby-label">STEROWANIE HOSTA</span>
-            <h3>Ty kontrolujesz start</h3>
+            <span className="lobby-label">{data.room.isTest ? "TRYB TESTOWY" : "STEROWANIE POKOJEM"}</span>
+            <h3>{isWordGame ? "Gra ruszy automatycznie, gdy wszyscy będą gotowi" : "Ty kontrolujesz start"}</h3>
           </div>
           <div className="host-buttons">
             {!isIndividualGame && (
@@ -401,6 +526,7 @@ export default function LobbyClient({ code }: { code: string }) {
             </p>
           )}
         </section>
+        </>
       )}
     </div>
   );
@@ -415,7 +541,7 @@ function PlayerTile({
 }) {
   return (
     <article className={current ? "player-tile current" : "player-tile"}>
-      <span className="tile-avatar">{AVATAR_EMOJI[player.avatar] ?? "🎮"}</span>
+      <span className="tile-avatar"><PartyPlayAvatar id={player.avatar} size={42} /></span>
       <strong>{player.display_name}</strong>
       <small className={player.ready ? "player-ready yes" : "player-ready"}>
         {player.ready ? "✓ GOTOWY" : "czeka"}

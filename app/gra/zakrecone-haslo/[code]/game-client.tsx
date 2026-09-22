@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   ZH_ALPHABET,
   ZH_VOWELS,
@@ -38,21 +39,6 @@ type PlayerState = {
 };
 
 type GameState = HostState | PlayerState;
-
-const AVATARS: Record<string, string> = {
-  lion: "🦁",
-  fox: "🦊",
-  panda: "🐼",
-  tiger: "🐯",
-  koala: "🐨",
-  owl: "🦉",
-  frog: "🐸",
-  penguin: "🐧",
-  bear: "🐻",
-  rabbit: "🐰",
-  monkey: "🐵",
-  cat: "🐱",
-};
 
 const DIFFICULTY: Record<number, string> = {
   1: "ŁATWE",
@@ -203,8 +189,8 @@ function EventBanner({ event, compact = false }: { event: ZhLastEvent; compact?:
 
 function PlayerAvatar({ player, small = false }: { player: { avatar: string; displayName?: string; display_name?: string }; small?: boolean }) {
   return (
-    <span className={`grid shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] ${small ? "h-10 w-10 text-xl" : "h-12 w-12 text-2xl"}`}>
-      {AVATARS[player.avatar] ?? "🎮"}
+    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-white/[.04] ${small ? "h-10 w-10" : "h-12 w-12"}`}>
+      <PartyPlayAvatar id={player.avatar} size={small ? 38 : 46} />
     </span>
   );
 }
@@ -432,7 +418,7 @@ function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolea
                   onClick={onNext}
                   className="mt-5 rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black disabled:opacity-50"
                 >
-                  {busy ? "CHWILA…" : game.roundNumber >= game.puzzleCount ? "POKAŻ WYNIKI →" : "NASTĘPNA RUNDA →"}
+                  {busy ? "CHWILA…" : game.roundNumber >= game.puzzleCount ? "POKAŻ WYNIKI →" : "DALEJ TERAZ →"}
                 </button>
               </div>
             ) : (
@@ -712,7 +698,7 @@ function PlayerGame({
             <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/[.06] p-5 text-center">
               <span className="text-3xl">🎉</span>
               <strong className="mt-2 block text-xl font-black">Hasło odgadnięte!</strong>
-              <p className="mt-1 text-xs text-zinc-400">Czekamy, aż host uruchomi kolejną rundę.</p>
+              <p className="mt-1 text-xs text-zinc-400">Kolejna runda uruchomi się automatycznie za chwilę.</p>
             </div>
           ) : wheelSpinning ? (
             <div className="mt-4 rounded-2xl border border-violet-300/20 bg-violet-400/[.06] p-5 text-center">
@@ -722,7 +708,7 @@ function PlayerGame({
             </div>
           ) : !isMyTurn ? (
             <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] p-5 text-center">
-              <span className="text-3xl">{active ? AVATARS[active.avatar] ?? "🎮" : "⏳"}</span>
+              <span className="text-3xl">{active ? <PartyPlayAvatar id={active.avatar} size={48} /> : "⏳"}</span>
               <strong className="mt-2 block text-lg font-black">
                 {active ? `Teraz gra ${active.displayName}` : "Czekamy na ruch"}
               </strong>
@@ -876,6 +862,18 @@ export default function GameClient({ code }: { code: string }) {
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!data || data.role !== "host" || data.game.mode !== "round_over" || busy) return;
+
+    const timer = window.setTimeout(() => {
+      void send({ action: "next" });
+    }, 4500);
+
+    return () => window.clearTimeout(timer);
+    // Przejście między rundami nie wymaga prowadzącego.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.role, data?.game.mode, data?.game.roundNumber, busy]);
 
   if (!data) {
     return (

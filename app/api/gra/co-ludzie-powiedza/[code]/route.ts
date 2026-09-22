@@ -53,8 +53,10 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const cookieStore = await cookies();
-  const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+  const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
+  const hostToken = testView === "player" ? null : rawHostToken;
 
   if (room.game_phase === "final" || room.game_phase === "finished") {
     const final = await getClpFinalState(code);

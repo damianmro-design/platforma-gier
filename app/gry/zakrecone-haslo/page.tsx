@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
+import TestGameButton from "@/components/test-game-button";
 
 export const metadata: Metadata = {
   title: "Zakręcone Hasło — zaGRAj",
@@ -48,7 +49,7 @@ export default function ZakreconeHasloPage() {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
-            {["👥 3–12 graczy", "⏱ 20–35 min", "🏆 każdy gra na siebie", "🧠 6 haseł"].map((item) => (
+            {["👥 3–12 graczy", "⏱ 20–35 min", "🏆 każdy gra na siebie", "🧠 6 haseł", "🤖 bez prowadzącego"].map((item) => (
               <span key={item} className="rounded-full border border-white/10 bg-white/[.04] px-3 py-2 text-zinc-300">{item}</span>
             ))}
           </div>
@@ -67,6 +68,7 @@ export default function ZakreconeHasloPage() {
               Jak gramy?
             </a>
           </div>
+          <TestGameButton gameSlug="zakrecone-haslo" className="mt-4" />
         </div>
 
         <div className="relative mx-auto w-full max-w-xl">
