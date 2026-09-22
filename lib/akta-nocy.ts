@@ -643,6 +643,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Która z obecnych osób miała identyfikator prasowy i dlaczego znalazła się wtedy na 2 piętrze?",
+    image: "/akta-nocy/evidence-b02-mirror.webp",
   },
   {
     id: "hallway-audio",
@@ -660,6 +661,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czy konflikt z Markiem dotyczył pieniędzy, reputacji, czy zawodowej kariery?",
+    image: "/akta-nocy/evidence-b03-audio.webp",
   },
   {
     id: "medical-window",
@@ -677,6 +679,7 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     ],
     question:
       "Czyje alibi obejmuje dokładnie ten przedział i kto nie potrafi go potwierdzić?",
+    image: "/akta-nocy/evidence-b04-medical.webp",
   },
   {
     id: "wicher-file",
