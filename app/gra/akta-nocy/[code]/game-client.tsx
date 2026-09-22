@@ -24,6 +24,7 @@ type Evidence = {
   summary: string;
   details: string[];
   question: string;
+  image?: string;
 };
 
 type HostInterrogation = {
@@ -666,6 +667,10 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Gracze wybierają 7 wydarzeń spośród 9, ustawiają je w kolejności i wskazują, kto ich zdaniem odpowiada za śmierć Marka. Nie pokazuj jeszcze żadnego rozwiązania.
           </p>
+          <StageArtwork
+            src="/akta-nocy/reconstruction.webp"
+            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_.75fr]">
@@ -858,6 +863,10 @@ function HostView({
           <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/55">
             Każdy gracz na własnym telefonie wybiera 1 osobę, 1 motyw i 1 najważniejszy dowód. Odpowiedź zostaje natychmiast zamknięta.
           </p>
+          <StageArtwork
+            src="/akta-nocy/accusation.webp"
+            alt="Karta oskarżenia w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-6 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5 sm:p-6">
@@ -950,6 +959,22 @@ function HostView({
           <p className="mt-5 max-w-4xl text-sm leading-7 text-orange-50/62 sm:text-base">
             {content.body}
           </p>
+
+          {reveal.step === 3 && (
+            <StageArtwork
+              src="/akta-nocy/reveal-culprit.webp"
+              alt="Ujawnienie sprawcy sprawy Apartament 214"
+              cinematic
+            />
+          )}
+
+          {reveal.step === 4 && (
+            <StageArtwork
+              src="/akta-nocy/case-closed.webp"
+              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
+              cinematic
+            />
+          )}
 
           {reveal.step === 3 && reveal.culprit && (
             <div className="mt-7 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
@@ -1351,6 +1376,10 @@ function PlayerAccusationView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Wybierz 1 osobę, 1 motyw i 1 najważniejszy dowód. Po zatwierdzeniu odpowiedź zostanie zamknięta i nie będzie można jej edytować.
           </p>
+          <StageArtwork
+            src="/akta-nocy/accusation.webp"
+            alt="Karta oskarżenia w sprawie Apartament 214"
+          />
         </section>
 
         <ChoiceSection label="Kogo oskarżasz?">
@@ -1485,6 +1514,22 @@ function PlayerRevealView({
             </p>
           )}
           <p className="mt-5 text-sm leading-7 text-orange-50/62">{content.body}</p>
+
+          {reveal.step === 3 && (
+            <StageArtwork
+              src="/akta-nocy/reveal-culprit.webp"
+              alt="Ujawnienie sprawcy sprawy Apartament 214"
+              cinematic
+            />
+          )}
+
+          {reveal.step === 4 && (
+            <StageArtwork
+              src="/akta-nocy/case-closed.webp"
+              alt="Akta Nocy, sprawa Apartament 214 zamknięta"
+              cinematic
+            />
+          )}
 
           {reveal.step === 3 && reveal.culprit && (
             <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-950/30 p-5">
@@ -1728,6 +1773,10 @@ function PlayerReconstructionView({
           <p className="mt-3 text-sm leading-6 text-orange-50/52">
             Spośród 9 wydarzeń wybierz dokładnie 7, które Twoim zdaniem naprawdę należą do przebiegu nocy. Dwa są fałszywymi tropami.
           </p>
+          <StageArtwork
+            src="/akta-nocy/reconstruction.webp"
+            alt="Materiały do rekonstrukcji nocy w sprawie Apartament 214"
+          />
         </section>
 
         <section className="mt-5 rounded-[1.5rem] border border-orange-100/10 bg-[#120907]/95 p-5">
@@ -2120,53 +2169,105 @@ function EvidenceCards({
   compact?: boolean;
 }) {
   const latestId = evidence.at(-1)?.id;
+  const [preview, setPreview] = useState<Evidence | null>(null);
 
   return (
-    <div className={`mt-6 grid gap-4 ${compact ? "" : "lg:grid-cols-2"}`}>
-      {evidence.map((item) => {
-        const latest = item.id === latestId;
-        return (
-          <article
-            key={item.id}
-            className={`relative overflow-hidden rounded-[1.5rem] border p-5 sm:p-6 ${
-              latest
-                ? "border-red-400/25 bg-red-950/20 shadow-[0_20px_65px_rgba(127,29,29,.16)]"
-                : "border-orange-100/10 bg-[#100806]/90"
-            }`}
-          >
-            {latest && evidence.length > 1 && (
-              <span className="absolute right-4 top-4 rounded-full border border-red-400/20 bg-red-500/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.18em] text-red-200">
-                nowy
+    <>
+      <div className={`mt-6 grid gap-4 ${compact ? "" : "lg:grid-cols-2"}`}>
+        {evidence.map((item) => {
+          const latest = item.id === latestId;
+          return (
+            <article
+              key={item.id}
+              className={`relative overflow-hidden rounded-[1.5rem] border p-5 sm:p-6 ${
+                latest
+                  ? "border-red-400/25 bg-red-950/20 shadow-[0_20px_65px_rgba(127,29,29,.16)]"
+                  : "border-orange-100/10 bg-[#100806]/90"
+              }`}
+            >
+              {latest && evidence.length > 1 && (
+                <span className="absolute right-4 top-4 z-10 rounded-full border border-red-400/20 bg-red-500/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.18em] text-red-200">
+                  nowy
+                </span>
+              )}
+              <span className="text-[9px] font-black uppercase tracking-[.24em] text-orange-300/50">
+                DOWÓD {item.no}
               </span>
-            )}
-            <span className="text-[9px] font-black uppercase tracking-[.24em] text-orange-300/50">
-              DOWÓD {item.no}
-            </span>
-            <h2 className="mt-2 pr-14 text-2xl font-black">{item.title}</h2>
-            <p className="mt-1 text-xs font-bold text-orange-100/35">
-              {item.source}{item.time ? ` · ${item.time}` : ""}
-            </p>
-            <p className="mt-4 text-sm leading-7 text-orange-50/67">{item.summary}</p>
+              <h2 className="mt-2 pr-14 text-2xl font-black">{item.title}</h2>
+              <p className="mt-1 text-xs font-bold text-orange-100/35">
+                {item.source}{item.time ? ` · ${item.time}` : ""}
+              </p>
 
-            <div className="mt-4 space-y-2">
-              {item.details.map((detail) => (
-                <div
-                  key={detail}
-                  className="flex gap-3 rounded-xl border border-orange-100/7 bg-black/15 p-3 text-xs leading-5 text-orange-50/52"
+              {item.image && (
+                <button
+                  type="button"
+                  onClick={() => setPreview(item)}
+                  className="group relative mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
                 >
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-orange-300/50" />
-                  <span>{detail}</span>
-                </div>
-              ))}
-            </div>
+                  <img
+                    src={item.image}
+                    alt={`Materiał dowodowy ${item.no}: ${item.title}`}
+                    className="max-h-[480px] w-full object-contain transition duration-300 group-hover:scale-[1.015]"
+                  />
+                  <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
+                    powiększ dokument
+                  </span>
+                </button>
+              )}
 
-            <div className="mt-4 border-l-2 border-red-500/45 pl-4 text-sm font-bold leading-6 text-orange-100/62">
-              {item.question}
-            </div>
-          </article>
-        );
-      })}
-    </div>
+              <p className="mt-4 text-sm leading-7 text-orange-50/67">{item.summary}</p>
+
+              <div className="mt-4 space-y-2">
+                {item.details.map((detail) => (
+                  <div
+                    key={detail}
+                    className="flex gap-3 rounded-xl border border-orange-100/7 bg-black/15 p-3 text-xs leading-5 text-orange-50/52"
+                  >
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-orange-300/50" />
+                    <span>{detail}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 border-l-2 border-red-500/45 pl-4 text-sm font-bold leading-6 text-orange-100/62">
+                {item.question}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {preview?.image && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Podgląd dowodu ${preview.no}`}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-3 backdrop-blur-sm sm:p-8"
+          onClick={() => setPreview(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreview(null)}
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/70 px-4 py-2 text-xs font-black text-white"
+          >
+            ZAMKNIJ ×
+          </button>
+          <div
+            className="max-h-full max-w-5xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={preview.image}
+              alt={`Powiększony materiał dowodowy ${preview.no}: ${preview.title}`}
+              className="max-h-[88vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.8)]"
+            />
+            <p className="mt-3 text-center text-xs font-bold text-orange-50/55">
+              {preview.no} · {preview.title}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -2244,6 +2345,67 @@ function DossierSection({
       </span>
       <div className="mt-3 text-sm leading-7 text-orange-50/62">{children}</div>
     </section>
+  );
+}
+
+function StageArtwork({
+  src,
+  alt,
+  cinematic = false,
+}: {
+  src: string;
+  alt: string;
+  cinematic?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`group relative mt-6 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 shadow-[0_18px_60px_rgba(0,0,0,.35)] ${
+          cinematic ? "sm:rounded-[1.5rem]" : ""
+        }`}
+      >
+        <img
+          src={src}
+          alt={alt}
+          className={`w-full object-cover transition duration-500 group-hover:scale-[1.012] ${
+            cinematic
+              ? "max-h-[640px] object-contain"
+              : "max-h-[480px] object-contain"
+          }`}
+        />
+        <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
+          powiększ
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={alt}
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/92 p-3 backdrop-blur-md sm:p-8"
+          onClick={() => setOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="absolute right-4 top-4 z-10 rounded-full border border-white/15 bg-black/75 px-4 py-2 text-xs font-black text-white"
+          >
+            ZAMKNIJ ×
+          </button>
+          <img
+            src={src}
+            alt={alt}
+            onClick={(event) => event.stopPropagation()}
+            className="max-h-[92vh] max-w-[96vw] rounded-xl object-contain shadow-[0_35px_120px_rgba(0,0,0,.82)]"
+          />
+        </div>
+      )}
+    </>
   );
 }
 
