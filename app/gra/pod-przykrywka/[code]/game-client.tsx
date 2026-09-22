@@ -212,6 +212,90 @@ function HostCue({
   );
 }
 
+function PlayerMissionPrompt({
+  prompt,
+  role,
+}: {
+  prompt: string;
+  role: PpRole;
+}) {
+  const lines = prompt
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const secret =
+    lines.find((line) => line.startsWith("TAJNE HASŁO:"))?.replace("TAJNE HASŁO:", "").trim() ?? "";
+  const category =
+    lines.find((line) => line.startsWith("KATEGORIA:"))?.replace("KATEGORIA:", "").trim() ?? "";
+  const question =
+    lines.find((line) => line.startsWith("PYTANIE:"))?.replace("PYTANIE:", "").trim() ?? "";
+
+  const instruction = lines
+    .filter(
+      (line) =>
+        !line.startsWith("TAJNE HASŁO:") &&
+        !line.startsWith("KATEGORIA:") &&
+        !line.startsWith("PYTANIE:"),
+    )
+    .join(" ");
+
+  if (!secret && !question) {
+    return (
+      <p className="mt-4 whitespace-pre-line rounded-2xl border border-white/9 bg-white/[.035] p-5 text-base font-bold leading-7 text-zinc-200">
+        {prompt}
+      </p>
+    );
+  }
+
+  const saboteur = role === "saboteur";
+
+  return (
+    <div className="mt-5 space-y-4">
+      <div
+        className={`rounded-2xl border p-5 ${
+          saboteur
+            ? "border-amber-300/20 bg-amber-300/[.07]"
+            : "border-cyan-300/20 bg-cyan-300/[.07]"
+        }`}
+      >
+        <p
+          className={`text-[9px] font-black uppercase tracking-[.22em] ${
+            saboteur ? "text-amber-300" : "text-cyan-300"
+          }`}
+        >
+          TAJNE HASŁO
+        </p>
+        <strong className="mt-2 block text-3xl font-black tracking-[-.04em]">
+          {saboteur ? "???" : secret}
+        </strong>
+        {saboteur && category && (
+          <p className="mt-2 text-xs font-black uppercase tracking-[.16em] text-amber-100/65">
+            Kategoria: {category}
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-white/9 bg-white/[.035] p-5">
+        <p className="text-[9px] font-black uppercase tracking-[.22em] text-zinc-500">PYTANIE</p>
+        <p className="mt-2 text-xl font-black leading-8 text-white">{question}</p>
+      </div>
+
+      {instruction && (
+        <p
+          className={`rounded-xl border px-4 py-3 text-xs font-bold leading-5 ${
+            saboteur
+              ? "border-amber-300/15 bg-amber-300/[.045] text-amber-100/75"
+              : "border-cyan-300/15 bg-cyan-300/[.035] text-cyan-50/70"
+          }`}
+        >
+          {instruction}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function AnswerCards({ game }: { game: PpGameState }) {
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -400,7 +484,7 @@ function HostGame({
             <p className="mt-5 text-[10px] font-black uppercase tracking-[.25em] text-cyan-300">TAJNE ROLE ROZDANE</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">Każdy sprawdza swój telefon.</h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
-              W grupie jest dokładnie 1 Oszust. Host nie zna jego tożsamości. Gdy wszyscy przeczytają swoją rolę, rozpocznijcie pierwszą misję.
+              W grupie jest dokładnie 1 Oszust. W każdej misji Agenci poznają tajne hasło, a Oszust zobaczy tylko jego kategorię i to samo pytanie. Host nie zna tożsamości Oszusta.
             </p>
             <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
               {busy ? "CHWILA…" : "ROZPOCZNIJ MISJĘ 1 →"}
@@ -642,14 +726,14 @@ function HostGame({
               <section className="rounded-[1.75rem] border border-white/10 bg-black/25 p-6 sm:p-7">
                 <span className="text-[9px] font-black uppercase tracking-[.22em] text-cyan-300">{game.mission.category}</span>
                 <h1 className="mt-2 text-3xl font-black tracking-[-.05em] sm:text-4xl">{game.mission.title}</h1>
-                <p className="mt-4 text-base font-medium leading-7 text-zinc-400">{game.mission.briefing}</p>
+                <p className="mt-4 whitespace-pre-line text-base font-medium leading-7 text-zinc-400">{game.mission.briefing}</p>
                 <SpecialRoundBanner modifier={game.mission.modifier} />
               </section>
 
               {game.phase === "mission" && (
                 <section className="rounded-[1.75rem] border border-white/10 bg-white/[.025] p-6">
                   <HostCue title="Najpierw cisza i telefony.">
-                    Powiedz: „Każdy czyta swoją instrukcję i odpowiada sam. Nie konsultujemy odpowiedzi, dopóki wszyscy nie skończą.”
+                    Powiedz: „Agenci widzą tajne hasło. Oszust zna tylko kategorię. Każdy odpowiada sam i nie zdradza hasła, dopóki wszyscy nie skończą.”
                   </HostCue>
 
                   <div className="flex items-end justify-between gap-4">
@@ -839,8 +923,8 @@ function RoleCard({ role }: { role: PpRole }) {
       <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">{saboteur ? "OSZUST" : "AGENT"}</h1>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-zinc-400">
         {saboteur
-          ? "Masz odpowiadać wiarygodnie, ale w każdej misji dostaniesz ukryty cel. Realizuj go subtelnie i nie daj się jednoznacznie wskazać w finale."
-          : "Obserwuj odpowiedzi, pytaj o tok myślenia i szukaj osoby, która próbuje realizować inny cel niż reszta grupy."}
+          ? "W każdej misji Agenci znają tajne hasło. Ty zobaczysz tylko kategorię i to samo pytanie. Odpowiadaj tak, jakbyś znał hasło, obserwuj innych i nie daj się zdemaskować."
+          : "W każdej misji poznasz tajne hasło. Odpowiadaj tak, żeby było widać, że je znasz, ale nie zdradzaj go wprost. Szukaj osoby, która odpowiada bez prawdziwego kontekstu."}
       </p>
       <p className="mt-5 rounded-xl border border-white/8 bg-black/20 px-4 py-3 text-xs font-black text-zinc-500">Nie pokazuj tego ekranu innym.</p>
     </div>
@@ -1114,7 +1198,7 @@ function PlayerGame({
                 </span>
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-[-.05em]">{game.mission.title}</h1>
-              <p className="mt-4 rounded-2xl border border-white/9 bg-white/[.035] p-5 text-base font-bold leading-7 text-zinc-200">{game.mission.prompt}</p>
+              <PlayerMissionPrompt prompt={game.mission.prompt} role={me.role} />
               <SpecialRoundBanner modifier={game.mission.modifier} />
 
               {me.role === "saboteur" && game.twist.secretOrder && (
