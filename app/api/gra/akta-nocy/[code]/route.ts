@@ -15,6 +15,7 @@ import {
   openAktaNocyDossier,
   revealAktaNocyEvidenceA,
   revealAktaNocyEvidenceB,
+  runAktaNocyTestBots,
   submitAktaNocyAccusation,
   submitAktaNocyReconstruction,
 } from "@/lib/platform-db";
@@ -273,6 +274,15 @@ export async function GET(_request: Request, context: RouteContext) {
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
   const hostToken = testView === "player" ? null : rawHostToken;
+
+  if (hostToken) {
+    try {
+      await runAktaNocyTestBots(code, hostToken);
+    } catch {
+      // Tryb testowy nie może blokować zwykłego odczytu gry.
+    }
+  }
+
   const evidence = publicEvidenceForPhase(room.game_phase);
 
   if (hostToken) {
