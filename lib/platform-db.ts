@@ -1945,3 +1945,30 @@ export async function closeAktaNocyOkGame(
   if (error) throw new Error(error.message);
   return Boolean(data);
 }
+
+
+export async function getAktaNocyOkReconstructionResults(
+  code: string,
+  sessionToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_reconstruction_results",
+    { p_code: code, p_session_token: sessionToken },
+  );
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyOkReconstructionHostRow[];
+}
+
+export async function getAktaNocyOkAccusationResultsForSession(
+  code: string,
+  sessionToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_accusation_results_for_session",
+    { p_code: code, p_session_token: sessionToken },
+  );
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyOkAccusationResultRow[];
+}
