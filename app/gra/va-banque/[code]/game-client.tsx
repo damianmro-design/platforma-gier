@@ -30,12 +30,6 @@ const phaseLabels: Partial<Record<VaBanqueState["phase"], string>> = {
   finished: "KONIEC GRY",
 };
 
-const difficultyLabel = {
-  easy: "łatwe",
-  medium: "średnie",
-  hard: "trudne",
-} as const;
-
 function money(value: number | null | undefined) {
   return new Intl.NumberFormat("pl-PL").format(Number(value ?? 0));
 }
@@ -152,7 +146,7 @@ export default function GameClient({ code }: { code: string }) {
         <div className="w-full max-w-sm rounded-[2rem] border border-amber-300/15 bg-[#1a100b] p-7 text-center shadow-2xl">
           <div className="mx-auto h-10 w-10 animate-pulse rounded-full border-2 border-amber-300/30 border-t-amber-200" />
           <h1 className="mt-5 text-xl font-black">Łączymy Cię ze stołem…</h1>
-          <p className="mt-2 text-sm leading-6 text-amber-100/45">
+          <p className="mt-2 text-sm leading-6 text-amber-100/55">
             Przywracamy aktualną rundę, wynik i pozostały czas.
           </p>
         </div>
@@ -169,22 +163,23 @@ export default function GameClient({ code }: { code: string }) {
   const isTakeoverAnswerer = Boolean(viewer && viewer.id === game.takeoverPlayerId);
   const canTakeover = Boolean(
     viewer &&
+      viewer.points > 0 &&
       game.phase === "takeover_open" &&
       viewer.id !== game.winningPlayerId &&
       !game.takeoverPlayerId,
   );
 
   const normalMax = viewer
-    ? Math.max(50, Math.floor((viewer.points * 0.5) / 50) * 50)
+    ? Math.floor((viewer.points * 0.5) / 50) * 50
     : 0;
-  const normalMin = Math.min(100, normalMax);
+  const normalMin = normalMax >= 100 ? 100 : normalMax;
 
   const tieMin = Number(game.winningBid ?? 0) + 50;
   const canRaiseTie = Boolean(viewer && normalMax >= tieMin);
   const quickBids = useMemo(() => {
     if (!viewer) return [];
     return Array.from(
-      new Set([normalMin, 200, 300, 500, normalMax].filter((value) => value >= normalMin && value <= normalMax)),
+      new Set([normalMin, 200, 300, 500, normalMax].filter((value) => value > 0 && value >= normalMin && value <= normalMax)),
     ).sort((a, b) => a - b);
   }, [normalMax, normalMin, viewer]);
 
@@ -259,7 +254,7 @@ export default function GameClient({ code }: { code: string }) {
             {game.phase === "intro" && <Intro />}
 
             {game.phase === "category" && (
-              <Category category={game.category} difficulty={game.difficulty} />
+              <Category category={game.category} />
             )}
 
             {game.phase === "bidding" && viewer && (
@@ -365,8 +360,18 @@ export default function GameClient({ code }: { code: string }) {
                 />
               ) : (
                 <Waiting
-                  title={viewer?.id === game.winningPlayerId ? "Pozostali mogą przejąć pytanie." : "Kto pierwszy?"}
-                  copy="Okno przejęcia jest krótkie. Serwer przyzna pytanie tylko jednej osobie."
+                  title={
+                    viewer?.id === game.winningPlayerId
+                      ? "Pozostali mogą przejąć pytanie."
+                      : viewer && viewer.points <= 0
+                        ? "Nie masz punktów na przejęcie."
+                        : "Kto pierwszy?"
+                  }
+                  copy={
+                    viewer && viewer.points <= 0
+                      ? "Możesz obserwować dalszy przebieg rundy. Do przejęcia potrzebujesz dodatniego kapitału."
+                      : "Okno przejęcia jest krótkie. Serwer przyzna pytanie tylko jednej osobie."
+                  }
                 />
               )
             )}
@@ -400,14 +405,18 @@ export default function GameClient({ code }: { code: string }) {
             )}
 
             {game.phase === "round_result" && (
-              <Waiting
-                title={eventType === "all_pass" ? "Wszyscy spasowali." : "Runda zamknięta."}
-                copy={
-                  eventType === "all_pass"
-                    ? "Nikt nie ryzykuje punktów. Za chwilę nowa kategoria."
-                    : "Aktualizujemy stany kont i przechodzimy do kolejnej kategorii."
-                }
-              />
+              eventType === "no_takeover" ? (
+                <NoTakeoverResult game={game} />
+              ) : (
+                <Waiting
+                  title={eventType === "all_pass" ? "Wszyscy spasowali." : "Runda zamknięta."}
+                  copy={
+                    eventType === "all_pass"
+                      ? "Nikt nie ryzykuje punktów. Za chwilę nowa kategoria."
+                      : "Aktualizujemy stany kont i przechodzimy do kolejnej kategorii."
+                  }
+                />
+              )
             )}
 
             {game.phase === "final_category" && (
@@ -567,9 +576,9 @@ function ScoreStrip({
 function Intro() {
   const rules = [
     ["01", "Najpierw kategoria", "Nie zobaczysz pytania przed licytacją."],
-    ["02", "Licytuj ryzyko", "W zwykłej rundzie możesz postawić maksymalnie 50% kapitału."],
-    ["03", "Wygrywasz albo tracisz", "Dobra odpowiedź dodaje stawkę. Zła ją odejmuje."],
-    ["04", "Przejmuj błędy", "Gdy ktoś odpowie źle, pierwszy może przejąć pytanie za połowę stawki."],
+    ["02", "Licytuj ryzyko", "W zwykłej rundzie możesz postawić maksymalnie 50% kapitału albo wybrać PAS."],
+    ["03", "Wygrywasz albo tracisz", "Dobra odpowiedź dodaje stawkę. Zła odejmuje ją od Twojego kapitału."],
+    ["04", "Przejmuj błędy", "Gdy ktoś odpowie źle, pierwszy z pozostałych graczy może przejąć pytanie, zwykle za połowę poprzedniej stawki."],
   ];
 
   return (
@@ -581,7 +590,7 @@ function Intro() {
           <article key={no} className="rounded-2xl border border-amber-200/10 bg-black/20 p-4">
             <span className="text-[9px] font-black tracking-[.2em] text-orange-300">{no}</span>
             <h2 className="mt-2 text-sm font-black">{title}</h2>
-            <p className="mt-1 text-xs leading-5 text-amber-50/45">{copy}</p>
+            <p className="mt-1 text-xs leading-5 text-amber-50/60">{copy}</p>
           </article>
         ))}
       </div>
@@ -592,23 +601,14 @@ function Intro() {
   );
 }
 
-function Category({
-  category,
-  difficulty,
-}: {
-  category: string;
-  difficulty: VaBanqueState["difficulty"];
-}) {
+function Category({ category }: { category: string }) {
   return (
     <div className="py-8 text-center sm:py-12">
       <p className="text-[10px] font-black uppercase tracking-[.3em] text-amber-300/55">NASTĘPNA KATEGORIA</p>
       <h1 className="mt-4 bg-gradient-to-r from-amber-100 via-yellow-300 to-orange-300 bg-clip-text text-5xl font-black tracking-[-.06em] text-transparent sm:text-6xl">
         {category}
       </h1>
-      <span className="mt-5 inline-flex rounded-full border border-amber-200/10 bg-black/20 px-3 py-2 text-[9px] font-black uppercase tracking-[.16em] text-amber-100/45">
-        poziom: {difficultyLabel[difficulty]}
-      </span>
-      <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-amber-50/45">
+      <p className="mx-auto mt-5 max-w-md text-sm leading-6 text-amber-50/60">
         Pytanie pozostaje ukryte. Za chwilę zdecydujesz, ile ta kategoria jest dla Ciebie warta.
       </p>
     </div>
@@ -648,7 +648,7 @@ function BidPanel({
         <Metric label="MAX 50%" value={money(max)} highlight />
       </div>
       <h1 className="mt-6 text-3xl font-black tracking-[-.045em]">{title}</h1>
-      <p className="mt-2 max-w-xl text-sm leading-6 text-amber-50/45">{copy}</p>
+      <p className="mt-2 max-w-xl text-sm leading-6 text-amber-50/60">{copy}</p>
 
       <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {values.map((value) => (
@@ -720,7 +720,7 @@ function TieBidPanel({
     <div>
       <span className="text-[10px] font-black uppercase tracking-[.22em] text-orange-300">REMIS NA {money(currentBid)}</span>
       <h1 className="mt-2 text-3xl font-black tracking-[-.045em]">Podbijasz czy pasujesz?</h1>
-      <p className="mt-2 text-sm leading-6 text-amber-50/45">
+      <p className="mt-2 text-sm leading-6 text-amber-50/60">
         Tylko remisujący gracze biorą udział w tej krótkiej dogrywce. Jeśli po niej nadal będzie remis, rozstrzygnie serwer.
       </p>
 
@@ -927,7 +927,32 @@ function ResultPanel({
           <span className="text-[9px] font-black uppercase tracking-[.16em] text-amber-300/50">POPRAWNA ODPOWIEDŹ</span>
           <strong className="mt-1 block text-sm text-amber-100">{correctLabel}</strong>
           {game.explanation && (
-            <p className="mt-2 text-xs leading-5 text-amber-50/40">{game.explanation}</p>
+            <p className="mt-2 text-xs leading-5 text-amber-50/60">{game.explanation}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NoTakeoverResult({ game }: { game: VaBanqueState }) {
+  const correctLabel =
+    game.correctIndex != null ? game.options[game.correctIndex] : null;
+
+  return (
+    <div className="py-5 text-center">
+      <p className="text-[10px] font-black uppercase tracking-[.24em] text-amber-300">
+        NIKT NIE PRZEJĄŁ PYTANIA
+      </p>
+      <h1 className="mt-3 text-3xl font-black tracking-[-.045em]">Zamykamy odpowiedź.</h1>
+      {correctLabel && (
+        <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-emerald-300/15 bg-emerald-300/[.06] p-4">
+          <span className="text-[9px] font-black uppercase tracking-[.16em] text-emerald-200/70">
+            POPRAWNA ODPOWIEDŹ
+          </span>
+          <strong className="mt-1 block text-base text-emerald-100">{correctLabel}</strong>
+          {game.explanation && (
+            <p className="mt-2 text-xs leading-5 text-amber-50/60">{game.explanation}</p>
           )}
         </div>
       )}
@@ -948,7 +973,7 @@ function TakeoverPanel({
     <div className="py-4 text-center">
       <p className="text-[10px] font-black uppercase tracking-[.28em] text-orange-300">ODPOWIEDŹ BYŁA BŁĘDNA</p>
       <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">Masz odwagę przejąć?</h1>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-amber-50/45">
+      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-amber-50/60">
         Pierwsze prawidłowo zarejestrowane kliknięcie dostanie pytanie. Ryzykujesz {money(risk)} pkt.
       </p>
       <button
@@ -971,7 +996,7 @@ function FinalCategory({ category }: { category: string }) {
       </div>
       <p className="mt-6 text-[10px] font-black uppercase tracking-[.32em] text-amber-300">FINAŁ VA BANQUE</p>
       <h1 className="mt-3 text-5xl font-black tracking-[-.06em] text-amber-100">{category}</h1>
-      <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-amber-50/45">
+      <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-amber-50/60">
         To ostatnia kategoria. Za chwilę każdy prywatnie zdecyduje, ile z całego kapitału stawia na finał.
       </p>
     </div>
@@ -1006,7 +1031,7 @@ function FinalBidPanel({
     <div>
       <p className="text-[10px] font-black uppercase tracking-[.25em] text-amber-300">OSTATNIA DECYZJA</p>
       <h1 className="mt-2 text-3xl font-black tracking-[-.045em]">Ile jesteś gotów postawić?</h1>
-      <p className="mt-2 text-sm leading-6 text-amber-50/45">
+      <p className="mt-2 text-sm leading-6 text-amber-50/60">
         Masz {money(points)} pkt. W finale możesz zagrać bezpiecznie, spasować albo postawić wszystko.
       </p>
 
@@ -1035,7 +1060,7 @@ function FinalBidPanel({
         onClick={onAllIn}
         className="mt-3 w-full rounded-[1.35rem] border border-yellow-100/35 bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-400 px-5 py-5 text-xl font-black tracking-[-.02em] text-[#291304] shadow-[0_18px_55px_rgba(251,191,36,.18)]"
       >
-        VA BANQUE · {money(points)} PKT
+        {points > 0 ? "VA BANQUE · " + money(points) + " PKT" : "ZATWIERDŹ 0 PKT"}
       </button>
 
       <button
@@ -1078,10 +1103,12 @@ function FinalReveal({ game }: { game: VaBanqueState }) {
                 <PartyPlayAvatar id={player.avatar} size={38} />
                 <strong className="min-w-0 flex-1 truncate text-sm">{player.name}</strong>
                 <span className={"text-sm font-black " + (answer?.correct ? "text-emerald-300" : "text-red-300")}>
-                  {answer?.correct ? "+" : "−"}{money(answer?.bid ?? 0)}
+                  {(answer?.bid ?? 0) === 0
+                    ? "0"
+                    : (answer?.correct ? "+" : "−") + money(answer?.bid ?? 0)}
                 </span>
               </div>
-              <p className="mt-2 pl-[50px] text-xs leading-5 text-amber-50/40">
+              <p className="mt-2 pl-[50px] text-xs leading-5 text-amber-50/60">
                 {label} · stawka {money(answer?.bid ?? 0)}
               </p>
             </div>
@@ -1114,7 +1141,7 @@ function Finished({
         <h1 className="mt-3 text-4xl font-black tracking-[-.055em]">
           {winners.length > 1 ? "Mamy remis na szczycie." : `${winners[0]?.name ?? "Zwycięzca"} wygrywa!`}
         </h1>
-        <p className="mt-2 text-sm text-amber-50/45">
+        <p className="mt-2 text-sm text-amber-50/60">
           Finał zamknął stawki. Oto ostateczny kapitał.
         </p>
       </div>
@@ -1149,7 +1176,7 @@ function Finished({
             Zagraj rewanż
           </button>
         ) : (
-          <div className="rounded-2xl border border-amber-200/10 bg-amber-200/[.04] px-5 py-4 text-center text-xs font-bold text-amber-100/45">
+          <div className="rounded-2xl border border-amber-200/10 bg-amber-200/[.04] px-5 py-4 text-center text-xs font-bold text-amber-100/55">
             Właściciel pokoju może uruchomić rewanż.
           </div>
         )}
@@ -1185,7 +1212,7 @@ function Waiting({
       <div className="mx-auto h-10 w-10 animate-pulse rounded-full border-2 border-amber-300/20 border-t-amber-300" />
       <h1 className="mt-5 text-2xl font-black tracking-[-.035em]">{title}</h1>
       {emphasis && <strong className="mt-2 block text-3xl font-black text-amber-200">{emphasis}</strong>}
-      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-amber-50/45">{copy}</p>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-amber-50/60">{copy}</p>
     </div>
   );
 }

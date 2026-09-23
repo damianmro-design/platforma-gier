@@ -130,7 +130,7 @@ values
 ('geo_06','GEOGRAFIA','Które pasmo górskie oddziela w dużej części Francję od Hiszpanii?','["Alpy","Pireneje","Karpaty","Apeniny"]',1,'medium','Granica Francji i Hiszpanii biegnie przez Pireneje.'),
 
 ('music_01','MUZYKA','Który zespół nagrał utwór „Bohemian Rhapsody”?','["The Beatles","Queen","ABBA","U2"]',1,'easy','„Bohemian Rhapsody” to utwór zespołu Queen.'),
-('music_02','MUZYKA','Jak miał na imię Mozart?','["Johann Sebastian","Ludwig","Wolfgang Amadeus","Antonio"]',2,'easy','Pełne imiona kompozytora to Wolfgang Amadeus Mozart.'),
+('music_02','MUZYKA','Pod jakimi imionami jest powszechnie znany Mozart?','["Johann Sebastian","Ludwig","Wolfgang Amadeus","Antonio"]',2,'easy','Kompozytor jest powszechnie znany jako Wolfgang Amadeus Mozart; w akcie chrztu zapisano dłuższą formę jego imion.'),
 ('music_03','MUZYKA','Który instrument ma standardowo 88 klawiszy?','["Fortepian","Akordeon","Organy Hammonda","Ksylofon"]',0,'easy','Standardowy współczesny fortepian ma 88 klawiszy.'),
 ('music_04','MUZYKA','Która grupa stworzyła przebój „Dancing Queen”?','["Boney M.","ABBA","Bee Gees","Roxette"]',1,'easy','„Dancing Queen” jest jednym z największych hitów ABBY.'),
 ('music_05','MUZYKA','Z jakim gatunkiem muzycznym najmocniej kojarzony jest Bob Marley?','["Reggae","Jazz","Heavy metal","Country"]',0,'easy','Bob Marley jest ikoną reggae.'),
@@ -168,7 +168,7 @@ values
 ('lang_02','JĘZYK','Co oznacza hiszpańskie słowo „gracias”?','["Proszę","Dziękuję","Przepraszam","Dzień dobry"]',1,'easy','„Gracias” znaczy „dziękuję”.'),
 ('lang_03','JĘZYK','Jak nazywa się alfabet używany współcześnie m.in. w języku rosyjskim?','["Cyrylica","Runy","Kanji","Devanagari"]',0,'easy','Rosyjski zapisuje się cyrylicą.'),
 ('lang_04','JĘZYK','Które słowo jest palindromem?','["kajak","rower","hotel","banan"]',0,'easy','„kajak” czyta się tak samo od lewej i od prawej.'),
-('lang_05','JĘZYK','Jak brzmi liczba 3 po grecku w podstawowej formie liczebnika?','["tria","pente","deka","ena"]',0,'medium','Greckie „τρία” (tria) oznacza 3.'),
+('lang_05','JĘZYK','Jak po grecku brzmi liczebnik „3” w rodzaju nijakim, np. w wyrażeniu „3 euro”?','["tria","pente","deka","ena"]',0,'medium','Greckie „τρία” (tria) to forma liczebnika 3 używana z rzeczownikami rodzaju nijakiego.'),
 ('lang_06','JĘZYK','Który znak kończy zdanie pytające w języku polskim?','["Dwukropek","Średnik","Znak zapytania","Apostrof"]',2,'easy','Zdanie pytające kończymy znakiem zapytania.'),
 
 ('pl_01','POLSKA','Jaka rzeka przepływa przez Warszawę?','["Odra","Wisła","Warta","Bug"]',1,'easy','Przez Warszawę przepływa Wisła.'),
@@ -182,7 +182,7 @@ values
 ('world_02','ŚWIAT','Jaką walutą posługuje się Japonia?','["Won","Jen","Juan","Ringgit"]',1,'easy','Walutą Japonii jest jen.'),
 ('world_03','ŚWIAT','W jakim mieście znajduje się Statua Wolności?','["Boston","Nowy Jork","Waszyngton","Filadelfia"]',1,'easy','Statua Wolności stoi w Nowym Jorku.'),
 ('world_04','ŚWIAT','Który kraj ma liść klonu na fladze?','["Kanada","Austria","Dania","Szwajcaria"]',0,'easy','Liść klonu jest symbolem Kanady.'),
-('world_05','ŚWIAT','Na jakiej wyspie znajduje się państwo Islandia?','["Na Islandii","Na Grenlandii","Na Gotlandii","Na Sycylii"]',0,'easy','Państwo Islandia zajmuje wyspę Islandię i mniejsze wyspy.'),
+('world_05','ŚWIAT','Które państwo jest najmniejszym krajem świata pod względem powierzchni?','["Monako","Watykan","San Marino","Liechtenstein"]',1,'medium','Najmniejszym państwem świata pod względem powierzchni jest Watykan.'),
 ('world_06','ŚWIAT','Który kanał łączy Morze Śródziemne z Morzem Czerwonym?','["Panamski","Kiloński","Sueski","Koryncki"]',2,'medium','Morza te łączy Kanał Sueski.'),
 
 ('pop_01','POP KULTURA','Jak nazywa się szkoła magii z serii o Harrym Potterze?','["Narnia","Hogwart","Nevermore","Camelot"]',1,'easy','Harry Potter uczy się w Hogwarcie.'),
@@ -193,7 +193,7 @@ values
 ('pop_06','POP KULTURA','Która gra planszowa polega na kupowaniu ulic i pobieraniu czynszu?','["Scrabble","Monopoly","Cluedo","Risk"]',1,'easy','Chodzi o Monopoly.'),
 
 ('tech_01','TECHNOLOGIA','Co oznacza skrót GPS?','["Global Positioning System","General Processing Service","Global Phone Signal","Graphic Positioning Standard"]',0,'medium','GPS to Global Positioning System.'),
-('tech_02','TECHNOLOGIA','Która firma stworzyła system operacyjny Android i rozwija go jako główny opiekun projektu?','["Apple","Google","IBM","Adobe"]',1,'easy','Android jest rozwijany pod kierunkiem Google.'),
+('tech_02','TECHNOLOGIA','Która firma jest głównym opiekunem projektu Android i kieruje jego rozwojem?','["Apple","Google","IBM","Adobe"]',1,'easy','Google kieruje rozwojem Androida i projektu Android Open Source Project; wcześniej system rozwijała firma Android Inc.'),
 ('tech_03','TECHNOLOGIA','Ile bitów składa się na 1 bajt?','["4","8","16","32"]',1,'easy','1 bajt to 8 bitów.'),
 ('tech_04','TECHNOLOGIA','Jak nazywa się protokół używany w adresie bezpiecznej strony internetowej, zwykle widoczny jako „https”?','["HTTPS","FTP","SMTP","Bluetooth"]',0,'easy','HTTPS to szyfrowany wariant protokołu HTTP.'),
 ('tech_05','TECHNOLOGIA','Co w komputerze przechowuje dane robocze krótkotrwale i traci je po wyłączeniu zasilania?','["SSD","RAM","Pendrive","Blu-ray"]',1,'medium','Pamięć RAM jest pamięcią ulotną.'),
@@ -281,7 +281,7 @@ begin
   insert into app_private.va_banque_games(
     room_id,round_index,regular_rounds,phase,phase_deadline
   )
-  values(p_room_id,1,v_rounds,'intro',now()+interval '8 seconds');
+  values(p_room_id,1,v_rounds,'intro',now()+interval '12 seconds');
 
   insert into app_private.va_banque_players(room_id,player_id,points)
   select p_room_id,p.id,2000
@@ -569,13 +569,13 @@ begin
         v_delta:=g.winning_bid;
       else
         update app_private.va_banque_players
-        set points=greatest(100,points-g.winning_bid)
+        set points=greatest(0,points-g.winning_bid)
         where room_id=r.id and player_id=g.winning_player_id;
         v_delta:=-g.winning_bid;
       end if;
 
       update app_private.va_banque_games
-      set phase='main_result',phase_deadline=now()+interval '3 seconds',
+      set phase='main_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object(
             'type',case when v_correct then 'main_correct' else 'main_wrong' end,
             'playerId',g.winning_player_id,'delta',v_delta,'answer',v_answer,
@@ -607,7 +607,7 @@ begin
     if g.phase='takeover_open' then
       exit when g.phase_deadline>now();
       update app_private.va_banque_games
-      set phase='round_result',phase_deadline=now()+interval '2 seconds',
+      set phase='round_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object('type','no_takeover'),
           updated_at=now()
       where room_id=r.id;
@@ -631,13 +631,13 @@ begin
         v_delta:=v_risk;
       else
         update app_private.va_banque_players
-        set points=greatest(100,points-v_risk)
+        set points=greatest(0,points-v_risk)
         where room_id=r.id and player_id=g.takeover_player_id;
         v_delta:=-v_risk;
       end if;
 
       update app_private.va_banque_games
-      set phase='takeover_result',phase_deadline=now()+interval '3 seconds',
+      set phase='takeover_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object(
             'type',case when v_correct then 'takeover_correct' else 'takeover_wrong' end,
             'playerId',g.takeover_player_id,'delta',v_delta,'answer',v_answer,
@@ -712,7 +712,7 @@ begin
       where room_id=r.id;
 
       update app_private.va_banque_games
-      set phase='final_reveal',phase_deadline=now()+interval '6 seconds',
+      set phase='final_reveal',phase_deadline=now()+interval '10 seconds',
           last_event=jsonb_build_object('type','final_reveal','correctIndex',q.correct_index),
           updated_at=now()
       where room_id=r.id;
@@ -808,7 +808,7 @@ begin
 
   select jsonb_agg(
     jsonb_build_object(
-      'id',p.id,
+      'id',p.player_id,
       'name',rp.display_name,
       'avatar',rp.avatar,
       'points',p.points,
@@ -928,7 +928,7 @@ begin
   if p.player_id is null then raise exception 'Player not found'; end if;
   if p.bid_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=greatest(50,floor((p.points*0.5)/50.0)::integer*50);
+  v_max:=floor((p.points*0.5)/50.0)::integer*50;
   v_min:=least(100,v_max);
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -977,7 +977,7 @@ begin
   end if;
   if p.tie_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=greatest(50,floor((p.points*0.5)/50.0)::integer*50);
+  v_max:=floor((p.points*0.5)/50.0)::integer*50;
   v_min:=g.winning_bid+50;
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -1074,7 +1074,7 @@ begin
   where rp.room_id=r.id and rp.player_token=p_player_token
   limit 1;
 
-  if v_player is null or v_player=g.winning_player_id then
+  if v_player is null or v_player=g.winning_player_id or v_points<=0 then
     return jsonb_build_object('won',false);
   end if;
 
