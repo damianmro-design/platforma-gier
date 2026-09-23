@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
+  configureAktaNocyRoom,
   createPlatformRoom,
   prepareTestRoom,
 } from "@/lib/platform-db";
@@ -28,6 +29,10 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const gameSlug = String(body.gameSlug ?? "").trim();
   const botCount = BOT_COUNTS[gameSlug];
+  const aktaCase = String(body.aktaCase ?? "apartament-214") === "ostatni-kurs"
+    ? "ostatni-kurs"
+    : "apartament-214";
+  const aktaMode = String(body.aktaMode ?? "host") === "auto" ? "auto" : "host";
 
   if (botCount == null) {
     return NextResponse.json({ error: "Ta gra nie obsługuje jeszcze trybu testowego." }, { status: 400 });
@@ -35,6 +40,19 @@ export async function POST(request: Request) {
 
   try {
     const room = await createPlatformRoom(gameSlug);
+
+    if (gameSlug === "akta-nocy") {
+      const configured = await configureAktaNocyRoom(
+        room.code,
+        room.host_token,
+        aktaCase,
+        aktaMode,
+      );
+      if (!configured) {
+        return NextResponse.json({ error: "Nie udało się skonfigurować sprawy testowej." }, { status: 500 });
+      }
+    }
+
     const prepared = await prepareTestRoom(room.code, room.host_token, botCount);
 
     if (!prepared) {
