@@ -71,7 +71,8 @@ export default function TylkoMyPage() {
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
             Jak dobrze potraficie przewidzieć swoje wybory? Odpowiadacie osobno, bez podglądania,
-            a gra sprawdza, kiedy naprawdę nadajecie na tej samej fali.
+            a gra sprawdza, kiedy naprawdę nadajecie na tej samej fali. Wystarczą 2 telefony,
+            nie potrzebujecie telewizora ani wspólnego ekranu.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
@@ -79,8 +80,8 @@ export default function TylkoMyPage() {
               "👥 dokładnie 2 graczy",
               "⏱ 20–30 min",
               "♡ wspólny wynik",
-              "20 pytań",
-              "📱 2 telefony",
+              "20 pytań z większej puli",
+              "📱 tylko 2 telefony",
             ].map((item) => (
               <span
                 key={item}
@@ -175,6 +176,29 @@ export default function TylkoMyPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 mx-auto max-w-7xl px-5 pb-14 sm:px-8">
+        <div className="rounded-[2rem] border border-white/9 bg-white/[.025] p-6 sm:p-8">
+          <span className="text-[10px] font-black uppercase tracking-[.24em] text-cyan-200">JAK TO DZIAŁA</span>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["01", "Utwórz pokój", "Jedna osoba uruchamia grę na swoim telefonie."],
+              ["02", "Zaproś drugą osobę", "Kod, link albo QR i oboje jesteście w środku."],
+              ["03", "Odpowiadajcie osobno", "Każde z Was wybiera odpowiedź na własnym ekranie."],
+              ["04", "Odkrywajcie wynik", "Po obu odpowiedziach gra sama pokazuje, czy się zgraliście."],
+            ].map(([no, title, copy]) => (
+              <div key={no} className="rounded-2xl border border-white/8 bg-black/20 p-4">
+                <span className="text-[10px] font-black tracking-[.2em] text-pink-200">{no}</span>
+                <h3 className="mt-2 text-sm font-black">{title}</h3>
+                <p className="mt-1 text-xs leading-5 text-zinc-500">{copy}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-xs font-bold text-zinc-500">
+            Działa dla par, przyjaciół, rodzeństwa i każdego duetu, który chce sprawdzić, jak dobrze się zna.
+          </p>
         </div>
       </section>
 
