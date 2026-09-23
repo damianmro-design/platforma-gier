@@ -299,14 +299,14 @@ export default function LobbyClient({ code }: { code: string }) {
   );
 
   useEffect(() => {
-    if (!data || !isWordGame || !canStart || busy) return;
+    if (!data || (!isWordGame && !isTylkoMy) || !canStart || busy) return;
     const timer = window.setTimeout(() => {
       void send({ action: "start" });
-    }, 1800);
+    }, isTylkoMy ? 1200 : 1800);
     return () => window.clearTimeout(timer);
-    // Automatyczny start dotyczy wyłącznie Zakręconego Hasła.
+    // Te gry nie potrzebują osobnego prowadzącego do uruchomienia rozgrywki.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.room.status, isWordGame, canStart, busy]);
+  }, [data?.room.status, isWordGame, isTylkoMy, canStart, busy]);
 
   if (!data) {
     return <div className="lobby-loading">Łączenie z pokojem…</div>;
@@ -488,8 +488,8 @@ export default function LobbyClient({ code }: { code: string }) {
         <>
           <section className="host-controls">
             <div className="w-full">
-              <span className="lobby-label">ZAPROŚ GRACZY</span>
-              <h3>Kod, QR albo gotowy link</h3>
+              <span className="lobby-label">{isTylkoMy ? "ZAPROŚ DRUGĄ OSOBĘ" : "ZAPROŚ GRACZY"}</span>
+              <h3>{isTylkoMy ? "Wyślij kod, link albo pokaż QR" : "Kod, QR albo gotowy link"}</h3>
               <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
                 {inviteUrl && (
                   <img
@@ -520,7 +520,13 @@ export default function LobbyClient({ code }: { code: string }) {
           <section className="host-controls">
           <div>
             <span className="lobby-label">{data.room.isTest ? "TRYB TESTOWY" : "STEROWANIE POKOJEM"}</span>
-            <h3>{isWordGame ? "Gra ruszy automatycznie, gdy wszyscy będą gotowi" : "Ty kontrolujesz start"}</h3>
+            <h3>
+              {isTylkoMy
+                ? "Gdy oboje będziecie gotowi, gra ruszy automatycznie"
+                : isWordGame
+                  ? "Gra ruszy automatycznie, gdy wszyscy będą gotowi"
+                  : "Ty kontrolujesz start"}
+            </h3>
           </div>
           <div className="host-buttons">
             {!isIndividualGame && (
@@ -533,14 +539,20 @@ export default function LobbyClient({ code }: { code: string }) {
                 🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
               </button>
             )}
-            <button
-              type="button"
-              className="start-button"
-              disabled={busy || !canStart}
-              onClick={() => void send({ action: "start" })}
-            >
-              START GRY
-            </button>
+            {isTylkoMy ? (
+              <div className="rounded-xl border border-pink-300/20 bg-pink-300/[.07] px-4 py-3 text-xs font-black text-pink-100">
+                ♡ START AUTOMATYCZNY
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="start-button"
+                disabled={busy || !canStart}
+                onClick={() => void send({ action: "start" })}
+              >
+                START GRY
+              </button>
+            )}
           </div>
           {!canStart && (
             <p className="start-hint">
@@ -551,7 +563,9 @@ export default function LobbyClient({ code }: { code: string }) {
                   : isAktaNocy
                     ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
                     : isTylkoMy
-                      ? "Do startu: dokładnie 2 osoby i obie oznaczone jako gotowe."
+                      ? data.players.length < 2
+                        ? "Dołączcie we 2 na telefonach. Gdy druga osoba wejdzie i oboje klikniecie „Gotowy”, gra wystartuje sama."
+                        : "Kliknijcie „Gotowy” na obu telefonach. Potem startujemy automatycznie."
                       : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
