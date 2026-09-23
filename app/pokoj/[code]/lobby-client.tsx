@@ -70,6 +70,11 @@ export default function LobbyClient({ code }: { code: string }) {
           window.location.assign(`/gra/tylko-my/${code}`);
           return;
         }
+
+        if (next.room.gameSlug === "va-banque") {
+          window.location.assign(`/gra/va-banque/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -133,7 +138,7 @@ export default function LobbyClient({ code }: { code: string }) {
       !data ||
       data.currentPlayerId ||
       data.room.status !== "lobby" ||
-      (data.isHost && (data.room.isTest || !["zakrecone-haslo", "tylko-my"].includes(data.room.gameSlug))) ||
+      (data.isHost && (data.room.isTest || !["zakrecone-haslo", "tylko-my", "va-banque"].includes(data.room.gameSlug))) ||
       autoJoinAttempted.current
     ) {
       return;
@@ -273,9 +278,10 @@ export default function LobbyClient({ code }: { code: string }) {
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
   const isTylkoMy = data?.room.gameSlug === "tylko-my";
-  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy || isTylkoMy;
-  const minPlayers = isTylkoMy ? 2 : isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
-  const maxPlayers = isTylkoMy ? 2 : isWordGame || isAktaNocy ? 12 : 14;
+  const isVaBanque = data?.room.gameSlug === "va-banque";
+  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy || isTylkoMy || isVaBanque;
+  const minPlayers = isTylkoMy || isVaBanque ? 2 : isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
+  const maxPlayers = isTylkoMy ? 2 : isVaBanque ? 8 : isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
   const waiting = isIndividualGame
@@ -566,7 +572,9 @@ export default function LobbyClient({ code }: { code: string }) {
                       ? data.players.length < 2
                         ? "Dołączcie we 2 na telefonach. Gdy druga osoba wejdzie i oboje klikniecie „Gotowy”, gra wystartuje sama."
                         : "Kliknijcie „Gotowy” na obu telefonach. Potem startujemy automatycznie."
-                      : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                      : isVaBanque
+                        ? "Do startu: 2–8 graczy i wszyscy oznaczeni jako gotowi."
+                        : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
