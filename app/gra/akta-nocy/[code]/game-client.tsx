@@ -96,6 +96,7 @@ type AccusationSummary = {
   total: number;
   correctSuspect: number;
   correctMotive: number;
+  correctEvidence: number;
   fullyCorrect: number;
   results: Array<{
     playerId: string;
@@ -109,6 +110,7 @@ type AccusationSummary = {
     evidenceTitle: string;
     suspectCorrect: boolean;
     motiveCorrect: boolean;
+    evidenceCorrect: boolean;
     fullyCorrect: boolean;
   }>;
 };
@@ -152,6 +154,7 @@ type AccusationVerdict = {
   evidenceTitle: string;
   suspectCorrect: boolean;
   motiveCorrect: boolean;
+  evidenceCorrect: boolean;
 } | null;
 
 type RoleCard = {
@@ -213,7 +216,16 @@ type PlayerState = {
   reveal: RevealPayload;
 };
 
-type GameState = HostState | PlayerState;
+type ClosedState = {
+  role: "closed";
+  room: {
+    code: string;
+    status: string;
+    phase: string | null;
+  };
+};
+
+type GameState = HostState | PlayerState | ClosedState;
 
 function AktaNocyAvatar({
   seed,
@@ -393,6 +405,10 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
     );
   }
 
+  if (data.role === "closed") {
+    return <ClosedView code={data.room.code} />;
+  }
+
   if (data.role === "host") {
     return (
       <HostView
@@ -402,6 +418,7 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
         onAdvance={() => void send("advance")}
         onRevealA={() => void send("revealEvidenceA")}
         onRevealB={() => void send("revealEvidenceB")}
+        onClose={() => void send("closeGame")}
       />
     );
   }
@@ -425,6 +442,34 @@ export default function AktaNocyGameClient({ code }: { code: string }) {
   );
 }
 
+function ClosedView({ code }: { code: string }) {
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
+      <Backdrop />
+      <div className="relative mx-auto flex min-h-screen max-w-3xl items-center px-5 py-10">
+        <section className="w-full rounded-[2rem] border border-orange-200/12 bg-[#120907]/95 p-7 text-center shadow-[0_30px_100px_rgba(0,0,0,.6)] sm:p-10">
+          <span className="text-[10px] font-black uppercase tracking-[.3em] text-red-300">
+            SPRAWA {code} · ZAMKNIĘTA
+          </span>
+          <h1 className="mt-4 font-serif text-5xl font-black tracking-[-.04em]">
+            Akta zostały zamknięte.
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-orange-50/55">
+            Rozgrywka została formalnie zakończona. Wynik i przebieg sprawy nie będą już zmieniane.
+          </p>
+          <AktaNocyStageArtwork kind="closed" />
+          <a
+            href="/"
+            className="mt-7 inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-6 py-4 text-sm font-black text-white transition hover:brightness-110"
+          >
+            WRÓĆ DO zaGRAJ
+          </a>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 function HostView({
   data,
   busy,
@@ -432,6 +477,7 @@ function HostView({
   onAdvance,
   onRevealA,
   onRevealB,
+  onClose,
 }: {
   data: HostState;
   busy: boolean;
@@ -439,6 +485,7 @@ function HostView({
   onAdvance: () => void;
   onRevealA: () => void;
   onRevealB: () => void;
+  onClose: () => void;
 }) {
   const phase = data.room.phase;
   const opened = data.progress.filter((player) => player.dossier_opened).length;
@@ -1112,14 +1159,17 @@ function HostView({
             <span className="text-[10px] font-black uppercase tracking-[.24em] text-orange-300/55">
               Wasze akty oskarżenia
             </span>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <TheoryCard label="Trafiony sprawca">
                 <strong className="text-2xl">{summary.correctSuspect}/{summary.total}</strong>
               </TheoryCard>
               <TheoryCard label="Trafiony motyw">
                 <strong className="text-2xl">{summary.correctMotive}/{summary.total}</strong>
               </TheoryCard>
-              <TheoryCard label="Sprawca + motyw">
+              <TheoryCard label="Trafiony dowód">
+                <strong className="text-2xl">{summary.correctEvidence}/{summary.total}</strong>
+              </TheoryCard>
+              <TheoryCard label="Pełne oskarżenie">
                 <strong className="text-2xl">{summary.fullyCorrect}/{summary.total}</strong>
               </TheoryCard>
             </div>
@@ -1137,14 +1187,20 @@ function HostView({
                             ? "bg-orange-400/10 text-orange-200"
                             : "bg-red-400/10 text-red-200"
                       }`}>
-                        {item.fullyCorrect ? "SPRAWCA + MOTYW" : item.suspectCorrect ? "TRAFIONY SPRAWCA" : "BŁĘDNY SPRAWCA"}
+                        {item.fullyCorrect
+                          ? "PEŁNE OSKARŻENIE"
+                          : item.suspectCorrect && item.motiveCorrect
+                            ? "SPRAWCA + MOTYW"
+                            : item.suspectCorrect
+                              ? "TRAFIONY SPRAWCA"
+                              : "BŁĘDNY SPRAWCA"}
                       </span>
                     </div>
                     <p className="mt-2 text-xs leading-5 text-orange-50/45">
                       Oskarżenie: {item.suspect?.characterName ?? "brak"} · {item.motiveLabel}
                     </p>
                     <p className="mt-1 text-xs leading-5 text-orange-50/35">
-                      Kluczowy dowód: {item.evidenceNo} · {item.evidenceTitle}
+                      Kluczowy dowód: {item.evidenceNo} · {item.evidenceTitle} · {item.evidenceCorrect ? "trafiony" : "nietrafiony"}
                     </p>
                   </div>
                 ))}
@@ -1155,7 +1211,7 @@ function HostView({
 
         {error && <ErrorBox message={error} />}
 
-        {!isFinal && (
+        {!isFinal ? (
           <section className="mt-6 flex justify-end">
             <PrimaryButton disabled={busy} onClick={onAdvance}>
               {busy
@@ -1165,6 +1221,18 @@ function HostView({
                   : reveal.step === 2
                     ? "UJAWNIJ SPRAWCĘ →"
                     : "OTWÓRZ PEŁNE AKTA →"}
+            </PrimaryButton>
+          </section>
+        ) : (
+          <section className="mt-6 flex flex-col gap-4 rounded-[1.5rem] border border-red-400/15 bg-red-950/15 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <strong className="block text-lg">Sprawa rozwiązana.</strong>
+              <span className="mt-1 block text-sm text-orange-50/45">
+                Zamknij rozgrywkę, kiedy wszyscy obejrzą pełne akta.
+              </span>
+            </div>
+            <PrimaryButton disabled={busy} onClick={onClose}>
+              {busy ? "ZAMYKANIE…" : "ZAMKNIJ SPRAWĘ →"}
             </PrimaryButton>
           </section>
         )}
@@ -1665,7 +1733,7 @@ function PlayerRevealView({
                 {verdict.motiveLabel} · {verdict.motiveCorrect ? "trafiony" : "nietrafiony"}
               </MiniTheory>
               <MiniTheory label="Wybrany dowód">
-                {verdict.evidenceNo} · {verdict.evidenceTitle}
+                {verdict.evidenceNo} · {verdict.evidenceTitle} · {verdict.evidenceCorrect ? "trafiony" : "nietrafiony"}
               </MiniTheory>
             </div>
           </section>
@@ -1673,7 +1741,9 @@ function PlayerRevealView({
 
         <div className="mt-5 flex items-center justify-between gap-3">
           <span className="text-xs text-orange-50/35">
-            Kolejny fragment ujawnienia uruchamia prowadzący.
+            {reveal.step === 4
+              ? "Prowadzący może teraz zamknąć sprawę."
+              : "Kolejny fragment ujawnienia uruchamia prowadzący."}
           </span>
           <button
             type="button"
