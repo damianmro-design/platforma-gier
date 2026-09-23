@@ -34,8 +34,8 @@ export default function AktaNocyPage() {
           </div>
         </header>
 
-        <section className="mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:pb-24 lg:pt-20">
-          <div>
+        <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-14 pt-10 sm:px-8 sm:pt-12 lg:grid-cols-[1.02fr_.98fr] lg:items-start lg:gap-12 lg:pb-20 lg:pt-12">
+          <div className="lg:pt-3">
             <span className="inline-flex items-center gap-2 rounded-full border border-red-400/20 bg-red-950/40 px-3 py-2 text-[10px] font-black uppercase tracking-[.24em] text-orange-200">
               <span className="h-2 w-2 rounded-full bg-red-400 shadow-[0_0_14px_rgba(248,113,113,.8)]" />
               Interaktywne śledztwo · w budowie
