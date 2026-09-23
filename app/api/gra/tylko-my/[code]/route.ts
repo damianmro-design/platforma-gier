@@ -55,7 +55,7 @@ function resultFor(question: TmQuestion | null, state: TmDbState) {
   };
 }
 
-function serializeState(state: TmDbState) {
+function serializeState(code: string, state: TmDbState) {
   const question = getTylkoMyQuestionForRoom(code, state.question_index);
   const options = optionsFor(question, state);
   const result = resultFor(question, state);
@@ -158,7 +158,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
   }
 
-  const game = serializeState(state);
+  const game = serializeState(code, state);
 
   if (playerToken) {
     const player = await getPlatformPlayer(code, playerToken);
