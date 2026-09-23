@@ -48,24 +48,38 @@ async function waitForPhase(page, code, wanted, timeout = 25000) {
   throw new Error(`Timeout waiting for phase: ${wanted.join(", ")}`);
 }
 
+async function safeClick(locator, timeout = 1500) {
+  try {
+    await locator.waitFor({ state: "visible", timeout });
+    if (await locator.isEnabled()) {
+      await locator.click({ timeout });
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 async function clickBidAmount(page) {
   const buttons = page.locator("button:not([disabled])");
   const texts = await buttons.allTextContents();
   const idx = texts.findIndex((text) => /^(MAX\s+)?\d[\d\s\u00a0]*$/.test(text.trim()));
   if (idx < 0) return false;
-  await buttons.nth(idx).click();
-  const submit = page.getByRole("button", { name: /Zatwierdź .* pkt/ });
-  await submit.click();
-  return true;
+  if (!(await safeClick(buttons.nth(idx)))) return false;
+  return safeClick(page.getByRole("button", { name: /Zatwierdź .* pkt/ }));
+}
+
+async function clickPass(page) {
+  return safeClick(page.getByRole("button", { name: "PAS" }));
 }
 
 async function answerFirst(page) {
   const buttons = page.locator("button:not([disabled])");
   const texts = await buttons.allTextContents();
-  const idx = texts.findIndex((text) => /^A\s/.test(text.trim()));
-  if (idx < 0) throw new Error("No enabled answer A button");
-  await buttons.nth(idx).click();
-  await page.getByRole("button", { name: "Zatwierdź odpowiedź" }).click();
+  let idx = texts.findIndex((text) => /^A(?:\s|$)/.test(text.trim()));
+  if (idx < 0) idx = texts.findIndex((text) => text.trim().startsWith("A"));
+  if (idx < 0) return false;
+  if (!(await safeClick(buttons.nth(idx)))) return false;
+  return safeClick(page.getByRole("button", { name: "Zatwierdź odpowiedź" }));
 }
 
 const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } });
@@ -127,8 +141,10 @@ await Promise.all([
 await noHorizontalOverflow(host, "host game");
 await noHorizontalOverflow(guest, "guest game");
 
+let forcedTie = false;
 let sawTie = false;
 let sawTakeover = false;
+let forcedAllPass = false;
 let sawAllPass = false;
 let reloaded = false;
 let finalSeen = false;
@@ -153,23 +169,31 @@ while (!finished && safety++ < 700) {
   const pageFor = (playerId) => a.viewer?.id === playerId ? host : b.viewer?.id === playerId ? guest : null;
 
   if (phase === "bidding") {
-    if (a.roundIndex === 1 && !sawTie) {
-      if (!a.viewer.bidLocked) await clickBidAmount(host);
-      if (!b.viewer.bidLocked) await clickBidAmount(guest);
-      sawTie = true;
-    } else if (a.roundIndex === 2 && !sawAllPass) {
-      if (!a.viewer.bidLocked) await host.getByRole("button", { name: "PAS" }).click();
-      if (!b.viewer.bidLocked) await guest.getByRole("button", { name: "PAS" }).click();
-      sawAllPass = true;
+    if (a.roundIndex === 1 && !forcedTie) {
+      for (const page of [host, guest]) {
+        const s = await state(page, code);
+        if (s.phase === "bidding" && !s.viewer.bidLocked) {
+          const didBid = await clickBidAmount(page);
+          if (!didBid) await clickPass(page);
+        }
+      }
+      forcedTie = true;
+    } else if (a.roundIndex === 2 && !forcedAllPass) {
+      for (const page of [host, guest]) {
+        const s = await state(page, code);
+        if (s.phase === "bidding" && !s.viewer.bidLocked) await clickPass(page);
+      }
+      forcedAllPass = true;
     } else {
       const bidder = a.players.slice().sort((x,y) => y.points - x.points)[0];
-      for (const [page, s] of [[host,a],[guest,b]]) {
-        if (s.viewer.bidLocked) continue;
+      for (const page of [host, guest]) {
+        const s = await state(page, code);
+        if (s.phase !== "bidding" || s.viewer.bidLocked) continue;
         if (s.viewer.id === bidder.id) {
           const didBid = await clickBidAmount(page);
-          if (!didBid) await page.getByRole("button", { name: "PAS" }).click();
+          if (!didBid) await clickPass(page);
         } else {
-          await page.getByRole("button", { name: "PAS" }).click();
+          await clickPass(page);
         }
       }
     }
@@ -178,9 +202,11 @@ while (!finished && safety++ < 700) {
   }
 
   if (phase === "tie_bid") {
-    for (const [page, s] of [[host,a],[guest,b]]) {
-      if (s.tiePlayerIds.includes(s.viewer.id) && !s.viewer.tieLocked) {
-        await page.getByRole("button", { name: "PAS" }).click();
+    sawTie = true;
+    for (const page of [host, guest]) {
+      const s = await state(page, code);
+      if (s.phase === "tie_bid" && s.tiePlayerIds.includes(s.viewer.id) && !s.viewer.tieLocked) {
+        await clickPass(page);
       }
     }
     await host.waitForTimeout(250);
@@ -190,8 +216,8 @@ while (!finished && safety++ < 700) {
   if (phase === "question") {
     const answerer = pageFor(a.winningPlayerId);
     if (!answerer) throw new Error("Main answerer page not found");
-    const answerState = a.viewer?.id === a.winningPlayerId ? a : b;
-    if (!answerState.viewer.answerLocked) await answerFirst(answerer);
+    const answerState = await state(answerer, code);
+    if (answerState.phase === "question" && !answerState.viewer.answerLocked) await answerFirst(answerer);
     await host.waitForTimeout(250);
     continue;
   }
@@ -213,8 +239,8 @@ while (!finished && safety++ < 700) {
   if (phase === "takeover_question") {
     const answerer = pageFor(a.takeoverPlayerId);
     if (!answerer) throw new Error("Takeover answerer page not found");
-    const answerState = a.viewer?.id === a.takeoverPlayerId ? a : b;
-    if (!answerState.viewer.answerLocked) await answerFirst(answerer);
+    const answerState = await state(answerer, code);
+    if (answerState.phase === "takeover_question" && !answerState.viewer.answerLocked) await answerFirst(answerer);
     await host.waitForTimeout(250);
     continue;
   }
@@ -234,12 +260,15 @@ while (!finished && safety++ < 700) {
   }
 
   if (phase === "final_question") {
-    for (const [page, s] of [[host,a],[guest,b]]) {
-      if (!s.viewer.finalAnswerLocked) await answerFirst(page);
+    for (const page of [host, guest]) {
+      const s = await state(page, code);
+      if (s.phase === "final_question" && !s.viewer.finalAnswerLocked) await answerFirst(page);
     }
     await host.waitForTimeout(250);
     continue;
   }
+
+  if (phase === "round_result" && String(a.lastEvent?.type ?? "") === "all_pass") sawAllPass = true;
 
   if (!reloaded && a.roundIndex >= 3 && !phase.startsWith("final")) {
     await guest.reload({ waitUntil: "domcontentloaded" });
