@@ -1,0 +1,57 @@
+-- VA BANQUE — rozszerzenie banku pytań.
+-- Evergreen, 4 odpowiedzi, dokładnie 1 poprawna. Bezpieczne do ponownego uruchomienia.
+
+insert into app_private.va_banque_questions
+  (question_key, category, prompt, options, correct_index, difficulty, explanation)
+values
+('codziennosc_01','CODZIENNOŚĆ','W jakiej temperaturze zamarza czysta woda przy normalnym ciśnieniu?',
+ '["0°C","10°C","−10°C","100°C"]'::jsonb,0,'easy','Przy normalnym ciśnieniu czysta woda zamarza w temperaturze 0°C.'),
+('codziennosc_02','CODZIENNOŚĆ','Który składnik odpowiada za kwaśny smak zwykłego octu spożywczego?',
+ '["Kwas cytrynowy","Kwas octowy","Kwas mlekowy","Kwas askorbinowy"]'::jsonb,1,'medium','Głównym kwasem w occie spożywczym jest kwas octowy.'),
+('codziennosc_03','CODZIENNOŚĆ','Co oznacza włoskie określenie „al dente” używane przy gotowaniu makaronu?',
+ '["Bardzo miękki","Lekko twardy przy nagryzaniu","Gotowany bez soli","Podawany na zimno"]'::jsonb,1,'medium','„Al dente” dosłownie znaczy „na ząb” i opisuje makaron lekko sprężysty przy nagryzaniu.'),
+('codziennosc_04','CODZIENNOŚĆ','Która substancja to soda oczyszczona?',
+ '["Chlorek sodu","Wodorowęglan sodu","Węglan wapnia","Kwas borowy"]'::jsonb,1,'medium','Soda oczyszczona to wodorowęglan sodu, NaHCO₃.'),
+('codziennosc_05','CODZIENNOŚĆ','Który materiał można przyciągnąć zwykłym magnesem?',
+ '["Aluminium","Miedź","Żelazo","Szkło"]'::jsonb,2,'easy','Żelazo jest materiałem ferromagnetycznym i jest przyciągane przez zwykły magnes.'),
+('codziennosc_06','CODZIENNOŚĆ','Dlaczego pokrojone jabłko z czasem ciemnieje?',
+ '["Zamarza","Utlenia się enzymatycznie","Wchłania sól z powietrza","Traci cały cukier"]'::jsonb,1,'medium','Ciemnienie jest wynikiem enzymatycznego utleniania związków obecnych w miąższu.'),
+
+('ciekawostki_01','CIEKAWOSTKI','Który ssak składa jaja?',
+ '["Delfin","Dziobak","Koala","Nietoperz"]'::jsonb,1,'medium','Dziobak należy do stekowców, czyli ssaków składających jaja.'),
+('ciekawostki_02','CIEKAWOSTKI','Ile serc ma ośmiornica?',
+ '["1","2","3","4"]'::jsonb,2,'medium','Ośmiornice mają 3 serca: 2 skrzelowe i 1 główne.'),
+('ciekawostki_03','CIEKAWOSTKI','Która planeta obraca się wokół własnej osi najwolniej?',
+ '["Mars","Jowisz","Wenus","Neptun"]'::jsonb,2,'hard','Wenus ma wyjątkowo wolny obrót: jeden obrót względem gwiazd trwa około 243 dni ziemskich.'),
+('ciekawostki_04','CIEKAWOSTKI','Jak nazywa się największa kość w ludzkim ciele?',
+ '["Kość ramienna","Kość piszczelowa","Kość udowa","Kość promieniowa"]'::jsonb,2,'medium','Największą i najdłuższą kością człowieka jest kość udowa.'),
+('ciekawostki_05','CIEKAWOSTKI','Który metal jest ciekły w typowej temperaturze pokojowej około 20°C?',
+ '["Rtęć","Aluminium","Żelazo","Srebro"]'::jsonb,0,'medium','Rtęć pozostaje ciekła w temperaturze około 20°C.'),
+('ciekawostki_06','CIEKAWOSTKI','Jak nazywa się zjawisko, dzięki któremu gekon może chodzić po gładkich ścianach?',
+ '["Siły van der Waalsa","Indukcja elektromagnetyczna","Rezonans akustyczny","Promieniowanie cieplne"]'::jsonb,0,'hard','Mikroskopijne włoski na stopach gekona wykorzystują bardzo słabe oddziaływania van der Waalsa.'),
+
+('historia_extra_01','HISTORIA','Który pokój zakończył w 1648 roku wojnę trzydziestoletnią?',
+ '["Pokój westfalski","Pokój wersalski","Pokój utrechcki","Pokój ryski"]'::jsonb,0,'hard','Seria traktatów określanych jako pokój westfalski zakończyła w 1648 roku wojnę trzydziestoletnią.'),
+('geografia_extra_01','GEOGRAFIA','Które państwo ma stolicę w Thimphu?',
+ '["Nepal","Bhutan","Laos","Mongolia"]'::jsonb,1,'hard','Thimphu jest stolicą Bhutanu.'),
+('nauka_extra_01','NAUKA','Który pierwiastek ma symbol chemiczny W?',
+ '["Wolfram","Wanad","Wapń","Węgiel"]'::jsonb,0,'hard','Symbol W pochodzi od nazwy wolframu.'),
+('technologia_extra_01','TECHNOLOGIA','Co oznacza skrót DNS w sieciach komputerowych?',
+ '["Domain Name System","Digital Network Storage","Data Node Security","Dynamic Number Service"]'::jsonb,0,'medium','DNS to Domain Name System, system tłumaczący nazwy domen na adresy sieciowe.'),
+('jezyk_extra_01','JĘZYK','Który z tych języków należy do rodziny ugrofińskiej?',
+ '["Węgierski","Bułgarski","Grecki","Albański"]'::jsonb,0,'hard','Węgierski należy do uralskiej gałęzi ugrofińskiej.'),
+('muzyka_extra_01','MUZYKA','Ile półtonów obejmuje oktawa w zachodnim systemie równomiernie temperowanym?',
+ '["8","10","12","14"]'::jsonb,2,'medium','Oktawa dzieli się na 12 równych półtonów.'),
+('sport_extra_01','SPORT','Ile punktów jest wart rzut wolny w koszykówce?',
+ '["1","2","3","4"]'::jsonb,0,'medium','Celny rzut wolny daje 1 punkt.'),
+('polska_extra_01','POLSKA','Które miasto leży nad Brdą?',
+ '["Bydgoszcz","Opole","Rzeszów","Siedlce"]'::jsonb,0,'hard','Brda przepływa przez Bydgoszcz i uchodzi do Wisły.'),
+('swiat_extra_01','ŚWIAT','Które państwo ma 3 stolice: Pretorię, Kapsztad i Bloemfontein?',
+ '["Namibia","Republika Południowej Afryki","Botswana","Zimbabwe"]'::jsonb,1,'medium','RPA rozdziela funkcje stołeczne między Pretorię, Kapsztad i Bloemfontein.'),
+('film_extra_01','FILMY','Który film Akiry Kurosawy opowiada o grupie wojowników broniących wioski?',
+ '["Rashomon","Siedmiu samurajów","Ran","Tron we krwi"]'::jsonb,1,'hard','„Siedmiu samurajów” z 1954 roku opowiada o obronie wioski przed bandytami.'),
+('pop_extra_01','POP KULTURA','Jak nazywa się fikcyjne miasto, w którym mieszka Batman?',
+ '["Metropolis","Gotham City","Star City","Central City"]'::jsonb,1,'medium','Batman jest związany z Gotham City.'),
+('jedzenie_extra_01','JEDZENIE','Z jakiego zboża tradycyjnie powstaje włoska polenta?',
+ '["Pszenica","Kukurydza","Żyto","Jęczmień"]'::jsonb,1,'medium','Polenta jest przygotowywana z mąki lub kaszki kukurydzianej.')
+on conflict (question_key) do nothing;
