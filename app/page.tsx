@@ -784,7 +784,8 @@ export default function Home() {
               tags={["kooperacyjna", "escape room", "komunikacja"]}
               accent="cyan"
               art="cipher"
-              status="soon"
+              href="/gry/szyfr"
+              status="new"
             />
 
             <FilteredGameCard filters={filters}
