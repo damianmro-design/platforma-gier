@@ -143,7 +143,7 @@ function MonitoringArt() {
         <rect x="260" y="78" width="164" height="110" rx="8" fill="#070605" stroke={RED} strokeWidth="3" />
         <text x="342" y="122" textAnchor="middle" fill="#d8c6a8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="15">BRAK</text>
         <text x="342" y="148" textAnchor="middle" fill="#d8c6a8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="15">NAGRANIA</text>
-        <text x="342" y="173" textAnchor="middle" fill="#a94a3d" fontFamily="monospace" fontSize="12">07:55 MIN</text>
+        <text x="342" y="173" textAnchor="middle" fill="#a94a3d" fontFamily="monospace" fontSize="12">07:54 MIN</text>
       </g>
       <Stamp x={420} y={466} text="LUKA 22:48–22:56" rotate={-3} />
       <g transform="translate(0 560)">
@@ -155,7 +155,7 @@ function MonitoringArt() {
         <line x1="0" y1="182" x2="684" y2="182" stroke="#876b52" opacity=".45" />
         <SmallText x={0} y={226} bold>PYTANIE ŚLEDCZE</SmallText>
         <text x="0" y="264" fill={RED} fontFamily="Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="24">
-          Kto skorzystał z ośmiu minut ciemności?
+          Kto skorzystał z niemal ośmiu minut ciemności?
         </text>
       </g>
     </EvidenceFrame>
@@ -167,6 +167,8 @@ function DoorLogArt() {
     ["22:47:31", "KARTA 214", "DOSTĘP PRZYJĘTY"],
     ["22:47:36", "DRZWI", "OTWARCIE"],
     ["22:47:40", "DRZWI", "ZAMKNIĘCIE"],
+    ["22:49:32", "OD WEWNĄTRZ", "OTWARCIE"],
+    ["22:49:38", "DRZWI", "ZAMKNIĘCIE"],
     ["22:54:09", "OD WEWNĄTRZ", "OTWARCIE"],
     ["22:54:14", "DRZWI", "ZAMKNIĘCIE"],
     ["23:05:41", "MASTER", "DOSTĘP SERWISOWY"],
@@ -175,7 +177,7 @@ function DoorLogArt() {
     <EvidenceFrame label="Rejestr wejść do apartamentu 214" number="A-02">
       <Title title="REJESTR ZAMKA" subtitle="APARTAMENT 214 · CZYTNIK HN-214" />
       <g transform="translate(0 132)">
-        <rect width="684" height="430" rx="6" fill="#cbb893" stroke="#6e513c" strokeWidth="2" />
+        <rect width="684" height="550" rx="6" fill="#cbb893" stroke="#6e513c" strokeWidth="2" />
         <rect width="684" height="48" fill="#423126" />
         <text x="24" y="31" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="14">CZAS</text>
         <text x="180" y="31" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="14">ŹRÓDŁO</text>
@@ -188,10 +190,10 @@ function DoorLogArt() {
             <text x="420" y="38" fill={index === 3 ? RED : INK} fontFamily="Arial, sans-serif" fontWeight="800" fontSize="15">{row[2]}</text>
           </g>
         ))}
-        <ellipse cx="475" cy="278" rx="185" ry="42" fill="none" stroke={RED} strokeWidth="5" transform="rotate(-2 475 278)" />
+        <ellipse cx="475" cy="400" rx="185" ry="42" fill="none" stroke={RED} strokeWidth="5" transform="rotate(-2 475 400)" />
       </g>
-      <Stamp x={420} y={600} text="WYJŚCIE 22:54" />
-      <g transform="translate(0 700)">
+      <Stamp x={420} y={680} text="WYJŚCIE 22:54" />
+      <g transform="translate(0 790)">
         <SmallText x={0} y={0} bold>UWAGA</SmallText>
         <SmallText x={0} y={42}>O 22:54 drzwi otwarto od środka.</SmallText>
         <SmallText x={0} y={76}>Nie zarejestrowano wtedy użycia żadnej karty.</SmallText>
@@ -225,7 +227,7 @@ function MessageArt({ scheduled = false }: { scheduled?: boolean }) {
         {scheduled && (
           <>
             <rect x="58" y="340" width="328" height="88" rx="12" fill="#17110e" stroke={RED} strokeWidth="2" />
-            <text x="222" y="374" textAnchor="middle" fill="#cda98d" fontFamily="monospace" fontSize="13">UTWORZONO: 22:53:18</text>
+            <text x="222" y="374" textAnchor="middle" fill="#cda98d" fontFamily="monospace" fontSize="13">UTWORZONO: 22:53:41</text>
             <text x="222" y="401" textAnchor="middle" fill="#e97868" fontFamily="monospace" fontWeight="800" fontSize="13">WYŚLIJ O: 23:02:00</text>
           </>
         )}
@@ -274,7 +276,7 @@ function DriveArt() {
 function MirrorArt() {
   return (
     <EvidenceFrame label="Zdjęcie z odbiciem osoby z identyfikatorem prasowym" number="B-02">
-      <Title title="FOTOGRAFIA Z KORYTARZA" subtitle="PLIK DSC_4419 · 22:49:17" />
+      <Title title="FOTOGRAFIA Z KORYTARZA" subtitle="PLIK IMG_8241 · 22:49:27" />
       <g transform="translate(55 128) rotate(2 285 300)">
         <rect width="574" height="620" fill="#e2d6c1" stroke="#7b6550" strokeWidth="3" />
         <rect x="28" y="28" width="518" height="475" fill="#15100d" />
@@ -288,7 +290,7 @@ function MirrorArt() {
           <text x="82" y="136" textAnchor="middle" fill={RED} fontFamily="Arial, sans-serif" fontWeight="900" fontSize="10" transform="rotate(6 82 136)">PRESS</text>
         </g>
         <text x="38" y="555" fill="#4a3529" fontFamily="Georgia, serif" fontStyle="italic" fontSize="23">„odbicie, nie twarz”</text>
-        <text x="520" y="585" textAnchor="end" fill="#6d5543" fontFamily="monospace" fontSize="14">22:49:17</text>
+        <text x="520" y="585" textAnchor="end" fill="#6d5543" fontFamily="monospace" fontSize="14">22:49:27</text>
       </g>
       <Stamp x={412} y={790} text="IDENTYFIKATOR PRASOWY" rotate={-4} />
     </EvidenceFrame>
