@@ -100,6 +100,37 @@ const roundStyles: Record<number, { label: string; glow: string; line: string }>
   },
 };
 
+const ROUND_STARTS = new Set([0, 5, 11, 16]);
+
+const ROUND_INTROS: Record<number, { title: string; copy: string; tip: string }> = {
+  1: {
+    title: "NA TEJ SAMEJ FALI",
+    copy: "Oboje dostajecie to samo pytanie i odpowiadacie niezależnie. Taki sam wybór daje Wam 1 punkt.",
+    tip: "Nie pokazujcie sobie ekranów przed odkryciem odpowiedzi.",
+  },
+  2: {
+    title: "CZYTAM CI W MYŚLACH",
+    copy: "Jedna osoba odpowiada o sobie, druga próbuje przewidzieć jej wybór. Pytania naprzemiennie dotyczą Was obojga.",
+    tip: "Trafne przewidywanie jest warte 2 punkty.",
+  },
+  3: {
+    title: "KTO Z NAS?",
+    copy: "Oboje wskazujecie osobę, która lepiej pasuje do pytania, albo wybieracie „Oboje tak samo”.",
+    tip: "Jeśli wskażecie to samo, zdobywacie 1 punkt.",
+  },
+  4: {
+    title: "TELEPATIA",
+    copy: "Ostatnie 4 pytania. Zasada jest prosta: wybieracie niezależnie i polujecie na ten sam wybór.",
+    tip: "Każda zgodność w finale jest warta aż 3 punkty.",
+  },
+};
+
+function scoreLabel(question: Question) {
+  if (question.type === "predict") return `trafienie +${question.points} pkt`;
+  if (question.type === "final") return `telepatia +${question.points} pkt`;
+  return `zgodność +${question.points} pkt`;
+}
+
 function MiniPerson({
   person,
   active = false,
@@ -148,6 +179,32 @@ function ResultPanel({ game }: { game: Game }) {
   const answerA = labelFor(question.options, result.answerA);
   const answerB = labelFor(question.options, result.answerB);
 
+  let title = result.matched ? "TEN SAM SYGNAŁ!" : "Tym razem inaczej";
+  let copy = result.matched
+    ? `Wspólny wybór daje Wam +${result.points} pkt.`
+    : "Bez punktu, ale za to macie temat do krótkiej dyskusji.";
+
+  if (question.type === "predict" && question.subject) {
+    const subjectIsA = question.subject.id === game.playerA.id;
+    const subjectAnswer = subjectIsA ? answerA : answerB;
+    const prediction = subjectIsA ? answerB : answerA;
+
+    title = result.matched ? "TRAFIONE!" : "NIE TYM RAZEM";
+    copy = result.matched
+      ? `Udało się przewidzieć odpowiedź ${question.subject.name}. +${result.points} pkt.`
+      : `Odpowiedź ${question.subject.name}: „${subjectAnswer}”. Przewidywanie: „${prediction}”.`;
+  } else if (question.type === "who") {
+    title = result.matched ? "ZGODA!" : "MACIE RÓŻNE TYPY";
+    copy = result.matched
+      ? `Oboje wskazaliście: „${answerA}”. +${result.points} pkt.`
+      : "Każde z Was widzi tę sytuację trochę inaczej. Zobaczcie swoje wybory.";
+  } else if (question.type === "final") {
+    title = result.matched ? "TELEPATIA!" : "BLISKO, ALE NIE TO SAMO";
+    copy = result.matched
+      ? `Finałowa zgodność daje Wam +${result.points} pkt.`
+      : "W finale każde z Was poszło w inną stronę.";
+  }
+
   return (
     <section
       className={
@@ -159,36 +216,30 @@ function ResultPanel({ game }: { game: Game }) {
     >
       <div className="text-center">
         <span className="text-4xl">{result.matched ? "♡" : "✦"}</span>
-        <h3 className="mt-3 text-2xl font-black tracking-[-.04em]">
-          {result.matched ? "TEN SAM SYGNAŁ!" : "Tym razem inaczej"}
-        </h3>
-        <p className="mt-2 text-sm text-zinc-400">
-          {result.matched
-            ? `Wspólny wybór daje Wam +${result.points} pkt.`
-            : "Bez punktu, ale za to macie temat do krótkiej dyskusji."}
-        </p>
+        <h3 className="mt-3 text-2xl font-black tracking-[-.04em]">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-zinc-400">{copy}</p>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-pink-200/15 bg-pink-300/[.045] p-4">
           <div className="flex items-center gap-3">
             <PartyPlayAvatar id={game.playerA.avatar} size={44} />
-            <div>
+            <div className="min-w-0">
               <span className="text-[9px] font-black uppercase tracking-[.15em] text-pink-200">
                 {game.playerA.name}
               </span>
-              <strong className="mt-1 block text-sm font-black text-white">{answerA}</strong>
+              <strong className="mt-1 block text-sm font-black leading-5 text-white">{answerA}</strong>
             </div>
           </div>
         </div>
         <div className="rounded-2xl border border-cyan-200/15 bg-cyan-300/[.045] p-4">
           <div className="flex items-center gap-3">
             <PartyPlayAvatar id={game.playerB.avatar} size={44} />
-            <div>
+            <div className="min-w-0">
               <span className="text-[9px] font-black uppercase tracking-[.15em] text-cyan-200">
                 {game.playerB.name}
               </span>
-              <strong className="mt-1 block text-sm font-black text-white">{answerB}</strong>
+              <strong className="mt-1 block text-sm font-black leading-5 text-white">{answerB}</strong>
             </div>
           </div>
         </div>
@@ -205,21 +256,14 @@ function FinalScreen({ game }: { game: Game }) {
   const dash = Math.max(0, Math.min(circumference, (final.percent / 100) * circumference));
 
   return (
-    <div className="mx-auto max-w-3xl py-10 text-center">
+    <div className="mx-auto max-w-3xl py-8 text-center sm:py-10">
       <span className="inline-flex rounded-full border border-pink-300/20 bg-pink-300/10 px-4 py-2 text-[10px] font-black uppercase tracking-[.24em] text-pink-100">
         KONIEC GRY
       </span>
 
       <div className="relative mx-auto mt-8 grid h-40 w-40 place-items-center">
         <svg viewBox="0 0 128 128" className="absolute inset-0 h-full w-full -rotate-90">
-          <circle
-            cx="64"
-            cy="64"
-            r="54"
-            fill="none"
-            stroke="rgba(255,255,255,.08)"
-            strokeWidth="8"
-          />
+          <circle cx="64" cy="64" r="54" fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="8" />
           <circle
             cx="64"
             cy="64"
@@ -240,11 +284,13 @@ function FinalScreen({ game }: { game: Game }) {
           </defs>
         </svg>
         <div>
-          <span className="block text-[10px] font-black uppercase tracking-[.15em] text-zinc-500">
-            WSPÓLNY WYNIK
+          <span className="block text-[9px] font-black uppercase tracking-[.15em] text-zinc-500">
+            SYNCHRONIZACJA
           </span>
-          <strong className="mt-1 block text-4xl font-black">{final.score}</strong>
-          <small className="text-xs font-bold text-zinc-500">z {final.maxScore} pkt</small>
+          <strong className="mt-1 block text-4xl font-black">{final.percent}%</strong>
+          <small className="text-xs font-bold text-zinc-500">
+            {final.score}/{final.maxScore} pkt
+          </small>
         </div>
       </div>
 
@@ -277,10 +323,47 @@ function FinalScreen({ game }: { game: Game }) {
   );
 }
 
+function RoundIntro({
+  round,
+  onClose,
+}: {
+  round: number;
+  onClose: () => void;
+}) {
+  const intro = ROUND_INTROS[round] ?? ROUND_INTROS[1];
+
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#07040d]/92 px-4 backdrop-blur-xl">
+      <div className="w-full max-w-lg rounded-[2rem] border border-white/12 bg-[#120b1d] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,.6)] sm:p-8">
+        <span className="text-[10px] font-black uppercase tracking-[.24em] text-pink-200">
+          RUNDA {round}
+        </span>
+        <h2 className="mt-3 bg-gradient-to-r from-pink-300 via-violet-200 to-cyan-200 bg-clip-text text-3xl font-black tracking-[-.05em] text-transparent">
+          {intro.title}
+        </h2>
+        <p className="mt-5 text-sm leading-7 text-zinc-300">{intro.copy}</p>
+        <div className="mt-5 rounded-2xl border border-cyan-300/12 bg-cyan-300/[.045] px-4 py-3 text-xs font-bold leading-5 text-cyan-100">
+          {intro.tip}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-6 w-full rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black text-white"
+        >
+          {round === 1 ? "Zaczynamy →" : "Dalej →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function GameClient({ code }: { code: string }) {
   const [data, setData] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [revealCountdown, setRevealCountdown] = useState<number | null>(null);
+  const [introRound, setIntroRound] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -293,41 +376,83 @@ export default function GameClient({ code }: { code: string }) {
     }
   }, [code]);
 
+  const send = useCallback(
+    async (body: Record<string, unknown>) => {
+      setBusy(true);
+      setError("");
+
+      try {
+        const response = await fetch(`/api/gra/tylko-my/${code}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          setError(result.error ?? "Coś poszło nie tak.");
+          return false;
+        }
+
+        await load();
+        return true;
+      } catch {
+        setError("Nie udało się połączyć z grą.");
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [code, load],
+  );
+
   useEffect(() => {
     void load();
     const timer = window.setInterval(() => void load(), 1000);
     return () => window.clearInterval(timer);
   }, [load]);
 
-  async function send(body: Record<string, unknown>) {
-    setBusy(true);
-    setError("");
-
-    try {
-      const response = await fetch(`/api/gra/tylko-my/${code}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error ?? "Coś poszło nie tak.");
-        return false;
-      }
-
-      await load();
-      return true;
-    } catch {
-      setError("Nie udało się połączyć z grą.");
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const game = data?.game;
   const question = game?.question ?? null;
+
+  useEffect(() => {
+    setSelectedAnswer(null);
+  }, [game?.questionIndex]);
+
+  useEffect(() => {
+    if (!question || game?.finished) {
+      setIntroRound(null);
+      return;
+    }
+
+    if (ROUND_STARTS.has(game.questionIndex)) {
+      setIntroRound(question.round);
+    }
+  }, [game?.finished, game?.questionIndex, question?.round]);
+
+  useEffect(() => {
+    if (!game?.revealed || game.finished) {
+      setRevealCountdown(null);
+      return;
+    }
+
+    setRevealCountdown(6);
+    const interval = window.setInterval(() => {
+      setRevealCountdown((value) => (value == null ? null : Math.max(0, value - 1)));
+    }, 1000);
+
+    const timer = data?.canAdvance
+      ? window.setTimeout(() => {
+          void send({ action: "next" });
+        }, 6000)
+      : null;
+
+    return () => {
+      window.clearInterval(interval);
+      if (timer != null) window.clearTimeout(timer);
+    };
+  }, [data?.canAdvance, game?.finished, game?.questionIndex, game?.revealed, send]);
+
   const me = data?.role === "player" ? data.player ?? null : null;
   const mePerson =
     game && me
@@ -348,7 +473,7 @@ export default function GameClient({ code }: { code: string }) {
 
     if (data?.role === "host") {
       if (question.type === "predict" && question.subject) {
-        return `TYM RAZEM ODPOWIEDŹ DOTYCZY: ${question.subject.name}`;
+        return `TYM RAZEM PYTANIE DOTYCZY: ${question.subject.name}`;
       }
       return question.eyebrow.toUpperCase();
     }
@@ -358,7 +483,7 @@ export default function GameClient({ code }: { code: string }) {
     if (question.type === "predict" && question.subject) {
       return question.subject.id === mePerson.id
         ? "ODPOWIEDZ O SOBIE"
-        : `JAK ODPOWIE ${question.subject.name.toUpperCase()}?`;
+        : `PRZEWIDŹ ODPOWIEDŹ: ${question.subject.name.toUpperCase()}`;
     }
 
     if (question.type === "who") return "KTO NAJBARDZIEJ PASUJE?";
@@ -387,6 +512,10 @@ export default function GameClient({ code }: { code: string }) {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#090611] text-white">
+      {introRound != null && !game.finished && (
+        <RoundIntro round={introRound} onClose={() => setIntroRound(null)} />
+      )}
+
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(244,114,182,.20),transparent_27%),radial-gradient(circle_at_88%_15%,rgba(34,211,238,.16),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(139,92,246,.14),transparent_32%)]" />
       <div className="pointer-events-none fixed inset-0 opacity-[.12] [background-image:linear-gradient(rgba(255,255,255,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.045)_1px,transparent_1px)] [background-size:48px_48px]" />
 
@@ -423,12 +552,12 @@ export default function GameClient({ code }: { code: string }) {
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-9">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-9">
         {game.finished ? (
           <FinalScreen game={game} />
         ) : question ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
               <MiniPerson
                 person={game.playerA}
                 active={mePerson?.id === game.playerA.id}
@@ -441,27 +570,15 @@ export default function GameClient({ code }: { code: string }) {
               />
             </div>
 
-            <section
-              className={
-                "relative mt-5 overflow-hidden rounded-[2rem] border border-white/10 bg-[#100b1b]/88 p-5 shadow-[0_28px_90px_rgba(0,0,0,.36)] backdrop-blur-xl sm:p-8"
-              }
-            >
-              <div
-                className={
-                  "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-80 " + style.glow
-                }
-              />
+            <section className="relative mt-4 overflow-hidden rounded-[1.7rem] border border-white/10 bg-[#100b1b]/88 p-4 shadow-[0_28px_90px_rgba(0,0,0,.36)] backdrop-blur-xl sm:mt-5 sm:rounded-[2rem] sm:p-8">
+              <div className={"pointer-events-none absolute inset-0 bg-gradient-to-br opacity-80 " + style.glow} />
               <div className="pointer-events-none absolute left-[8%] top-[18%] h-32 w-32 rounded-full border border-pink-200/10" />
               <div className="pointer-events-none absolute bottom-[12%] right-[7%] h-36 w-36 rounded-full border border-cyan-200/10" />
 
               <div className="relative z-10">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <span
-                      className={
-                        "text-[9px] font-black uppercase tracking-[.22em] " + style.label
-                      }
-                    >
+                    <span className={"text-[9px] font-black uppercase tracking-[.22em] " + style.label}>
                       RUNDA {question.round} · {question.roundLabel}
                     </span>
                     <p className="mt-1 text-[10px] font-bold text-zinc-600">
@@ -469,15 +586,15 @@ export default function GameClient({ code }: { code: string }) {
                     </p>
                   </div>
                   <span className="rounded-full border border-white/10 bg-black/20 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-zinc-400">
-                    zgodność +{question.points} {question.points === 1 ? "pkt" : "pkt"}
+                    {scoreLabel(question)}
                   </span>
                 </div>
 
-                <div className="mx-auto mt-9 max-w-3xl text-center">
+                <div className="mx-auto mt-7 max-w-3xl text-center sm:mt-9">
                   <p className={"text-[10px] font-black uppercase tracking-[.25em] " + style.label}>
                     {instruction}
                   </p>
-                  <h1 className="mt-4 text-3xl font-black leading-tight tracking-[-.045em] sm:text-4xl">
+                  <h1 className="mt-3 text-2xl font-black leading-tight tracking-[-.045em] sm:mt-4 sm:text-4xl">
                     {question.prompt}
                   </h1>
                   {question.type === "predict" && question.subject && (
@@ -487,9 +604,7 @@ export default function GameClient({ code }: { code: string }) {
                         <span className="block text-[8px] font-black uppercase tracking-[.15em] text-zinc-600">
                           PYTANIE DOTYCZY
                         </span>
-                        <strong className="mt-0.5 block text-sm font-black">
-                          {question.subject.name}
-                        </strong>
+                        <strong className="mt-0.5 block text-sm font-black">{question.subject.name}</strong>
                       </div>
                     </div>
                   )}
@@ -497,26 +612,22 @@ export default function GameClient({ code }: { code: string }) {
 
                 {!game.revealed && data.role === "player" ? (
                   <>
-                    <div className="mx-auto mt-8 grid max-w-3xl gap-3 sm:grid-cols-2">
+                    <div className="mx-auto mt-7 grid max-w-3xl gap-2.5 sm:mt-8 sm:grid-cols-2 sm:gap-3">
                       {question.options.map((option, index) => {
-                        const selected = game.viewerAnswer === option.value;
+                        const selected = selectedAnswer === option.value;
+                        const locked = Boolean(game.viewerAnswer);
+
                         return (
                           <button
                             key={option.value}
                             type="button"
-                            disabled={busy || Boolean(game.viewerAnswer)}
-                            onClick={() =>
-                              void send({
-                                action: "answer",
-                                questionIndex: game.questionIndex,
-                                answer: option.value,
-                              })
-                            }
+                            disabled={busy || locked}
+                            onClick={() => setSelectedAnswer(option.value)}
                             className={
-                              "group flex min-h-[78px] items-center rounded-2xl border px-4 py-4 text-left transition " +
-                              (selected
+                              "group flex min-h-[70px] items-center rounded-2xl border px-4 py-3.5 text-left transition sm:min-h-[78px] sm:py-4 " +
+                              (selected || game.viewerAnswer === option.value
                                 ? "border-cyan-200/50 bg-cyan-300/[.12] text-white shadow-[0_0_34px_rgba(34,211,238,.10)]"
-                                : game.viewerAnswer
+                                : locked
                                   ? "border-white/7 bg-white/[.018] text-zinc-600"
                                   : "border-white/10 bg-white/[.04] text-zinc-200 hover:-translate-y-0.5 hover:border-pink-200/30 hover:bg-white/[.07]")
                             }
@@ -530,15 +641,36 @@ export default function GameClient({ code }: { code: string }) {
                       })}
                     </div>
 
+                    {!game.viewerAnswer && (
+                      <div className="mx-auto mt-4 max-w-3xl">
+                        <button
+                          type="button"
+                          disabled={!selectedAnswer || busy}
+                          onClick={() =>
+                            selectedAnswer &&
+                            void send({
+                              action: "answer",
+                              questionIndex: game.questionIndex,
+                              answer: selectedAnswer,
+                            })
+                          }
+                          className="w-full rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black text-white shadow-[0_16px_40px_rgba(236,72,153,.16)] transition disabled:cursor-not-allowed disabled:opacity-35"
+                        >
+                          {busy ? "Zapisuję…" : "Zatwierdź odpowiedź"}
+                        </button>
+                        <p className="mt-2 text-center text-[10px] font-bold text-zinc-600">
+                          Możesz zmienić wybór, dopóki go nie zatwierdzisz.
+                        </p>
+                      </div>
+                    )}
+
                     {game.viewerAnswer && (
-                      <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-emerald-300/15 bg-emerald-300/[.045] p-4 text-center">
-                        <strong className="text-sm font-black text-emerald-200">
-                          ✓ Odpowiedź zapisana
-                        </strong>
+                      <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-emerald-300/15 bg-emerald-300/[.045] p-4 text-center">
+                        <strong className="text-sm font-black text-emerald-200">✓ Odpowiedź zatwierdzona</strong>
                         <p className="mt-1 text-xs leading-5 text-zinc-500">
                           {game.answerCount < 2
-                            ? `Czekamy jeszcze na ${otherPerson?.name ?? "drugą osobę"}. Niczego nie podglądamy.`
-                            : "Obie odpowiedzi są gotowe. Za chwilę je odkrywamy."}
+                            ? `Czekamy na ${otherPerson?.name ?? "drugą osobę"}. Odpowiedzi pozostają ukryte.`
+                            : "Obie odpowiedzi są gotowe. Odkrywamy wynik."}
                         </p>
                       </div>
                     )}
@@ -578,24 +710,28 @@ export default function GameClient({ code }: { code: string }) {
                 ) : null}
 
                 {game.revealed && (
-                  <div className="mx-auto mt-8 max-w-3xl">
+                  <div className="mx-auto mt-7 max-w-3xl sm:mt-8">
                     <ResultPanel game={game} />
 
-                    {data.canAdvance ? (
+                    <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] px-4 py-3 text-center">
+                      <span className="text-xs font-bold text-zinc-400">
+                        {game.questionIndex + 1 >= game.questionCount
+                          ? `Wynik końcowy za ${revealCountdown ?? 0} s`
+                          : `Następne pytanie za ${revealCountdown ?? 0} s`}
+                      </span>
+                    </div>
+
+                    {data.canAdvance && (
                       <button
                         type="button"
                         disabled={busy}
                         onClick={() => void send({ action: "next" })}
-                        className="mt-4 w-full rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black text-white shadow-[0_18px_45px_rgba(236,72,153,.18)] transition hover:brightness-110 disabled:opacity-50"
+                        className="mt-2 w-full rounded-2xl border border-pink-300/18 bg-pink-300/[.06] px-6 py-3.5 text-xs font-black text-pink-100 transition hover:bg-pink-300/[.1] disabled:opacity-50"
                       >
                         {game.questionIndex + 1 >= game.questionCount
-                          ? "Pokaż wynik końcowy →"
-                          : "Następne pytanie →"}
+                          ? "Pokaż wynik teraz →"
+                          : "Dalej teraz →"}
                       </button>
-                    ) : (
-                      <div className="mt-4 rounded-2xl border border-white/8 bg-white/[.025] px-4 py-4 text-center text-xs font-bold text-zinc-500">
-                        Odpowiedzi odkryte. Za chwilę przechodzicie dalej.
-                      </div>
                     )}
                   </div>
                 )}
@@ -608,8 +744,8 @@ export default function GameClient({ code }: { code: string }) {
               </div>
             </section>
 
-            <p className="mt-5 text-center text-[10px] font-bold leading-5 text-zinc-700">
-              Odpowiadajcie osobno. Rozbieżność nie jest porażką, tylko częścią zabawy.
+            <p className="mt-4 text-center text-[10px] font-bold leading-5 text-zinc-700 sm:mt-5">
+              Gracie tylko na swoich telefonach. Nie pokazujcie odpowiedzi przed ich odkryciem.
             </p>
           </>
         ) : (
