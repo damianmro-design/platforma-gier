@@ -2262,14 +2262,14 @@ function EvidenceCards({
               <button
                 type="button"
                 onClick={() => setPreview(item)}
-                className="group relative mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
+                className="group mt-5 block w-full overflow-hidden rounded-2xl border border-orange-100/10 bg-black/35 text-left shadow-[0_16px_50px_rgba(0,0,0,.32)]"
               >
                 <AktaNocyEvidenceArtwork
                   id={item.id}
                   className="transition duration-300 group-hover:scale-[1.008]"
                 />
-                <span className="absolute bottom-3 right-3 rounded-full border border-orange-100/15 bg-black/75 px-3 py-1.5 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/80 backdrop-blur">
-                  powiększ dokument
+                <span className="flex items-center justify-end border-t border-orange-100/10 bg-black/45 px-4 py-3 text-[9px] font-black uppercase tracking-[.15em] text-orange-50/70">
+                  powiększ dokument ↗
                 </span>
               </button>
 
