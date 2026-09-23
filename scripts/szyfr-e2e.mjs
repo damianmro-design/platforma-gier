@@ -125,7 +125,8 @@ function watch(page, label) {
     if (message.type() === "error") {
       const text = message.text();
       if (!text.includes("favicon") && !text.includes("qrserver")) {
-        errors.push(`${label} console: ${text}`);
+        const location = message.location();
+        errors.push(`${label} console: ${text} @ ${location.url || "unknown"}:${location.lineNumber || 0}`);
       }
     }
   });
