@@ -577,8 +577,10 @@ function Intro() {
   const rules = [
     ["01", "Najpierw kategoria", "Nie zobaczysz pytania przed licytacją."],
     ["02", "Licytuj ryzyko", "W zwykłej rundzie możesz postawić maksymalnie 50% kapitału albo wybrać PAS."],
-    ["03", "Wygrywasz albo tracisz", "Dobra odpowiedź dodaje stawkę. Zła odejmuje ją od Twojego kapitału."],
+    ["03", "Wygrywasz albo tracisz", "Dobra odpowiedź dodaje stawkę. Zła ją odejmuje, ale przed finałem zawsze zostaje Ci co najmniej 100 pkt."],
     ["04", "Przejmuj błędy", "Gdy ktoś odpowie źle, pierwszy z pozostałych graczy może przejąć pytanie, zwykle za połowę poprzedniej stawki."],
+    ["05", "Remis? Dogrywka", "Gracze z najwyższą równą stawką mogą jeszcze podbić albo spasować. Jeśli nadal jest remis, rozstrzyga serwer."],
+    ["06", "Finał bez limitu", "Na końcu każdy może postawić od 0 do 100% swojego kapitału. VA BANQUE oznacza wszystko."],
   ];
 
   return (
@@ -595,7 +597,7 @@ function Intro() {
         ))}
       </div>
       <div className="mt-5 rounded-2xl border border-amber-300/20 bg-gradient-to-r from-amber-300/10 to-orange-500/[.05] p-4 text-center">
-        <strong className="text-sm font-black text-amber-100">W finale możesz postawić wszystko. Dosłownie.</strong>
+        <strong className="text-sm font-black text-amber-100">Każdy wybór jest prywatny. W finale możesz postawić wszystko. Dosłownie.</strong>
       </div>
     </div>
   );
