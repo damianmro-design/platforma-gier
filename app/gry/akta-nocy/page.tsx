@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
+import {
+  OSTATNI_KURS_CASE,
+  OSTATNI_KURS_PHASES,
+} from "@/lib/akta-nocy-ostatni-kurs";
 import { createRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 import AktaNocyCoverArtwork from "@/components/akta-nocy-cover-artwork";
+import {
+  OstatniKursCover,
+  OstatniKursTrainMap,
+} from "@/components/akta-nocy-ostatni-kurs-artwork";
 
 export const metadata: Metadata = {
   title: "Akta Nocy — zaGRAj",
   description:
-    "Interaktywna gra śledcza: role, sekrety, dowody, przesłuchania i rekonstrukcja zbrodni.",
+    "Interaktywna gra śledcza: fikcyjne sprawy, tajne role, dowody, rekonstrukcje i tryb z prowadzącym lub bez.",
 };
 
 const firstCase = AKTA_NOCY_CASES[0];
@@ -56,7 +64,7 @@ export default function AktaNocyPage() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold text-orange-50/70">
-              {["👥 5–12 graczy", "⏱ 75–105 min", "🔎 dedukcja", "🎭 tajne role", "📁 fabularna", "🎤 wymagany prowadzący"].map((item) => (
+              {["👥 5–12 graczy", "⏱ 75–115 min", "🔎 dedukcja", "🎭 tajne role", "📁 różne sprawy", "🤖 tryb bez prowadzącego"].map((item) => (
                 <span key={item} className="rounded-full border border-orange-100/10 bg-black/20 px-3 py-2">
                   {item}
                 </span>
@@ -64,23 +72,19 @@ export default function AktaNocyPage() {
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <form action={createRoom}>
-                <input type="hidden" name="gameSlug" value="akta-nocy" />
-                <button
-                  type="submit"
-                  className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_18px_55px_rgba(153,27,27,.22)] transition hover:brightness-110 sm:w-auto"
-                >
-                  Utwórz pokój · sprawa #001
-                </button>
-              </form>
               <a
-                href="#przebieg"
+                href="#sprawy"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-6 py-4 text-sm font-black text-white shadow-[0_18px_55px_rgba(153,27,27,.22)] transition hover:brightness-110 sm:w-auto"
+              >
+                Wybierz sprawę
+              </a>
+              <a
+                href="#jak-to-dziala"
                 className="inline-flex items-center justify-center rounded-2xl border border-orange-100/12 bg-white/[.035] px-6 py-4 text-sm font-black text-orange-50/80 transition hover:bg-white/[.07]"
               >
-                Jak wygląda rozgrywka
+                Jak to działa
               </a>
             </div>
-            <TestGameButton gameSlug="akta-nocy" className="mt-4" />
           </div>
 
           <div className="relative">
@@ -134,6 +138,128 @@ export default function AktaNocyPage() {
           </div>
         </section>
 
+        <section id="sprawy" className="border-y border-orange-100/8 bg-[#090707]">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">
+            <div className="max-w-3xl">
+              <p className="text-[10px] font-black uppercase tracking-[.28em] text-orange-300/65">
+                Wybierz sprawę
+              </p>
+              <h2 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">
+                Każda noc opowiada inną historię
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-orange-50/50">
+                Sprawy korzystają z tego samego systemu prywatnych akt, ale mają
+                własne role, dowody, mechaniki i rozwiązania. Nie trzeba nic drukować.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-6 xl:grid-cols-2">
+              <article className="rounded-[2rem] border border-orange-200/12 bg-[#140b08] p-5 shadow-[0_24px_70px_rgba(0,0,0,.35)] sm:p-7">
+                <AktaNocyCoverArtwork />
+                <div className="mt-6">
+                  <span className="text-[9px] font-black uppercase tracking-[.24em] text-red-300">SPRAWA #001</span>
+                  <h3 className="mt-2 font-serif text-3xl font-black">Apartament 214</h3>
+                  <p className="mt-3 text-sm leading-7 text-orange-50/50">
+                    Hotel, zaginiony pendrive, luka monitoringu i wiadomość wysłana po śmierci.
+                    Klasyczne śledztwo prowadzone przez jedną osobę.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-black">
+                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 osób</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">75–105 min</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">z prowadzącym</span>
+                  </div>
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <form action={createRoom}>
+                      <input type="hidden" name="gameSlug" value="akta-nocy" />
+                      <input type="hidden" name="aktaCase" value="apartament-214" />
+                      <input type="hidden" name="aktaMode" value="host" />
+                      <button type="submit" className="w-full rounded-xl bg-gradient-to-r from-red-700 to-orange-600 px-5 py-3.5 text-xs font-black text-white">
+                        UTWÓRZ POKÓJ
+                      </button>
+                    </form>
+                    <TestGameButton gameSlug="akta-nocy" aktaCase="apartament-214" aktaMode="host" label="Test #001" />
+                  </div>
+                </div>
+              </article>
+
+              <article className="rounded-[2rem] border border-slate-300/12 bg-[#07101a] p-5 shadow-[0_24px_70px_rgba(0,0,0,.4)] sm:p-7">
+                <OstatniKursCover />
+                <div className="mt-6">
+                  <span className="text-[9px] font-black uppercase tracking-[.24em] text-amber-300/70">SPRAWA #002 · NOWA</span>
+                  <h3 className="mt-2 font-serif text-3xl font-black">Ostatni Kurs</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-400">
+                    Pasażer znika z nocnego pociągu. Telefon i bagaż zostają w przedziale,
+                    a głównym narzędziem dedukcji staje się interaktywna mapa składu.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-black text-slate-300">
+                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 osób</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">85–115 min</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">z prowadzącym lub bez</span>
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <form action={createRoom}>
+                      <input type="hidden" name="gameSlug" value="akta-nocy" />
+                      <input type="hidden" name="aktaCase" value="ostatni-kurs" />
+                      <input type="hidden" name="aktaMode" value="host" />
+                      <button type="submit" className="w-full rounded-xl bg-gradient-to-r from-red-800 to-amber-700 px-5 py-3.5 text-xs font-black text-white">
+                        Z PROWADZĄCYM
+                      </button>
+                    </form>
+                    <form action={createRoom}>
+                      <input type="hidden" name="gameSlug" value="akta-nocy" />
+                      <input type="hidden" name="aktaCase" value="ostatni-kurs" />
+                      <input type="hidden" name="aktaMode" value="auto" />
+                      <button type="submit" className="w-full rounded-xl border border-amber-300/20 bg-amber-300/[.07] px-5 py-3.5 text-xs font-black text-amber-100">
+                        BEZ PROWADZĄCEGO
+                      </button>
+                    </form>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <TestGameButton gameSlug="akta-nocy" aktaCase="ostatni-kurs" aktaMode="host" label="Test z prowadzącym" />
+                    <TestGameButton gameSlug="akta-nocy" aktaCase="ostatni-kurs" aktaMode="auto" label="Test bez prowadzącego" />
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section id="jak-to-dziala" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
+          <div className="grid gap-5 lg:grid-cols-4">
+            {[
+              ["1", "Każdy ma telefon", "Prywatne akta, sekrety i odpowiedzi nigdy nie muszą być drukowane."],
+              ["2", "Wybieracie tryb", "W Ostatnim Kursie może prowadzić jedna osoba albo system może prowadzić wszystkich automatycznie."],
+              ["3", "Rozmawiacie naprawdę", "Aplikacja daje fakty i pytania, ale śledztwo odbywa się między Wami przy jednym stole."],
+              ["4", "Oskarżacie prywatnie", "Na końcu każdy wskazuje osobę, motyw, sposób i kluczowy dowód, zanim prawda zostanie ujawniona."],
+            ].map(([no,title,copy])=>(
+              <article key={no} className="rounded-2xl border border-orange-100/9 bg-white/[.02] p-5">
+                <span className="text-2xl font-black text-red-300/70">{no}</span>
+                <h3 className="mt-3 text-lg font-black">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-orange-50/45">{copy}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-6 rounded-2xl border border-emerald-300/10 bg-emerald-300/[.035] p-5 text-sm leading-7 text-orange-50/55">
+            <strong className="text-orange-50">Czego potrzebujecie:</strong> 5–12 osób i po jednym telefonie na gracza.
+            Wspólny ekran jest opcjonalny. Nie trzeba nic drukować ani instalować.
+          </div>
+        </section>
+
+        <section id="sprawa-002" className="border-y border-slate-200/8 bg-[#060b11]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[.9fr_1.1fr] lg:py-20">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[.28em] text-amber-300/70">Sprawa #002</p>
+              <h2 className="mt-3 font-serif text-4xl font-black sm:text-5xl">Ostatni Kurs</h2>
+              <p className="mt-3 text-sm text-slate-500">{OSTATNI_KURS_CASE.train}</p>
+              <p className="mt-5 text-base leading-7 text-slate-300">{OSTATNI_KURS_CASE.premise}</p>
+              <p className="mt-5 border-l-2 border-red-500/55 pl-5 font-serif text-lg italic text-slate-400">„{OSTATNI_KURS_CASE.hook}”</p>
+            </div>
+            <div>
+              <OstatniKursTrainMap />
+            </div>
+          </div>
+        </section>
+
         <section id="sprawa-001" className="border-y border-orange-100/8 bg-white/[.018]">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-[.7fr_1.3fr] lg:py-20">
             <div>
@@ -176,7 +302,8 @@ export default function AktaNocyPage() {
             </h2>
             <p className="mt-4 text-sm leading-7 text-orange-50/50">
               Telefon pokazuje wyłącznie prywatne informacje danej postaci.
-              Wspólny ekran prowadzi fabułę, ujawnia dowody i pilnuje kolejności.
+              W trybie z prowadzącym jedna osoba steruje etapami. W trybie automatycznym
+              gracze klikają „Gotowy”, a system sam odsłania kolejne części śledztwa.
             </p>
           </div>
 
@@ -193,6 +320,18 @@ export default function AktaNocyPage() {
                 <p className="mt-2 text-sm leading-6 text-orange-50/45">{phase.copy}</p>
               </article>
             ))}
+          </div>
+          <div className="mt-14">
+            <p className="text-[10px] font-black uppercase tracking-[.25em] text-amber-300/65">Ostatni Kurs · 11 etapów</p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {OSTATNI_KURS_PHASES.map((phase) => (
+                <article key={phase.no} className="rounded-2xl border border-slate-200/9 bg-[#08101a] p-5">
+                  <span className="text-[10px] font-black tracking-[.28em] text-amber-300/70">{phase.no}</span>
+                  <h3 className="mt-2 text-lg font-black text-slate-100">{phase.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">{phase.copy}</p>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
