@@ -177,29 +177,29 @@ function DoorLogArt() {
     <EvidenceFrame label="Rejestr wejść do apartamentu 214" number="A-02">
       <Title title="REJESTR ZAMKA" subtitle="APARTAMENT 214 · CZYTNIK HN-214" />
       <g transform="translate(0 132)">
-        <rect width="684" height="550" rx="6" fill="#cbb893" stroke="#6e513c" strokeWidth="2" />
-        <rect width="684" height="48" fill="#423126" />
-        <text x="24" y="31" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="14">CZAS</text>
-        <text x="180" y="31" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="14">ŹRÓDŁO</text>
-        <text x="420" y="31" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="14">ZDARZENIE</text>
+        <rect width="684" height="420" rx="6" fill="#cbb893" stroke="#6e513c" strokeWidth="2" />
+        <rect width="684" height="42" fill="#423126" />
+        <text x="24" y="27" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="13">CZAS</text>
+        <text x="180" y="27" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="13">ŹRÓDŁO</text>
+        <text x="420" y="27" fill="#ead9b8" fontFamily="Arial, sans-serif" fontWeight="800" fontSize="13">ZDARZENIE</text>
         {rows.map((row, index) => (
-          <g key={row[0]} transform={`translate(0 ${48 + index * 61})`}>
-            <rect width="684" height="61" fill={index === 3 ? "#cda991" : index % 2 ? "#d7c5a4" : "#dfcfaf"} />
-            <text x="24" y="38" fill={INK} fontFamily="monospace" fontWeight="700" fontSize="18">{row[0]}</text>
-            <text x="180" y="38" fill={INK} fontFamily="Arial, sans-serif" fontWeight="700" fontSize="16">{row[1]}</text>
-            <text x="420" y="38" fill={index === 3 ? RED : INK} fontFamily="Arial, sans-serif" fontWeight="800" fontSize="15">{row[2]}</text>
+          <g key={row[0]} transform={`translate(0 ${42 + index * 46})`}>
+            <rect width="684" height="46" fill={index === 3 || index === 5 ? "#cda991" : index % 2 ? "#d7c5a4" : "#dfcfaf"} />
+            <text x="24" y="30" fill={INK} fontFamily="monospace" fontWeight="700" fontSize="16">{row[0]}</text>
+            <text x="180" y="30" fill={INK} fontFamily="Arial, sans-serif" fontWeight="700" fontSize="14">{row[1]}</text>
+            <text x="420" y="30" fill={index === 3 || index === 5 ? RED : INK} fontFamily="Arial, sans-serif" fontWeight="800" fontSize="13">{row[2]}</text>
           </g>
         ))}
-        <ellipse cx="475" cy="400" rx="185" ry="42" fill="none" stroke={RED} strokeWidth="5" transform="rotate(-2 475 400)" />
+        <ellipse cx="475" cy="295" rx="185" ry="31" fill="none" stroke={RED} strokeWidth="5" transform="rotate(-2 475 295)" />
       </g>
-      <Stamp x={420} y={680} text="WYJŚCIE 22:54" />
-      <g transform="translate(0 790)">
+      <Stamp x={420} y={580} text="WYJŚCIE 22:54" />
+      <g transform="translate(0 675)">
         <SmallText x={0} y={0} bold>UWAGA</SmallText>
-        <SmallText x={0} y={42}>O 22:54 drzwi otwarto od środka.</SmallText>
-        <SmallText x={0} y={76}>Nie zarejestrowano wtedy użycia żadnej karty.</SmallText>
+        <SmallText x={0} y={42}>O 22:49 i 22:54 drzwi otwarto od środka.</SmallText>
+        <SmallText x={0} y={76}>W obu przypadkach nie zarejestrowano użycia karty.</SmallText>
         <line x1="0" y1="122" x2="684" y2="122" stroke="#876b52" opacity=".45" />
-        <text x="0" y="180" fill={RED} fontFamily="Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="24">
-          Kto wyszedł z pokoju o 22:54?
+        <text x="0" y="180" fill={RED} fontFamily="Georgia, serif" fontStyle="italic" fontWeight="700" fontSize="21">
+          Kogo wpuszczono o 22:49 i kto wyszedł o 22:54?
         </text>
       </g>
     </EvidenceFrame>
