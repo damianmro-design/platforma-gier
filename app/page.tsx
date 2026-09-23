@@ -759,10 +759,10 @@ export default function Home() {
               categories={["funny"]}
               moods={["laugh", "cooperate"]}
               eyebrow="Gra dla 2 osób"
-              description="Sprawdźcie, jak dobrze się znacie. Przewidujcie swoje wybory, szukajcie zgodności i polujcie na momenty telepatii."
+              description="Gra dla 2 osób na 2 telefonach. Przewidujcie swoje wybory, szukajcie zgodności i sprawdzajcie momenty telepatii, bez wspólnego ekranu."
               players="2 graczy"
               time="20–30 min"
-              tags={["dla dwojga", "relacyjna", "telepatia"]}
+              tags={["dla dwojga", "2 telefony", "telepatia"]}
               accent="pink"
               art="duo"
               href="/gry/tylko-my"
