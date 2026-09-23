@@ -802,7 +802,8 @@ export default function Home() {
               tags={["licytacja", "quiz", "ryzyko"]}
               accent="gold"
               art="auction"
-              status="soon"
+              href="/gry/va-banque"
+              status="new"
             />
 
           </div>
