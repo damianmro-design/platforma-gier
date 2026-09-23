@@ -170,12 +170,11 @@ try {
     agent.waitForURL(new RegExp(`/gra/szyfr/${code}$`)),
   ]);
 
-  let state = (await apiState(host, code)).body.game;
+  let state = await waitForGameState(host, code, (g) => g.phase === "tutorial", "host tutorial state");
   state.roomCode = code;
-  assert(state.phase === "tutorial", "Game did not start in tutorial");
   assert(state.puzzle.privateClues.length === 3, "2-player tutorial should give host 3 clues");
 
-  const agentTutorial = (await apiState(agent, code)).body.game;
+  const agentTutorial = await waitForGameState(agent, code, (g) => g.phase === "tutorial", "agent tutorial state");
   assert(agentTutorial.puzzle.privateClues.length === 3, "2-player tutorial should give agent 3 clues");
   assert(
     new Set([...state.puzzle.privateClues, ...agentTutorial.puzzle.privateClues]).size === 6,
