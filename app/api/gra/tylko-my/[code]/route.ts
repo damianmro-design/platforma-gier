@@ -9,9 +9,9 @@ import {
 } from "@/lib/tylko-my-db";
 import {
   TYLKO_MY_MAX_SCORE,
-  TYLKO_MY_QUESTIONS,
+  TYLKO_MY_QUESTION_COUNT,
   getTylkoMyFinalCopy,
-  getTylkoMyQuestion,
+  getTylkoMyQuestionForRoom,
   type TmOption,
   type TmQuestion,
 } from "@/lib/tylko-my";
@@ -56,7 +56,7 @@ function resultFor(question: TmQuestion | null, state: TmDbState) {
 }
 
 function serializeState(state: TmDbState) {
-  const question = getTylkoMyQuestion(state.question_index);
+  const question = getTylkoMyQuestionForRoom(code, state.question_index);
   const options = optionsFor(question, state);
   const result = resultFor(question, state);
   const subject =
@@ -85,7 +85,7 @@ function serializeState(state: TmDbState) {
 
   return {
     questionIndex: state.question_index,
-    questionCount: TYLKO_MY_QUESTIONS.length,
+    questionCount: TYLKO_MY_QUESTION_COUNT,
     score: state.score,
     projectedScore: state.score + (result?.points ?? 0),
     finished: state.finished,
@@ -211,7 +211,7 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Gra nie jest aktywna." }, { status: 400 });
       }
 
-      const question = getTylkoMyQuestion(state.question_index);
+      const question = getTylkoMyQuestionForRoom(code, state.question_index);
       if (!question) {
         return NextResponse.json({ error: "Nie znaleziono pytania." }, { status: 400 });
       }
@@ -245,7 +245,7 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: "Gra nie jest aktywna." }, { status: 400 });
       }
 
-      const question = getTylkoMyQuestion(state.question_index);
+      const question = getTylkoMyQuestionForRoom(code, state.question_index);
       const result = resultFor(question, state);
 
       if (!question || !result) {
@@ -257,7 +257,7 @@ export async function POST(request: Request, context: RouteContext) {
         hostToken,
         state.question_index,
         result.points,
-        TYLKO_MY_QUESTIONS.length,
+        TYLKO_MY_QUESTION_COUNT,
       );
 
       return NextResponse.json({ ok: true, questionIndex: nextIndex });
