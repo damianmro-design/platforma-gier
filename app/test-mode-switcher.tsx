@@ -28,6 +28,12 @@ export default function TestModeSwitcher() {
       return;
     }
     const data = await response.json();
+    if (data?.enabled === false || data?.ok === false) {
+      setEnabled(false);
+      setPlayers([]);
+      setView("host");
+      return;
+    }
     setEnabled(true);
     setPlayers(data.players ?? []);
     setView(data.view ?? "host");
