@@ -1730,3 +1730,218 @@ export async function runAktaNocyTestBots(
   if (error) throw new Error(error.message);
   return String(data ?? "idle");
 }
+
+
+export type AktaNocyRoomConfig = {
+  case_key: "apartament-214" | "ostatni-kurs";
+  play_mode: "host" | "auto";
+};
+
+export async function configureAktaNocyRoom(
+  code: string,
+  hostToken: string,
+  caseKey: AktaNocyRoomConfig["case_key"],
+  playMode: AktaNocyRoomConfig["play_mode"],
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("configure_akta_nocy_room", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_case_key: caseKey,
+    p_play_mode: playMode,
+  });
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function getAktaNocyRoomConfig(code: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_room_config", {
+    p_code: code,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as AktaNocyRoomConfig | null;
+}
+
+export type AktaNocyOkReadyProgress = {
+  total_players: number;
+  ready_players: number;
+  player_ready: boolean;
+};
+
+export async function getAktaNocyOkReadyProgress(
+  code: string,
+  sessionToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("get_akta_nocy_ok_ready_progress", {
+    p_code: code,
+    p_session_token: sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    total_players: Number(row.total_players ?? 0),
+    ready_players: Number(row.ready_players ?? 0),
+    player_ready: Boolean(row.player_ready),
+  } as AktaNocyOkReadyProgress;
+}
+
+export async function markAktaNocyOkReady(code: string, playerToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("mark_akta_nocy_ok_ready", {
+    p_code: code,
+    p_player_token: playerToken,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
+export async function advanceAktaNocyOkPhase(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("advance_akta_nocy_ok_phase", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? null) as string | null;
+}
+
+export type AktaNocyOkReconstruction = {
+  event_order: string[];
+  route: string[];
+  submitted_at?: string;
+};
+
+export async function submitAktaNocyOkReconstruction(
+  code: string,
+  playerToken: string,
+  eventOrder: string[],
+  route: string[],
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_akta_nocy_ok_reconstruction", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_event_order: eventOrder,
+    p_route: route,
+  });
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function getAktaNocyOkReconstructionPlayer(
+  code: string,
+  playerToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_reconstruction_player",
+    { p_code: code, p_player_token: playerToken },
+  );
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as AktaNocyOkReconstruction | null;
+}
+
+export type AktaNocyOkReconstructionHostRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  event_order: string[];
+  route: string[];
+};
+
+export async function getAktaNocyOkReconstructionHost(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_reconstruction_host",
+    { p_code: code, p_host_token: hostToken },
+  );
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyOkReconstructionHostRow[];
+}
+
+export type AktaNocyOkAccusation = {
+  suspect_player_id: string;
+  motive_key: string;
+  evidence_id: string;
+  disappearance_key: string;
+  submitted_at?: string;
+};
+
+export async function submitAktaNocyOkAccusation(
+  code: string,
+  playerToken: string,
+  suspectPlayerId: string,
+  motiveKey: string,
+  evidenceId: string,
+  disappearanceKey: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("submit_akta_nocy_ok_accusation", {
+    p_code: code,
+    p_player_token: playerToken,
+    p_suspect_player_id: suspectPlayerId,
+    p_motive_key: motiveKey,
+    p_evidence_id: evidenceId,
+    p_disappearance_key: disappearanceKey,
+  });
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function getAktaNocyOkAccusationPlayer(
+  code: string,
+  playerToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_accusation_player",
+    { p_code: code, p_player_token: playerToken },
+  );
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as AktaNocyOkAccusation | null;
+}
+
+export type AktaNocyOkAccusationResultRow = {
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  suspect_player_id: string;
+  motive_key: string;
+  evidence_id: string;
+  disappearance_key: string;
+};
+
+export async function getAktaNocyOkAccusationResults(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc(
+    "get_akta_nocy_ok_accusation_results",
+    { p_code: code, p_host_token: hostToken },
+  );
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AktaNocyOkAccusationResultRow[];
+}
+
+export async function closeAktaNocyOkGame(
+  code: string,
+  sessionToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("close_akta_nocy_ok_game", {
+    p_code: code,
+    p_session_token: sessionToken,
+  });
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
