@@ -9,6 +9,7 @@ const GAME_LABELS: Record<string, string> = {
   "pod-przykrywka": "POD PRZYKRYWKĄ",
   "akta-nocy": "AKTA NOCY",
   "tylko-my": "TYLKO MY",
+  "va-banque": "VA BANQUE",
 };
 
 const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }> = {
@@ -36,6 +37,11 @@ const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }>
     theme: "room-theme-duo",
     title: "Tylko Wy. I żadnego podglądania.",
     copy: "Każde z Was gra na swoim telefonie. Nie potrzebujecie telewizora ani wspólnego ekranu. Odpowiedzi są prywatne do momentu, aż oboje je zatwierdzicie.",
+  },
+  "va-banque": {
+    theme: "room-theme-va-banque",
+    title: "Stół gotowy. Zbieramy graczy.",
+    copy: "Każdy gra na swoim telefonie. Stawki pozostają prywatne aż do końca licytacji, a host rozpoczyna grę, gdy wszyscy są gotowi.",
   },
 };
 
