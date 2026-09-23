@@ -8,6 +8,7 @@ const GAME_LABELS: Record<string, string> = {
   "zakrecone-haslo": "ZAKRĘCONE HASŁO",
   "pod-przykrywka": "POD PRZYKRYWKĄ",
   "akta-nocy": "AKTA NOCY",
+  "tylko-my": "TYLKO MY",
 };
 
 const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }> = {
@@ -30,6 +31,11 @@ const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }>
     theme: "room-theme-akta",
     title: "Zbierz świadków. Otwieramy akta.",
     copy: "Po starcie każdy otrzyma tajną postać i własne informacje. Prowadzący rozpocznie sprawę, gdy wszyscy będą gotowi.",
+  },
+  "tylko-my": {
+    theme: "room-theme-duo",
+    title: "Tylko Wy. I żadnego podglądania.",
+    copy: "Dołączcie na 2 telefonach. Odpowiedzi są prywatne, a po każdym pytaniu zobaczycie, czy złapaliście ten sam sygnał.",
   },
 };
 
