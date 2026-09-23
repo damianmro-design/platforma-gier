@@ -808,7 +808,7 @@ begin
 
   select jsonb_agg(
     jsonb_build_object(
-      'id',p.id,
+      'id',p.player_id,
       'name',rp.display_name,
       'avatar',rp.avatar,
       'points',p.points,
