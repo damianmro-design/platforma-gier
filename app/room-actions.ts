@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createPlatformRoom, lookupPlatformRoom, type PlatformRoom } from "@/lib/platform-db";
 
-const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque"]);
+const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque", "szyfr"]);
 
 function normalizeCode(value: FormDataEntryValue | null) {
   return String(value ?? "")
@@ -44,7 +44,7 @@ export async function createRoom(formData: FormData) {
 export async function joinRoom(formData: FormData) {
   const code = normalizeCode(formData.get("roomCode"));
   const rawReturnPath = String(formData.get("returnPath") ?? "").trim();
-  const returnPath = ["/gry/tylko-my", "/gry/va-banque"].includes(rawReturnPath)
+  const returnPath = ["/gry/tylko-my", "/gry/va-banque", "/gry/szyfr"].includes(rawReturnPath)
     ? rawReturnPath
     : "/";
 
