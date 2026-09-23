@@ -425,7 +425,7 @@ export default function GameClient({ code }: { code: string }) {
       return;
     }
 
-    if (ROUND_STARTS.has(game.questionIndex)) {
+    if (game && ROUND_STARTS.has(game.questionIndex)) {
       setIntroRound(question.round);
     }
   }, [game?.finished, game?.questionIndex, question?.round]);
