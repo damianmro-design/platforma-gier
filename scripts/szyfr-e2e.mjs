@@ -190,6 +190,7 @@ try {
   state.roomCode = code;
 
   const firstKey = state.puzzle.stepKey;
+  await host.getByText(state.puzzle.title, { exact: true }).waitFor({ state: "visible" });
   await host.locator("#szyfr-answer").fill("999999");
   await host.getByRole("button", { name: /Sprawdź wspólną odpowiedź/ }).click();
   state = await waitForGameState(host, code, (g) => g.wrongAttempts === 1, "wrong-answer penalty");
