@@ -184,7 +184,9 @@ export async function POST(request: Request, context: RouteContext) {
                   ? "Do startu gry Tylko My potrzebne są dokładnie 2 osoby i obie muszą być gotowe."
                   : room?.game_slug === "va-banque"
                     ? "Do startu VA BANQUE potrzeba 2–8 graczy i wszyscy muszą być gotowi."
-                    : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
+                    : room?.game_slug === "szyfr"
+                      ? "Do startu SZYFRU potrzeba 2–6 graczy i wszyscy muszą być gotowi."
+                      : "Do startu potrzeba min. 4 graczy, wszyscy muszą być gotowi i mieć drużynę.";
 
         return NextResponse.json({ error: message }, { status: 400 });
       }
