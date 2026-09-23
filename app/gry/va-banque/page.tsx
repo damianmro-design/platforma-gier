@@ -14,7 +14,7 @@ type PageProps = {
 
 const rules = [
   ["01", "Poznaj kategorię", "Najpierw widzisz tylko kategorię. Pytanie pozostaje ukryte do końca licytacji."],
-  ["02", "Zalicytuj albo spasuj", "W zwykłej rundzie stawiasz maksymalnie 50% kapitału. PAS oznacza stawkę 0 pkt."],
+  ["02", "Zalicytuj albo spasuj", "W zwykłej rundzie stawiasz maksymalnie 50% kapitału. PAS oznacza stawkę 0 pkt. Nie możesz stracić ostatnich 100 pkt przed finałem."],
   ["03", "Odpowiedz za swoją stawkę", "Najwyższa oferta przejmuje pytanie. Dobra odpowiedź dodaje stawkę, zła odejmuje ją od kapitału."],
   ["04", "Poluj na błąd", "Po złej odpowiedzi pierwszy z pozostałych graczy może przejąć pytanie. Ryzyko to zwykle połowa poprzedniej stawki, minimum 50 pkt i nigdy więcej niż posiadany kapitał."],
   ["05", "Rozstrzygnij remis", "Jeśli najwyższe oferty są równe, tylko remisujący podbijają albo pasują. Gdy nadal nie ma rozstrzygnięcia, wybiera serwer."],
@@ -183,7 +183,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
 
       <section id="zasady" className="relative z-10 border-y border-amber-200/8 bg-amber-100/[.015]">
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
-          <span className="text-[10px] font-black uppercase tracking-[.24em] text-amber-300">4 PROSTE ZASADY</span>
+          <span className="text-[10px] font-black uppercase tracking-[.24em] text-amber-300">6 PROSTYCH ZASAD</span>
           <h2 className="mt-2 max-w-3xl text-4xl font-black tracking-[-.055em] sm:text-5xl">
             Nie wygrywa ten, kto wie wszystko. Wygrywa ten, kto najlepiej wie, kiedy ryzykować.
           </h2>
