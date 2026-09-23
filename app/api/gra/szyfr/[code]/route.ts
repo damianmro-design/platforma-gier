@@ -114,6 +114,14 @@ export async function POST(request: Request, context: RouteContext) {
 
     return NextResponse.json({ error: "Nieznana akcja." }, { status: 400 });
   } catch (error) {
+    const raw = error instanceof Error ? error.message : "";
+    if (raw.includes("Step changed")) {
+      return NextResponse.json({
+        ok: false,
+        stale: true,
+        message: "Etap został już rozwiązany. Synchronizujemy ekran.",
+      });
+    }
     return NextResponse.json({ error: messageFor(error) }, { status: 400 });
   }
 }
