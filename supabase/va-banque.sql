@@ -802,9 +802,9 @@ begin
     'question','main_result','takeover_open','takeover_question',
     'takeover_result','round_result','final_question','final_reveal','finished'
   );
-  v_show_solution := g.phase in (
-    'main_result','takeover_open','takeover_result','round_result','final_reveal','finished'
-  );
+  v_show_solution :=
+    g.phase in ('takeover_result','round_result','final_reveal','finished')
+    or (g.phase='main_result' and g.last_event->>'type'='main_correct');
 
   select jsonb_agg(
     jsonb_build_object(
