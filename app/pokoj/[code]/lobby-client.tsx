@@ -580,7 +580,9 @@ export default function LobbyClient({ code }: { code: string }) {
                         : "Kliknijcie „Gotowy” na obu telefonach. Potem startujemy automatycznie."
                       : isVaBanque
                         ? "Do startu: 2–8 graczy i wszyscy oznaczeni jako gotowi."
-                        : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                        : isSzyfr
+                          ? "Do startu: 2–6 graczy i wszyscy oznaczeni jako gotowi."
+                          : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
