@@ -6,7 +6,31 @@ import LobbyClient from "./lobby-client";
 const GAME_LABELS: Record<string, string> = {
   "co-ludzie-powiedza": "CO LUDZIE POWIEDZĄ",
   "zakrecone-haslo": "ZAKRĘCONE HASŁO",
+  "pod-przykrywka": "POD PRZYKRYWKĄ",
   "akta-nocy": "AKTA NOCY",
+};
+
+const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }> = {
+  "co-ludzie-powiedza": {
+    theme: "room-theme-survey",
+    title: "Zbierz ekipę i zaczynamy.",
+    copy: "Gdy wszyscy będą gotowi, dzielicie się na drużyny i rusza teleturniej.",
+  },
+  "zakrecone-haslo": {
+    theme: "room-theme-wheel",
+    title: "Koło czeka na graczy.",
+    copy: "Dołączcie tym samym kodem. Gdy wszyscy będą gotowi, gra ruszy automatycznie.",
+  },
+  "pod-przykrywka": {
+    theme: "room-theme-undercover",
+    title: "Zbierzcie ekipę. Nie ufajcie nikomu.",
+    copy: "Po starcie każdy dostanie prywatne informacje. Nie pokazujcie swoich ekranów innym.",
+  },
+  "akta-nocy": {
+    theme: "room-theme-akta",
+    title: "Zbierz świadków. Otwieramy akta.",
+    copy: "Po starcie każdy otrzyma tajną postać i własne informacje. Prowadzący rozpocznie sprawę, gdy wszyscy będą gotowi.",
+  },
 };
 
 type RoomPageProps = {
@@ -38,8 +62,14 @@ export default async function RoomPage({ params }: RoomPageProps) {
     notFound();
   }
 
+  const lobby = GAME_LOBBY[room.game_slug] ?? {
+    theme: "",
+    title: "Zbierz ekipę i zaczynamy.",
+    copy: "Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy pojawiają się tutaj automatycznie.",
+  };
+
   return (
-    <main className="room-shell room-shell-live">
+    <main className={`room-shell room-shell-live ${lobby.theme}`}>
       <div className="room-live-container">
         <header className="room-live-header">
           <div>
@@ -54,11 +84,11 @@ export default async function RoomPage({ params }: RoomPageProps) {
         </header>
 
         <section className="room-live-title">
-          <h1>Zbierz ekipę i zaczynamy.</h1>
-          <p>
-            Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy
-            pojawiają się tutaj automatycznie.
-          </p>
+          {room.game_slug === "akta-nocy" && (
+            <span className="akta-lobby-case">SPRAWA 001 · APARTAMENT 214 · POUFNE</span>
+          )}
+          <h1>{lobby.title}</h1>
+          <p>{lobby.copy}</p>
         </section>
 
         <LobbyClient code={room.code} />
