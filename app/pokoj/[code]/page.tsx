@@ -35,7 +35,7 @@ const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }>
   "tylko-my": {
     theme: "room-theme-duo",
     title: "Tylko Wy. I żadnego podglądania.",
-    copy: "Dołączcie na 2 telefonach. Odpowiedzi są prywatne, a po każdym pytaniu zobaczycie, czy złapaliście ten sam sygnał.",
+    copy: "Każde z Was gra na swoim telefonie. Nie potrzebujecie telewizora ani wspólnego ekranu. Odpowiedzi są prywatne do momentu, aż oboje je zatwierdzicie.",
   },
 };
 
