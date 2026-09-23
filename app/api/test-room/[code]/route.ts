@@ -19,7 +19,10 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? "";
 
   if (!hostToken || !(await isPlatformTestRoomHost(code, hostToken))) {
-    return NextResponse.json({ error: "To nie jest Twój pokój testowy." }, { status: 403 });
+    return NextResponse.json(
+      { ok: false, enabled: false, players: [], view: "host" },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   }
 
   const players = await listPlatformLobby(code);
