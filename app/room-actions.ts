@@ -2,7 +2,12 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createPlatformRoom, lookupPlatformRoom, type PlatformRoom } from "@/lib/platform-db";
+import {
+  configureAktaNocyRoom,
+  createPlatformRoom,
+  lookupPlatformRoom,
+  type PlatformRoom,
+} from "@/lib/platform-db";
 
 const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque", "szyfr"]);
 
@@ -25,6 +30,24 @@ export async function createRoom(formData: FormData) {
 
   try {
     room = await createPlatformRoom(gameSlug);
+
+    if (gameSlug === "akta-nocy") {
+      const rawCase = String(formData.get("aktaCase") ?? "apartament-214").trim();
+      const rawMode = String(formData.get("aktaMode") ?? "host").trim();
+      const caseKey = rawCase === "ostatni-kurs" ? "ostatni-kurs" : "apartament-214";
+      const playMode = rawMode === "auto" ? "auto" : "host";
+
+      const configured = await configureAktaNocyRoom(
+        room.code,
+        room.host_token,
+        caseKey,
+        playMode,
+      );
+
+      if (!configured) {
+        throw new Error("Nie udało się skonfigurować sprawy Akta Nocy.");
+      }
+    }
   } catch {
     redirect(`/gry/${gameSlug}?roomError=create-failed`);
   }
