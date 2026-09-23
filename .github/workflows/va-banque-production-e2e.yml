@@ -1,0 +1,51 @@
+name: VA BANQUE production E2E
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  va-banque-production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VA_BANQUE_BASE_URL: https://zagraj.fun
+      CHECK_HOME: "0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Wait for audited production version
+        run: |
+          for i in {1..90}; do
+            HTML="$(curl -LfsS --max-time 20 "$VA_BANQUE_BASE_URL/gry/va-banque" || true)"
+            if echo "$HTML" | grep -q "Rozstrzygnij remis"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run VA BANQUE production browser E2E
+        run: node scripts/va-banque-e2e.mjs
+
+      - name: Upload production screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: va-banque-production-e2e
+          path: artifacts/va-banque
+          if-no-files-found: ignore
