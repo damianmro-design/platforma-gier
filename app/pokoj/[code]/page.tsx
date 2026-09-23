@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { lookupPlatformRoom } from "@/lib/platform-db";
+import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
 import LobbyClient from "./lobby-client";
 
 const GAME_LABELS: Record<string, string> = {
@@ -80,7 +80,23 @@ export default async function RoomPage({ params }: RoomPageProps) {
     notFound();
   }
 
-  const lobby = GAME_LOBBY[room.game_slug] ?? {
+  const aktaConfig =
+    room.game_slug === "akta-nocy" ? await getAktaNocyRoomConfig(code) : null;
+
+  const lobby =
+    room.game_slug === "akta-nocy" && aktaConfig?.case_key === "ostatni-kurs"
+      ? {
+          theme: "room-theme-akta room-theme-ostatni-kurs",
+          title:
+            aktaConfig.play_mode === "auto"
+              ? "Wszyscy na pokład. Śledztwo poprowadzi system."
+              : "Wszyscy na pokład. Za chwilę rusza Ostatni Kurs.",
+          copy:
+            aktaConfig.play_mode === "auto"
+              ? "Każdy dołącza jako gracz na własnym telefonie. Gdy wszyscy będą gotowi, system sam poprowadzi kolejne etapy sprawy."
+              : "Po starcie każdy otrzyma tajną rolę i własne informacje. Prowadzący steruje dowodami i tempem śledztwa.",
+        }
+      : GAME_LOBBY[room.game_slug] ?? {
     theme: "",
     title: "Zbierz ekipę i zaczynamy.",
     copy: "Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy pojawiają się tutaj automatycznie.",
@@ -103,7 +119,11 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
         <section className="room-live-title">
           {room.game_slug === "akta-nocy" && (
-            <span className="akta-lobby-case">SPRAWA 001 · APARTAMENT 214 · POUFNE</span>
+            <span className="akta-lobby-case">
+              {aktaConfig?.case_key === "ostatni-kurs"
+                ? "SPRAWA 002 · OSTATNI KURS · N417 ORION"
+                : "SPRAWA 001 · APARTAMENT 214 · POUFNE"}
+            </span>
           )}
           <h1>{lobby.title}</h1>
           <p>{lobby.copy}</p>
