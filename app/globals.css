@@ -1657,6 +1657,49 @@ footer { position: relative; z-index: 1; border-top: 1px solid var(--line); }
     #090806;
 }
 
+.room-theme-duo {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(244,114,182,.2), transparent 28rem),
+    radial-gradient(circle at 88% 18%, rgba(34,211,238,.16), transparent 26rem),
+    radial-gradient(circle at 50% 100%, rgba(139,92,246,.12), transparent 32rem),
+    #090611;
+}
+
+.room-theme-duo .room-kicker,
+.room-theme-duo .lobby-label {
+  color: #f9a8d4;
+}
+
+.room-theme-duo .compact-room-code {
+  border-color: rgba(103,232,249,.16);
+  background: linear-gradient(180deg, rgba(30,14,39,.88), rgba(8,17,29,.92));
+}
+
+.room-theme-duo .compact-room-code strong {
+  color: #a5f3fc;
+}
+
+.room-theme-duo .player-join-panel,
+.room-theme-duo .lobby-roster,
+.room-theme-duo .host-controls,
+.room-theme-duo .my-player-panel {
+  border-color: rgba(244,114,182,.11);
+  background: linear-gradient(180deg, rgba(24,12,31,.92), rgba(9,11,23,.94));
+  box-shadow: 0 28px 75px rgba(0,0,0,.3);
+}
+
+.room-theme-duo .join-player-button,
+.room-theme-duo .start-button {
+  background: linear-gradient(100deg, #ec4899, #a855f7 54%, #22d3ee);
+  color: white;
+  box-shadow: 0 16px 42px rgba(236,72,153,.18);
+}
+
+.room-theme-duo .player-name-input:focus {
+  border-color: rgba(244,114,182,.4);
+  box-shadow: 0 0 0 4px rgba(236,72,153,.09);
+}
+
 .room-theme-undercover {
   background:
     radial-gradient(circle at 14% 8%, rgba(16,185,129,.13), transparent 28rem),
