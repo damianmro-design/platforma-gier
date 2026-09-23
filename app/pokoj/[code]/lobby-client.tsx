@@ -75,6 +75,11 @@ export default function LobbyClient({ code }: { code: string }) {
           window.location.assign(`/gra/va-banque/${code}`);
           return;
         }
+
+        if (next.room.gameSlug === "szyfr") {
+          window.location.assign(`/gra/szyfr/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -138,7 +143,7 @@ export default function LobbyClient({ code }: { code: string }) {
       !data ||
       data.currentPlayerId ||
       data.room.status !== "lobby" ||
-      (data.isHost && (data.room.isTest || !["zakrecone-haslo", "tylko-my", "va-banque"].includes(data.room.gameSlug))) ||
+      (data.isHost && (data.room.isTest || !["zakrecone-haslo", "tylko-my", "va-banque", "szyfr"].includes(data.room.gameSlug))) ||
       autoJoinAttempted.current
     ) {
       return;
@@ -279,9 +284,10 @@ export default function LobbyClient({ code }: { code: string }) {
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
   const isTylkoMy = data?.room.gameSlug === "tylko-my";
   const isVaBanque = data?.room.gameSlug === "va-banque";
-  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy || isTylkoMy || isVaBanque;
-  const minPlayers = isTylkoMy || isVaBanque ? 2 : isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
-  const maxPlayers = isTylkoMy ? 2 : isVaBanque ? 8 : isWordGame || isAktaNocy ? 12 : 14;
+  const isSzyfr = data?.room.gameSlug === "szyfr";
+  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy || isTylkoMy || isVaBanque || isSzyfr;
+  const minPlayers = isTylkoMy || isVaBanque || isSzyfr ? 2 : isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
+  const maxPlayers = isTylkoMy ? 2 : isSzyfr ? 6 : isVaBanque ? 8 : isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
   const waiting = isIndividualGame
@@ -574,7 +580,9 @@ export default function LobbyClient({ code }: { code: string }) {
                         : "Kliknijcie „Gotowy” na obu telefonach. Potem startujemy automatycznie."
                       : isVaBanque
                         ? "Do startu: 2–8 graczy i wszyscy oznaczeni jako gotowi."
-                        : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                        : isSzyfr
+                          ? "Do startu: 2–6 graczy i wszyscy oznaczeni jako gotowi."
+                          : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
