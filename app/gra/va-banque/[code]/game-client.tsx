@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import type { VaBanquePlayer, VaBanqueState } from "@/lib/va-banque-db";
 
@@ -176,12 +176,15 @@ export default function GameClient({ code }: { code: string }) {
 
   const tieMin = Number(game.winningBid ?? 0) + 50;
   const canRaiseTie = Boolean(viewer && normalMax >= tieMin);
-  const quickBids = useMemo(() => {
-    if (!viewer) return [];
-    return Array.from(
-      new Set([normalMin, 200, 300, 500, normalMax].filter((value) => value > 0 && value >= normalMin && value <= normalMax)),
-    ).sort((a, b) => a - b);
-  }, [normalMax, normalMin, viewer]);
+  const quickBids = viewer
+    ? Array.from(
+        new Set(
+          [normalMin, 200, 300, 500, normalMax].filter(
+            (value) => value > 0 && value >= normalMin && value <= normalMax,
+          ),
+        ),
+      ).sort((a, b) => a - b)
+    : [];
 
   const eventType = String(game.lastEvent?.type ?? "");
   const eventDelta = Number(game.lastEvent?.delta ?? 0);
