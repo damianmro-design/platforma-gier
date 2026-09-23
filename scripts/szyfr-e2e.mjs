@@ -236,7 +236,12 @@ try {
     postAnswer(agent, code, raceKey, raceValue),
   ]);
   const statuses = [raceA.status, raceB.status].sort((a,b) => a-b);
-  assert(statuses[0] === 200 && statuses[1] === 400, `Concurrent answer was not race-safe: ${statuses.join(",")}`);
+  assert(statuses[0] === 200 && statuses[1] === 200, `Concurrent answer did not sync cleanly: ${statuses.join(",")}`);
+  const raceBodies = [raceA.body, raceB.body];
+  assert(
+    raceBodies.some((body) => body.correct === true) && raceBodies.some((body) => body.stale === true),
+    `Concurrent answer did not produce one success and one stale sync: ${JSON.stringify(raceBodies)}`,
+  );
   state = await waitForGameState(host, code, (g) => g.puzzle.stepKey !== raceKey, "concurrent answer advance");
   state.roomCode = code;
 
