@@ -43,9 +43,17 @@ export async function createRoom(formData: FormData) {
 
 export async function joinRoom(formData: FormData) {
   const code = normalizeCode(formData.get("roomCode"));
+  const rawReturnPath = String(formData.get("returnPath") ?? "").trim();
+  const returnPath =
+    rawReturnPath === "/gry/tylko-my"
+      ? "/gry/tylko-my"
+      : "/";
+
+  const errorTarget = (error: string, extra = "") =>
+    `${returnPath}?roomError=${error}${extra}#dolacz`;
 
   if (code.length !== 4) {
-    redirect("/?roomError=invalid-code#dolacz");
+    redirect(errorTarget("invalid-code"));
   }
 
   let room: PlatformRoom | null;
@@ -53,11 +61,11 @@ export async function joinRoom(formData: FormData) {
   try {
     room = await lookupPlatformRoom(code);
   } catch {
-    redirect("/?roomError=lookup-failed#dolacz");
+    redirect(errorTarget("lookup-failed"));
   }
 
   if (!room) {
-    redirect(`/?roomError=not-found&code=${encodeURIComponent(code)}#dolacz`);
+    redirect(errorTarget("not-found", `&code=${encodeURIComponent(code)}`));
   }
 
   redirect(`/pokoj/${room.code}`);
