@@ -1,0 +1,50 @@
+name: VA BANQUE preview E2E
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  va-banque-e2e:
+    if: github.head_ref == 'audit-va-banque'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VA_BANQUE_BASE_URL: https://platforma-gier-git-audit-va-banque-damianmro-2326s-projects.vercel.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Wait for Vercel preview
+        run: |
+          for i in {1..60}; do
+            if curl -LfsS --max-time 20 "$VA_BANQUE_BASE_URL/gry/va-banque" >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run VA BANQUE browser E2E
+        run: node scripts/va-banque-e2e.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: va-banque-e2e
+          path: artifacts/va-banque
+          if-no-files-found: ignore
