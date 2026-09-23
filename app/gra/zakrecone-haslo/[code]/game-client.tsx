@@ -107,8 +107,8 @@ function formatPhrase(phrase: string) {
                 key={`${character}-${index}`}
                 className={`grid h-12 min-w-10 place-items-center rounded-xl border text-2xl font-black uppercase sm:h-16 sm:min-w-12 sm:text-3xl ${
                   hidden
-                    ? "border-white/10 bg-black/35 text-transparent"
-                    : "border-violet-300/35 bg-violet-300/10 text-white shadow-[0_0_28px_rgba(167,139,250,.08)]"
+                    ? "border-violet-300/45 bg-gradient-to-b from-violet-400/20 to-fuchsia-400/10 text-transparent shadow-[inset_0_0_18px_rgba(139,92,246,.14),0_0_18px_rgba(139,92,246,.10)]"
+                    : "border-cyan-200/65 bg-gradient-to-br from-violet-500/45 via-fuchsia-500/30 to-cyan-400/25 text-white shadow-[inset_0_0_20px_rgba(255,255,255,.06),0_0_26px_rgba(34,211,238,.16)]"
                 }`}
               >
                 {hidden ? "•" : character}
