@@ -64,7 +64,7 @@ export const AKTA_NOCY_CASES: NightCase[] = [
     duration: "75–105 min",
     difficulty: "średnia",
     premise:
-      "Znany dziennikarz śledczy zostaje znaleziony martwy w zamkniętym apartamencie. Kilkanaście minut później z jego konta wychodzi wiadomość, a korytarzowy monitoring ma dokładnie 8 minut luki.",
+      "Znany dziennikarz śledczy zostaje znaleziony martwy w zamkniętym apartamencie. Kilkanaście minut później z jego konta wychodzi wiadomość, a korytarzowy monitoring ma 7 minut i 54 sekundy luki.",
     hook:
       "Każda osoba obecna tej nocy coś ukrywa. Tylko jedna ukrywa samą zbrodnię.",
     investigationMotifs: [
@@ -175,9 +175,9 @@ export const APARTAMENT_214_ROLES: AktaNocyRole[] = [
     ],
     timeline: [
       "22:47, idziesz na 2 piętro, żeby porozmawiać z Markiem.",
+      "22:49, Marek otwiera drzwi od środka i wpuszcza Cię do apartamentu 214.",
       "22:50–22:54, jesteś w apartamencie 214.",
       "22:55, opuszczasz korytarz w czasie luki monitoringu.",
-      "22:58, wysyłasz ze swojego telefonu wiadomość mającą stworzyć Ci alibi.",
     ],
     core: true,
     isCulprit: true,
@@ -408,16 +408,18 @@ export const AKTA_NOCY_EVIDENCE_A: AktaNocyEvidence[] = [
     source: "System kontroli dostępu · drzwi 214",
     time: "22:47–23:05",
     summary:
-      "System zarejestrował wejście do apartamentu tuż przed początkiem luki monitoringu oraz otwarcie drzwi od środka kilka minut później.",
+      "Marek wchodzi do apartamentu własną kartą o 22:47. O 22:49 drzwi otwierają się od środka, a kilka minut później ponownie otwierają się od środka tuż przed opuszczeniem pokoju.",
     details: [
       "22:47:31, zaakceptowano kartę przypisaną do apartamentu 214.",
       "22:47:36, drzwi otwarte. 22:47:40, drzwi zamknięte.",
+      "22:49:32, drzwi otwarte od środka bez użycia karty.",
+      "22:49:38, drzwi ponownie zamknięte.",
       "22:54:09, drzwi otwarte od środka bez użycia karty.",
       "22:54:14, drzwi ponownie zamknięte.",
       "23:05:41, użyto karty głównej hotelu.",
     ],
     question:
-      "Kto mógł mieć dostęp do karty 214 i kto opuszczał pokój o 22:54?",
+      "Kogo Marek mógł wpuścić do pokoju o 22:49 i kto opuścił apartament o 22:54?",
   },
   {
     id: "late-message",
@@ -500,7 +502,7 @@ export const AKTA_NOCY_INTERROGATIONS_A: AktaNocyInterrogation[] = [
     prompts: [
       "Gdzie byłeś dokładnie między 22:47 a 22:56?",
       "Czy wchodziłeś na 2 piętro albo do strefy VIP?",
-      "Dlaczego o 22:58 wysłałeś nerwową wiadomość ze swojego telefonu?",
+      "Co robiłeś bezpośrednio po opuszczeniu 2 piętra i kto może to potwierdzić?",
     ],
     pressurePoint:
       "Poproś o możliwie dokładną minutową oś czasu, nie tylko ogólne alibi.",
@@ -662,12 +664,12 @@ export const AKTA_NOCY_EVIDENCE_B: AktaNocyEvidence[] = [
     no: "B-04",
     title: "Wstępna ocena czasu śmierci",
     source: "Notatka Julii Narew · pierwsza ocena na miejscu",
-    time: "około 22:50–22:56",
+    time: "około 22:50–22:55",
     summary:
-      "Stan Marka w chwili odnalezienia nie pasuje do wersji, według której żył jeszcze o 23:02. Lekarka zawęża prawdopodobny czas śmierci do okresu obejmującego lukę monitoringu.",
+      "Stan Marka w chwili odnalezienia nie pasuje do wersji, według której żył jeszcze o 23:02. Lekarka zawęża prawdopodobny czas śmierci do przedziału około 22:50–22:55.",
     details: [
       "Nie da się wskazać dokładnej minuty śmierci.",
-      "Najbardziej prawdopodobny przedział obejmuje około 22:50–22:56.",
+      "Najbardziej prawdopodobny przedział obejmuje około 22:50–22:55.",
       "Wiadomość wysłana o 23:02 nie może być traktowana jako dowód, że Marek wtedy żył.",
       "Ocena jest zgodna z hipotezą, że miejsce zdarzenia zostało później upozorowane.",
     ],
