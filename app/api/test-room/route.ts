@@ -13,6 +13,7 @@ const BOT_COUNTS: Record<string, number> = {
   "zakrecone-haslo": 3,
   "pod-przykrywka": 6,
   "akta-nocy": 5,
+  "tylko-my": 2,
 };
 
 export async function POST(request: Request) {
