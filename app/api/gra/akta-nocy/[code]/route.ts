@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   advanceAktaNocyPhase,
+  closeAktaNocyGame,
   getAktaNocyAccusationPlayer,
   getAktaNocyAccusationProgress,
   getAktaNocyAccusationResults,
@@ -227,6 +228,9 @@ function buildAccusationSummary(
       culprit && row.suspect_player_id === culprit.playerId,
     );
     const motiveCorrect = row.motive_key === AKTA_NOCY_SOLUTION.motiveKey;
+    const evidenceCorrect = AKTA_NOCY_SOLUTION.decisiveEvidenceIds.some(
+      (id) => id === row.evidence_id,
+    );
 
     return {
       playerId: row.player_id,
@@ -240,7 +244,8 @@ function buildAccusationSummary(
       evidenceTitle: evidenceById.get(row.evidence_id)?.title ?? row.evidence_id,
       suspectCorrect,
       motiveCorrect,
-      fullyCorrect: suspectCorrect && motiveCorrect,
+      evidenceCorrect,
+      fullyCorrect: suspectCorrect && motiveCorrect && evidenceCorrect,
     };
   });
 
@@ -248,6 +253,7 @@ function buildAccusationSummary(
     total: results.length,
     correctSuspect: results.filter((item) => item.suspectCorrect).length,
     correctMotive: results.filter((item) => item.motiveCorrect).length,
+    correctEvidence: results.filter((item) => item.evidenceCorrect).length,
     fullyCorrect: results.filter((item) => item.fullyCorrect).length,
     results,
   };
@@ -262,6 +268,26 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Nie znaleziono sprawy." }, { status: 404 });
   }
 
+  const cookieStore = await cookies();
+  const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+  const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
+
+  if (room.status === "finished" && room.game_phase === "zamknieta") {
+    if (!rawHostToken && !playerToken) {
+      return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
+    }
+
+    return NextResponse.json({
+      role: "closed",
+      room: {
+        code: room.code,
+        status: room.status,
+        phase: room.game_phase,
+      },
+    });
+  }
+
   if (room.status !== "active") {
     return NextResponse.json(
       { error: "Rozgrywka jeszcze się nie rozpoczęła." },
@@ -269,10 +295,6 @@ export async function GET(_request: Request, context: RouteContext) {
     );
   }
 
-  const cookieStore = await cookies();
-  const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
-  const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
-  const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
   const hostToken = testView === "player" ? null : rawHostToken;
 
   if (hostToken) {
@@ -460,6 +482,9 @@ export async function GET(_request: Request, context: RouteContext) {
               ),
               motiveCorrect:
                 accusation.motive_key === AKTA_NOCY_SOLUTION.motiveKey,
+              evidenceCorrect: AKTA_NOCY_SOLUTION.decisiveEvidenceIds.some(
+                (id) => id === accusation.evidence_id,
+              ),
             };
           })()
         : null;
@@ -588,6 +613,20 @@ export async function POST(request: Request, context: RouteContext) {
         String(body.coverupKey ?? ""),
       );
 
+      return NextResponse.json({ ok });
+    }
+
+    if (action === "closeGame") {
+      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+
+      if (!hostToken) {
+        return NextResponse.json(
+          { error: "Tylko prowadzący może zamknąć sprawę." },
+          { status: 403 },
+        );
+      }
+
+      const ok = await closeAktaNocyGame(code, hostToken);
       return NextResponse.json({ ok });
     }
 
