@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { createRoom } from "../../room-actions";
+import { createRoom, joinRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 
 export const metadata: Metadata = {
@@ -36,7 +36,20 @@ const rounds = [
   },
 ];
 
-export default function TylkoMyPage() {
+type TylkoMyPageProps = {
+  searchParams?: Promise<{ roomError?: string; code?: string }>;
+};
+
+export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
+  const params = (await searchParams) ?? {};
+  const joinError =
+    params.roomError === "invalid-code"
+      ? "Wpisz 4-znakowy kod pokoju."
+      : params.roomError === "not-found"
+        ? `Nie znaleźliśmy pokoju ${params.code ? `„${params.code}”` : "o takim kodzie"}.`
+        : params.roomError === "lookup-failed"
+          ? "Nie udało się sprawdzić kodu. Spróbuj ponownie."
+          : null;
   return (
     <main className="min-h-screen overflow-hidden bg-[#090611] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_13%_12%,rgba(244,114,182,.24),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(34,211,238,.18),transparent_27%),radial-gradient(circle_at_50%_100%,rgba(139,92,246,.17),transparent_35%)]" />
@@ -92,23 +105,72 @@ export default function TylkoMyPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <form action={createRoom}>
+          <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-2">
+            <form action={createRoom} className="rounded-2xl border border-pink-300/15 bg-pink-300/[.045] p-4">
               <input type="hidden" name="gameSlug" value="tylko-my" />
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-pink-200">
+                OSOBA 1
+              </span>
+              <h3 className="mt-1 text-base font-black">Utwórz nową grę</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                Dostaniesz kod, który druga osoba wpisze na swoim telefonie.
+              </p>
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-7 py-4 text-sm font-black shadow-[0_18px_55px_rgba(236,72,153,.24)] transition hover:brightness-110 sm:w-auto"
+                className="mt-4 w-full rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-5 py-3.5 text-sm font-black shadow-[0_18px_55px_rgba(236,72,153,.18)] transition hover:brightness-110"
               >
                 Utwórz grę →
               </button>
             </form>
-            <a
-              href="#zasady"
-              className="inline-flex items-center justify-center rounded-2xl border border-white/12 bg-white/[.04] px-7 py-4 text-sm font-black text-zinc-300 transition hover:bg-white/[.08]"
+
+            <form
+              id="dolacz"
+              action={joinRoom}
+              className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[.04] p-4"
             >
-              Jak gramy?
-            </a>
+              <input type="hidden" name="returnPath" value="/gry/tylko-my" />
+              <span className="text-[9px] font-black uppercase tracking-[.18em] text-cyan-200">
+                OSOBA 2
+              </span>
+              <h3 className="mt-1 text-base font-black">Dołącz za pomocą kodu</h3>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                Wpisz 4 znaki wyświetlone na telefonie osoby, która utworzyła pokój.
+              </p>
+
+              <label htmlFor="tm-room-code" className="sr-only">Kod pokoju</label>
+              <input
+                id="tm-room-code"
+                name="roomCode"
+                maxLength={4}
+                required
+                autoComplete="off"
+                inputMode="text"
+                placeholder="AB12"
+                defaultValue={params.code ?? ""}
+                className="mt-4 w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3.5 text-center text-2xl font-black uppercase tracking-[.34em] text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-300/55 focus:ring-4 focus:ring-cyan-400/10"
+              />
+
+              <button
+                type="submit"
+                className="mt-2 w-full rounded-xl border border-cyan-200/20 bg-cyan-300/[.09] px-5 py-3.5 text-sm font-black text-cyan-50 transition hover:bg-cyan-300/[.14]"
+              >
+                Dołącz do gry →
+              </button>
+
+              {joinError && (
+                <p className="mt-3 rounded-xl border border-red-300/15 bg-red-400/[.06] px-3 py-2.5 text-xs font-bold leading-5 text-red-200">
+                  {joinError}
+                </p>
+              )}
+            </form>
           </div>
+
+          <a
+            href="#zasady"
+            className="mt-3 inline-flex text-xs font-black text-zinc-500 transition hover:text-white"
+          >
+            Jak gramy? ↓
+          </a>
 
           <TestGameButton gameSlug="tylko-my" className="mt-4" />
         </div>
@@ -185,7 +247,7 @@ export default function TylkoMyPage() {
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["01", "Utwórz pokój", "Jedna osoba uruchamia grę na swoim telefonie."],
-              ["02", "Zaproś drugą osobę", "Kod, link albo QR i oboje jesteście w środku."],
+              ["02", "Druga osoba wpisuje kod", "Może użyć kodu na stronie TYLKO MY albo wejść gotowym linkiem / QR."],
               ["03", "Odpowiadajcie osobno", "Każde z Was wybiera odpowiedź na własnym ekranie."],
               ["04", "Odkrywajcie wynik", "Po obu odpowiedziach gra sama pokazuje, czy się zgraliście."],
             ].map(([no, title, copy]) => (
