@@ -281,7 +281,7 @@ begin
   insert into app_private.va_banque_games(
     room_id,round_index,regular_rounds,phase,phase_deadline
   )
-  values(p_room_id,1,v_rounds,'intro',now()+interval '8 seconds');
+  values(p_room_id,1,v_rounds,'intro',now()+interval '12 seconds');
 
   insert into app_private.va_banque_players(room_id,player_id,points)
   select p_room_id,p.id,2000
@@ -569,13 +569,13 @@ begin
         v_delta:=g.winning_bid;
       else
         update app_private.va_banque_players
-        set points=greatest(100,points-g.winning_bid)
+        set points=greatest(0,points-g.winning_bid)
         where room_id=r.id and player_id=g.winning_player_id;
         v_delta:=-g.winning_bid;
       end if;
 
       update app_private.va_banque_games
-      set phase='main_result',phase_deadline=now()+interval '3 seconds',
+      set phase='main_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object(
             'type',case when v_correct then 'main_correct' else 'main_wrong' end,
             'playerId',g.winning_player_id,'delta',v_delta,'answer',v_answer,
@@ -607,7 +607,7 @@ begin
     if g.phase='takeover_open' then
       exit when g.phase_deadline>now();
       update app_private.va_banque_games
-      set phase='round_result',phase_deadline=now()+interval '2 seconds',
+      set phase='round_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object('type','no_takeover'),
           updated_at=now()
       where room_id=r.id;
@@ -631,13 +631,13 @@ begin
         v_delta:=v_risk;
       else
         update app_private.va_banque_players
-        set points=greatest(100,points-v_risk)
+        set points=greatest(0,points-v_risk)
         where room_id=r.id and player_id=g.takeover_player_id;
         v_delta:=-v_risk;
       end if;
 
       update app_private.va_banque_games
-      set phase='takeover_result',phase_deadline=now()+interval '3 seconds',
+      set phase='takeover_result',phase_deadline=now()+interval '4 seconds',
           last_event=jsonb_build_object(
             'type',case when v_correct then 'takeover_correct' else 'takeover_wrong' end,
             'playerId',g.takeover_player_id,'delta',v_delta,'answer',v_answer,
@@ -712,7 +712,7 @@ begin
       where room_id=r.id;
 
       update app_private.va_banque_games
-      set phase='final_reveal',phase_deadline=now()+interval '6 seconds',
+      set phase='final_reveal',phase_deadline=now()+interval '10 seconds',
           last_event=jsonb_build_object('type','final_reveal','correctIndex',q.correct_index),
           updated_at=now()
       where room_id=r.id;
@@ -928,7 +928,7 @@ begin
   if p.player_id is null then raise exception 'Player not found'; end if;
   if p.bid_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=greatest(50,floor((p.points*0.5)/50.0)::integer*50);
+  v_max:=floor((p.points*0.5)/50.0)::integer*50;
   v_min:=least(100,v_max);
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -977,7 +977,7 @@ begin
   end if;
   if p.tie_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=greatest(50,floor((p.points*0.5)/50.0)::integer*50);
+  v_max:=floor((p.points*0.5)/50.0)::integer*50;
   v_min:=g.winning_bid+50;
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -1074,7 +1074,7 @@ begin
   where rp.room_id=r.id and rp.player_token=p_player_token
   limit 1;
 
-  if v_player is null or v_player=g.winning_player_id then
+  if v_player is null or v_player=g.winning_player_id or v_points<=0 then
     return jsonb_build_object('won',false);
   end if;
 
