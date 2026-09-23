@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
+  getAktaNocyRoomConfig,
   getPlatformPlayer,
   getPlatformRecoveryCode,
   joinPlatformRoom,
@@ -44,11 +45,12 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostToken = cookieStore.get(names.host)?.value ?? null;
   const playerToken = cookieStore.get(names.player)?.value ?? null;
 
-  const [players, currentPlayer, recoveryCode, isTest] = await Promise.all([
+  const [players, currentPlayer, recoveryCode, isTest, aktaConfig] = await Promise.all([
     listPlatformLobby(code),
     playerToken ? getPlatformPlayer(code, playerToken) : Promise.resolve(null),
     playerToken ? getPlatformRecoveryCode(code, playerToken) : Promise.resolve(null),
     hostToken ? isPlatformTestRoomHost(code, hostToken) : Promise.resolve(false),
+    room.game_slug === "akta-nocy" ? getAktaNocyRoomConfig(code) : Promise.resolve(null),
   ]);
 
   return NextResponse.json({
@@ -57,6 +59,8 @@ export async function GET(_request: Request, context: RouteContext) {
       gameSlug: room.game_slug,
       status: room.status,
       isTest,
+      aktaCase: aktaConfig?.case_key ?? null,
+      aktaMode: aktaConfig?.play_mode ?? null,
     },
     players,
     currentPlayerId: currentPlayer?.id ?? null,
