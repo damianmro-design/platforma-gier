@@ -18,6 +18,8 @@ type LobbyState = {
     gameSlug: string;
     status: "lobby" | "active" | "finished";
     isTest?: boolean;
+    aktaCase?: "apartament-214" | "ostatni-kurs" | null;
+    aktaMode?: "host" | "auto" | null;
   };
   players: Player[];
   currentPlayerId: string | null;
@@ -281,6 +283,8 @@ export default function LobbyClient({ code }: { code: string }) {
   const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
   const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
+  const isAktaAuto = isAktaNocy && data?.room.aktaMode === "auto";
+  const isOstatniKurs = isAktaNocy && data?.room.aktaCase === "ostatni-kurs";
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
   const isTylkoMy = data?.room.gameSlug === "tylko-my";
   const isVaBanque = data?.room.gameSlug === "va-banque";
@@ -311,14 +315,14 @@ export default function LobbyClient({ code }: { code: string }) {
   );
 
   useEffect(() => {
-    if (!data || (!isWordGame && !isTylkoMy) || !canStart || busy) return;
+    if (!data || (!isWordGame && !isTylkoMy && !isAktaAuto) || !canStart || busy) return;
     const timer = window.setTimeout(() => {
       void send({ action: "start" });
-    }, isTylkoMy ? 1200 : 1800);
+    }, isTylkoMy ? 1200 : isAktaAuto ? 1600 : 1800);
     return () => window.clearTimeout(timer);
     // Te gry nie potrzebują osobnego prowadzącego do uruchomienia rozgrywki.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.room.status, isWordGame, isTylkoMy, canStart, busy]);
+  }, [data?.room.status, isWordGame, isTylkoMy, isAktaAuto, canStart, busy]);
 
   if (!data) {
     return <div className="lobby-loading">Łączenie z pokojem…</div>;
@@ -470,6 +474,17 @@ export default function LobbyClient({ code }: { code: string }) {
 
       {error && <div className="lobby-error">{error}</div>}
 
+      {isAktaNocy && (
+        <section className="mb-4 rounded-2xl border border-orange-200/10 bg-orange-950/10 p-4">
+          <span className="text-[9px] font-black uppercase tracking-[.18em] text-orange-300/65">
+            {isOstatniKurs ? "SPRAWA #002 · OSTATNI KURS" : "SPRAWA #001 · APARTAMENT 214"}
+          </span>
+          <strong className="mt-1 block text-sm text-orange-50/85">
+            {isAktaAuto ? "Automatyczne śledztwo · bez prowadzącego" : "Tryb z prowadzącym"}
+          </strong>
+        </section>
+      )}
+
       <section className="lobby-roster">
         <div className="roster-head">
           <div>
@@ -537,7 +552,9 @@ export default function LobbyClient({ code }: { code: string }) {
                 ? "Gdy oboje będziecie gotowi, gra ruszy automatycznie"
                 : isWordGame
                   ? "Gra ruszy automatycznie, gdy wszyscy będą gotowi"
-                  : "Ty kontrolujesz start"}
+                  : isAktaAuto
+                    ? "Automatyczne śledztwo ruszy, gdy wszyscy będą gotowi"
+                    : "Ty kontrolujesz start"}
             </h3>
           </div>
           <div className="host-buttons">
@@ -551,9 +568,13 @@ export default function LobbyClient({ code }: { code: string }) {
                 🎲 {allAssigned ? "Losuj ponownie" : "Podziel na drużyny"}
               </button>
             )}
-            {isTylkoMy ? (
-              <div className="rounded-xl border border-pink-300/20 bg-pink-300/[.07] px-4 py-3 text-xs font-black text-pink-100">
-                ♡ START AUTOMATYCZNY
+            {isTylkoMy || isAktaAuto ? (
+              <div className={`rounded-xl border px-4 py-3 text-xs font-black ${
+                isAktaAuto
+                  ? "border-orange-300/20 bg-orange-300/[.07] text-orange-100"
+                  : "border-pink-300/20 bg-pink-300/[.07] text-pink-100"
+              }`}>
+                {isAktaAuto ? "◉ START AUTOMATYCZNY" : "♡ START AUTOMATYCZNY"}
               </div>
             ) : (
               <button
@@ -573,7 +594,9 @@ export default function LobbyClient({ code }: { code: string }) {
                 : isUndercoverGame
                   ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
                   : isAktaNocy
-                    ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
+                    ? isAktaAuto
+                      ? `Do startu Ostatniego Kursu: 5–12 osób. Każdy, także twórca pokoju, dołącza jako gracz i klika „Gotowy”.`
+                      : "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
                     : isTylkoMy
                       ? data.players.length < 2
                         ? "Dołączcie we 2 na telefonach. Gdy druga osoba wejdzie i oboje klikniecie „Gotowy”, gra wystartuje sama."
