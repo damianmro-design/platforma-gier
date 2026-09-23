@@ -8,9 +8,15 @@ const TESTER_EMAIL = "damian.mro@wp.pl";
 export default function TestGameButton({
   gameSlug,
   className = "",
+  aktaCase,
+  aktaMode,
+  label,
 }: {
   gameSlug: string;
   className?: string;
+  aktaCase?: "apartament-214" | "ostatni-kurs";
+  aktaMode?: "host" | "auto";
+  label?: string;
 }) {
   const [allowed, setAllowed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -52,7 +58,7 @@ export default function TestGameButton({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ gameSlug }),
+        body: JSON.stringify({ gameSlug, aktaCase, aktaMode }),
       });
       const result = await response.json();
 
@@ -77,7 +83,7 @@ export default function TestGameButton({
         onClick={() => void createTestGame()}
         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-300/25 bg-cyan-300/[.07] px-6 py-4 text-sm font-black text-cyan-100 transition hover:bg-cyan-300/[.12] disabled:opacity-50 sm:w-auto"
       >
-        🧪 {busy ? "Tworzę test…" : "Uruchom grę testową"}
+        🧪 {busy ? "Tworzę test…" : label ?? "Uruchom grę testową"}
       </button>
       {error && <p className="mt-2 text-xs font-bold text-red-300">{error}</p>}
     </div>
