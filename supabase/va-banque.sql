@@ -1623,3 +1623,47 @@ grant execute on function public.claim_va_banque_takeover(text,uuid) to anon,aut
 grant execute on function public.submit_va_banque_final_bid(text,uuid,integer) to anon,authenticated;
 grant execute on function public.submit_va_banque_final_answer(text,uuid,smallint) to anon,authenticated;
 grant execute on function public.rematch_va_banque(text,uuid) to anon,authenticated;
+
+
+-- Balance correct-answer positions across A/B/C/D.
+-- This is deterministic and idempotent: rerunning it keeps each question's correct
+-- answer, but removes exploitable answer-position patterns from the bank.
+with ranked as (
+  select
+    id,
+    options,
+    correct_index,
+    ((row_number() over (order by question_key) - 1) % 4)::int as target_index
+  from app_private.va_banque_questions
+),
+parts as (
+  select
+    r.*,
+    r.options -> r.correct_index as correct_value,
+    (
+      select jsonb_agg(value order by ord)
+      from jsonb_array_elements(r.options) with ordinality e(value, ord)
+      where ord - 1 <> r.correct_index
+    ) as distractors
+  from ranked r
+),
+rebuilt as (
+  select
+    id,
+    target_index,
+    jsonb_agg(
+      case
+        when pos = target_index then correct_value
+        else distractors -> (case when pos < target_index then pos else pos - 1 end)
+      end
+      order by pos
+    ) as new_options
+  from parts
+  cross join lateral generate_series(0,3) pos
+  group by id,target_index,correct_value,distractors
+)
+update app_private.va_banque_questions q
+set options=r.new_options,
+    correct_index=r.target_index
+from rebuilt r
+where q.id=r.id;
