@@ -65,6 +65,11 @@ export default function LobbyClient({ code }: { code: string }) {
           window.location.assign(`/gra/akta-nocy/${code}`);
           return;
         }
+
+        if (next.room.gameSlug === "tylko-my") {
+          window.location.assign(`/gra/tylko-my/${code}`);
+          return;
+        }
       }
 
       setData(next);
@@ -128,7 +133,7 @@ export default function LobbyClient({ code }: { code: string }) {
       !data ||
       data.currentPlayerId ||
       data.room.status !== "lobby" ||
-      (data.isHost && (data.room.isTest || data.room.gameSlug !== "zakrecone-haslo")) ||
+      (data.isHost && (data.room.isTest || !["zakrecone-haslo", "tylko-my"].includes(data.room.gameSlug))) ||
       autoJoinAttempted.current
     ) {
       return;
@@ -267,9 +272,10 @@ export default function LobbyClient({ code }: { code: string }) {
   const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
   const isAktaNocy = data?.room.gameSlug === "akta-nocy";
   const isCoLudzie = data?.room.gameSlug === "co-ludzie-powiedza";
-  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy;
-  const minPlayers = isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
-  const maxPlayers = isWordGame || isAktaNocy ? 12 : 14;
+  const isTylkoMy = data?.room.gameSlug === "tylko-my";
+  const isIndividualGame = isWordGame || isUndercoverGame || isAktaNocy || isTylkoMy;
+  const minPlayers = isTylkoMy ? 2 : isWordGame ? 3 : isUndercoverGame ? 6 : isAktaNocy ? 5 : 4;
+  const maxPlayers = isTylkoMy ? 2 : isWordGame || isAktaNocy ? 12 : 14;
   const teamA = data?.players.filter((player) => player.team === "A") ?? [];
   const teamB = data?.players.filter((player) => player.team === "B") ?? [];
   const waiting = isIndividualGame
@@ -544,7 +550,9 @@ export default function LobbyClient({ code }: { code: string }) {
                   ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
                   : isAktaNocy
                     ? "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
-                    : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
+                    : isTylkoMy
+                      ? "Do startu: dokładnie 2 osoby i obie oznaczone jako gotowe."
+                      : "Do startu: min. 4 osoby, wszyscy gotowi i podzieleni na drużyny."}
             </p>
           )}
         </section>
