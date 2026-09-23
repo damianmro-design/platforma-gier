@@ -49,6 +49,13 @@ export const PARTYPLAY_GAMES: PartyPlayGameMeta[] = [
     icon: "♡",
     connectedToProgress: false,
   },
+  {
+    slug: "va-banque",
+    label: "VA BANQUE",
+    shortLabel: "VA BANQUE",
+    icon: "◆",
+    connectedToProgress: false,
+  },
 ] as const;
 
 export function getPartyPlayGameMeta(slug: string) {
