@@ -527,12 +527,24 @@ export default function Home() {
               >
                 <option value="">Ile Was jest?</option>
                 <option value="2">2 osoby</option>
+                <option value="3">3 osoby</option>
                 <option value="4">4 osoby</option>
+                <option value="5">5 osób</option>
                 <option value="6">6 osób</option>
+                <option value="7">7 osób</option>
                 <option value="8">8 osób</option>
+                <option value="9">9 osób</option>
                 <option value="10">10 osób</option>
+                <option value="11">11 osób</option>
                 <option value="12">12 osób</option>
+                <option value="13">13 osób</option>
                 <option value="14">14 osób</option>
+                <option value="15">15 osób</option>
+                <option value="16">16 osób</option>
+                <option value="17">17 osób</option>
+                <option value="18">18 osób</option>
+                <option value="19">19 osób</option>
+                <option value="20">20 osób</option>
               </select>
 
               <select
@@ -643,17 +655,17 @@ export default function Home() {
 
             <FilteredGameCard filters={filters}
               title="Floor Party"
-              minPlayers={4}
-              maxPlayers={14}
+              minPlayers={6}
+              maxPlayers={20}
               minTime={25}
               maxTime={60}
-              categories={["funny", "team"]}
-              moods={["laugh", "compete", "cooperate"]}
-              eyebrow="Szybka energia"
-              description="Dynamiczna mieszanka kategorii, obrazków, haseł, wiedzy i teleturniejowych pojedynków."
-              players="4–14 graczy"
+              categories={["funny", "strategic"]}
+              moods={["laugh", "think", "compete"]}
+              eyebrow="Obroń swoją podłogę"
+              description="Zgaduj obrazy i hasła w pojedynkach, broń swojego pola i przejmuj terytorium rywali, aż cały Floor będzie należał do 1 gracza."
+              players="6–20 graczy"
               time="25–60 min"
-              tags={["dynamiczna", "teleturniej", "wymagany prowadzący"]}
+              tags={["zgadywanie", "pojedynki", "wymagany prowadzący"]}
               accent="pink"
               art="floor"
               href="https://floor-party.vercel.app"
@@ -688,7 +700,7 @@ export default function Home() {
               maxTime={75}
               categories={["strategic"]}
               moods={["think", "compete"]}
-              eyebrow="Dedukcja i sabotaż"
+              eyebrow="Dedukcja i blef"
               description="Jedna osoba działa przeciw grupie. Obserwuj, zbieraj tropy i odkryj, kto gra podwójną grę."
               players="6–14 graczy"
               time="45–75 min"

@@ -37,7 +37,7 @@ export default function PodPrzykrywkaPage() {
       <section className="relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-16 pt-14 sm:px-8 lg:grid-cols-[1fr_.9fr] lg:items-center lg:pt-20">
         <div>
           <span className="inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-[10px] font-black uppercase tracking-[.24em] text-cyan-200">
-            DEDUKCJA I SABOTAŻ
+            DEDUKCJA I BLEF
           </span>
 
           <h1 className="mt-6 text-6xl font-black leading-[.84] tracking-[-.075em] sm:text-7xl">
