@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { lookupPlatformRoom } from "@/lib/platform-db";
+import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
 import GameClient from "./game-client";
+import OstatniKursClient from "./ostatni-kurs-client";
 
 type RoomPageProps = {
   params: Promise<{ code: string }>;
@@ -10,7 +11,10 @@ type RoomPageProps = {
 export default async function AktaNocyRoomPage({ params }: RoomPageProps) {
   const { code: rawCode } = await params;
   const code = rawCode.trim().toUpperCase();
-  const room = await lookupPlatformRoom(code);
+  const [room, config] = await Promise.all([
+    lookupPlatformRoom(code),
+    getAktaNocyRoomConfig(code),
+  ]);
 
   if (!room || room.game_slug !== "akta-nocy") {
     notFound();
@@ -26,6 +30,10 @@ export default async function AktaNocyRoomPage({ params }: RoomPageProps) {
 
   if (!hostToken && !playerToken) {
     redirect(`/pokoj/${code}`);
+  }
+
+  if (config?.case_key === "ostatni-kurs") {
+    return <OstatniKursClient code={code} />;
   }
 
   return <GameClient code={code} />;
