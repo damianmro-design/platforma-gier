@@ -42,6 +42,13 @@ export const PARTYPLAY_GAMES: PartyPlayGameMeta[] = [
     icon: "⚡",
     connectedToProgress: false,
   },
+  {
+    slug: "tylko-my",
+    label: "TYLKO MY",
+    shortLabel: "Tylko My",
+    icon: "♡",
+    connectedToProgress: false,
+  },
 ] as const;
 
 export function getPartyPlayGameMeta(slug: string) {
