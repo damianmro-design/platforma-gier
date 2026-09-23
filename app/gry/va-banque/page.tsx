@@ -13,10 +13,12 @@ type PageProps = {
 };
 
 const rules = [
-  ["01", "Poznaj kategorię", "Pytanie pozostaje ukryte, więc najpierw oceniasz własną wiedzę."],
-  ["02", "Zalicytuj", "W zwykłej rundzie ryzykujesz maksymalnie 50% aktualnego kapitału."],
-  ["03", "Przejmij pytanie", "Najwyższa oferta odpowiada. Dobra odpowiedź dodaje stawkę, zła ją odejmuje."],
-  ["04", "Poluj na błąd", "Po złej odpowiedzi pozostali mają kilka sekund, żeby przejąć pytanie."],
+  ["01", "Poznaj kategorię", "Najpierw widzisz tylko kategorię. Pytanie pozostaje ukryte do końca licytacji."],
+  ["02", "Zalicytuj albo spasuj", "W zwykłej rundzie stawiasz maksymalnie 50% kapitału. PAS oznacza stawkę 0 pkt."],
+  ["03", "Odpowiedz za swoją stawkę", "Najwyższa oferta przejmuje pytanie. Dobra odpowiedź dodaje stawkę, zła odejmuje ją od kapitału."],
+  ["04", "Poluj na błąd", "Po złej odpowiedzi pierwszy z pozostałych graczy może przejąć pytanie. Ryzyko to zwykle połowa poprzedniej stawki, minimum 50 pkt i nigdy więcej niż posiadany kapitał."],
+  ["05", "Rozstrzygnij remis", "Jeśli najwyższe oferty są równe, tylko remisujący podbijają albo pasują. Gdy nadal nie ma rozstrzygnięcia, wybiera serwer."],
+  ["06", "Zagraj finał", "Każdy prywatnie stawia od 0 do 100% swojego kapitału, a potem wszyscy odpowiadają na to samo finałowe pytanie."],
 ];
 
 export default async function VaBanquePage({ searchParams }: PageProps) {
@@ -62,7 +64,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
               BANQUE
             </span>
           </h1>
-          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-amber-50/48">
+          <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-amber-50/65">
             Licytuj kategorie, przejmuj pytania i decyduj, ile jesteś gotów postawić.
             Wiedza to dopiero połowa gry.
           </p>
@@ -82,7 +84,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
               <input type="hidden" name="gameSlug" value="va-banque" />
               <span className="text-[9px] font-black uppercase tracking-[.18em] text-amber-200">NOWY STÓŁ</span>
               <h2 className="mt-1 text-base font-black">Utwórz grę</h2>
-              <p className="mt-1 text-xs leading-5 text-amber-50/38">
+              <p className="mt-1 text-xs leading-5 text-amber-50/60">
                 Dostaniesz 4-znakowy kod. Pozostali wpisują go na swoich telefonach.
               </p>
               <button
@@ -101,7 +103,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
               <input type="hidden" name="returnPath" value="/gry/va-banque" />
               <span className="text-[9px] font-black uppercase tracking-[.18em] text-orange-200">MASZ KOD?</span>
               <h2 className="mt-1 text-base font-black">Dołącz do gry</h2>
-              <p className="mt-1 text-xs leading-5 text-amber-50/38">
+              <p className="mt-1 text-xs leading-5 text-amber-50/60">
                 Wpisz kod wyświetlony osobie, która utworzyła pokój.
               </p>
               <label htmlFor="vb-room-code" className="sr-only">Kod pokoju</label>
@@ -149,7 +151,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
               <div className="relative z-10 mt-12 text-center">
                 <p className="text-[10px] font-black uppercase tracking-[.3em] text-amber-300/55">ILE RYZYKUJESZ?</p>
                 <h2 className="mt-3 text-4xl font-black tracking-[-.055em]">Pytania jeszcze nie znasz.</h2>
-                <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-amber-50/38">
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-amber-50/60">
                   Oceniasz kategorię, własną wiedzę i przeciwników.
                 </p>
               </div>
@@ -185,12 +187,12 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
           <h2 className="mt-2 max-w-3xl text-4xl font-black tracking-[-.055em] sm:text-5xl">
             Nie wygrywa ten, kto wie wszystko. Wygrywa ten, kto najlepiej wie, kiedy ryzykować.
           </h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {rules.map(([no, title, copy]) => (
               <article key={no} className="rounded-3xl border border-amber-200/9 bg-black/20 p-5">
                 <span className="text-xs font-black tracking-[.24em] text-orange-300">{no}</span>
                 <h3 className="mt-3 text-lg font-black">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-amber-50/38">{copy}</p>
+                <p className="mt-2 text-sm leading-6 text-amber-50/60">{copy}</p>
               </article>
             ))}
           </div>
