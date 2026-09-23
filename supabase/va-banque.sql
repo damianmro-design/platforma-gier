@@ -103,8 +103,14 @@ with check(false);
 
 create index if not exists va_banque_questions_category_idx
   on app_private.va_banque_questions(category);
-create index if not exists va_banque_players_room_idx
-  on app_private.va_banque_players(room_id);
+create index if not exists va_banque_players_player_idx
+  on app_private.va_banque_players(player_id);
+create index if not exists va_banque_games_question_idx
+  on app_private.va_banque_games(question_id);
+create index if not exists va_banque_games_winner_idx
+  on app_private.va_banque_games(winning_player_id);
+create index if not exists va_banque_games_takeover_idx
+  on app_private.va_banque_games(takeover_player_id);
 
 insert into app_private.va_banque_questions
 (question_key, category, prompt, options, correct_index, difficulty, explanation)
