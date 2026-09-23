@@ -2,6 +2,7 @@ import { chromium } from "playwright";
 import fs from "node:fs/promises";
 
 const baseUrl = process.env.VA_BANQUE_BASE_URL;
+const checkHome = process.env.CHECK_HOME === "1";
 if (!baseUrl) throw new Error("VA_BANQUE_BASE_URL is required");
 
 await fs.mkdir("artifacts/va-banque", { recursive: true });
@@ -71,7 +72,19 @@ const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } }
 watch(desktop, "desktop");
 await desktop.goto(`${baseUrl}/gry/va-banque`, { waitUntil: "networkidle", timeout: 60000 });
 await desktop.getByRole("heading", { name: "VA BANQUE" }).waitFor();
+await desktop.getByText("Rozstrzygnij remis").waitFor();
 await noHorizontalOverflow(desktop, "desktop landing");
+
+if (checkHome) {
+  await desktop.goto(baseUrl, { waitUntil: "networkidle", timeout: 60000 });
+  const vaLink = desktop.locator('a[href="/gry/va-banque"]').first();
+  await vaLink.waitFor({ state: "visible" });
+  const cardText = await vaLink.innerText();
+  if (/Wkrótce/i.test(cardText)) throw new Error("VA BANQUE is still marked Wkrótce on homepage");
+  await noHorizontalOverflow(desktop, "desktop homepage");
+  await desktop.screenshot({ path: "artifacts/va-banque/homepage-active.png", fullPage: true });
+  await desktop.goto(`${baseUrl}/gry/va-banque`, { waitUntil: "networkidle", timeout: 60000 });
+}
 await desktop.screenshot({ path: "artifacts/va-banque/desktop-landing.png", fullPage: true });
 
 const hostContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
