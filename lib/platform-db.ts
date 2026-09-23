@@ -1429,6 +1429,20 @@ export async function advanceAktaNocyPhase(
   return (data ?? null) as string | null;
 }
 
+export async function closeAktaNocyGame(
+  code: string,
+  hostToken: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("close_akta_nocy_game", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
 export type AktaNocyHostInterrogationRow = {
   player_id: string;
   display_name: string;
