@@ -757,7 +757,7 @@ export default function Home() {
               minTime={20}
               maxTime={30}
               categories={["funny"]}
-              moods={["laugh", "compete"]}
+              moods={["laugh", "cooperate"]}
               eyebrow="Gra dla 2 osób"
               description="Sprawdźcie, jak dobrze się znacie. Przewidujcie swoje wybory, szukajcie zgodności i polujcie na momenty telepatii."
               players="2 graczy"
@@ -765,7 +765,8 @@ export default function Home() {
               tags={["dla dwojga", "relacyjna", "telepatia"]}
               accent="pink"
               art="duo"
-              status="soon"
+              href="/gry/tylko-my"
+              status="new"
             />
 
             <FilteredGameCard filters={filters}
