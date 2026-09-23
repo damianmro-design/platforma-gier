@@ -715,19 +715,19 @@ export default function Home() {
               title="Akta Nocy"
               minPlayers={5}
               maxPlayers={12}
-              minTime={60}
-              maxTime={120}
+              minTime={75}
+              maxTime={105}
               categories={["strategic", "team"]}
               moods={["think", "cooperate"]}
               eyebrow="Interaktywne śledztwo"
               description="Role, sekrety, dowody i przesłuchania. Odtwórz przebieg zbrodni i wskaż sprawcę."
               players="5–12 graczy"
-              time="60–120 min"
+              time="75–105 min"
               tags={["murder mystery", "dedukcja", "wymagany prowadzący"]}
               accent="red"
               art="crime"
               href="/gry/akta-nocy"
-              status="soon"
+              status="new"
             />
 
             <FilteredGameCard filters={filters}
