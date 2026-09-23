@@ -38,7 +38,7 @@ export default function AktaNocyPage() {
           <div className="lg:pt-3">
             <span className="inline-flex items-center gap-2 rounded-full border border-red-400/20 bg-red-950/40 px-3 py-2 text-[10px] font-black uppercase tracking-[.24em] text-orange-200">
               <span className="h-2 w-2 rounded-full bg-red-400 shadow-[0_0_14px_rgba(248,113,113,.8)]" />
-              Interaktywne śledztwo · w budowie
+              Interaktywne śledztwo · gotowe do gry
             </span>
 
             <p className="mt-7 text-xs font-black uppercase tracking-[.34em] text-orange-300/65">
@@ -56,7 +56,7 @@ export default function AktaNocyPage() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold text-orange-50/70">
-              {["👥 5–12 graczy", "⏱ 60–120 min", "🔎 dedukcja", "🎭 tajne role", "📁 fabularna", "🎤 wymagany prowadzący"].map((item) => (
+              {["👥 5–12 graczy", "⏱ 75–105 min", "🔎 dedukcja", "🎭 tajne role", "📁 fabularna", "🎤 wymagany prowadzący"].map((item) => (
                 <span key={item} className="rounded-full border border-orange-100/10 bg-black/20 px-3 py-2">
                   {item}
                 </span>
@@ -125,7 +125,7 @@ export default function AktaNocyPage() {
                   </div>
                   <div className="rounded-xl bg-black/25 p-3">
                     <span className="text-orange-100/35">STATUS</span>
-                    <strong className="mt-1 block text-orange-50/85">Projektowanie</strong>
+                    <strong className="mt-1 block text-orange-50/85">Gotowa</strong>
                   </div>
                 </div>
               </div>
@@ -229,15 +229,16 @@ export default function AktaNocyPage() {
         <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
           <div className="rounded-[2rem] border border-orange-200/12 bg-[linear-gradient(110deg,rgba(127,29,29,.24),rgba(124,45,18,.16),rgba(0,0,0,.1))] p-7 sm:p-10">
             <p className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
-              Etap 2
+              Sprawa #001
             </p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-[-.045em] sm:text-4xl">
-              Lobby bez drużyn i wejście do sprawy są gotowe.
+              Pełne śledztwo od tajnych akt do finałowego ujawnienia.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-orange-50/50">
-              Pokój obsługuje 5–12 graczy bez podziału na drużyny. Kolejny krok
-              to trwały przydział postaci i prywatne karty roli, a później
-              paczki dowodowe, przesłuchania i finałowe oskarżenie.
+              Pokój obsługuje 5–12 graczy bez drużyn. Role są przydzielane
+              automatycznie, akta pozostają prywatne, a prowadzący odsłania
+              kolejne dowody, przesłuchania, rekonstrukcję, akt oskarżenia
+              i finał sprawy.
             </p>
           </div>
         </section>
