@@ -264,21 +264,30 @@ function Wheel({ game, spinning = false }: { game: ZhGameState; spinning?: boole
         }}
       >
         {ZH_WHEEL_SEGMENTS.map((label, index) => {
-          const angle = (360 / ZH_WHEEL_SEGMENTS.length) * index + 10;
+          const angle = (360 / ZH_WHEEL_SEGMENTS.length) * index;
+          const radians = (angle * Math.PI) / 180;
           const special = label === "BANKRUT" || label === "PAS";
+          const radius = special ? 34 : 35;
+
           return (
             <span
               key={`${label}-${index}`}
-              className="absolute left-1/2 top-1/2 origin-left font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.8)]"
+              className="absolute z-10 grid -translate-x-1/2 -translate-y-1/2 place-items-center"
               style={{
-                width: "47%",
-                transform: `rotate(${angle}deg) translateX(46%)`,
+                left: `${50 + Math.sin(radians) * radius}%`,
+                top: `${50 - Math.cos(radians) * radius}%`,
               }}
             >
               <span
-                className={`inline-block -rotate-90 whitespace-nowrap rounded px-1 py-0.5 ${
-                  special ? "text-[8px] sm:text-[9px]" : "text-[10px] sm:text-[11px]"
+                className={`inline-flex min-w-[30px] items-center justify-center whitespace-nowrap rounded-md bg-black/18 px-1.5 py-0.5 font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,.85)] ${
+                  special ? "text-[7px] sm:text-[8px]" : "text-[9px] sm:text-[10px]"
                 }`}
+                style={{
+                  transform: `rotate(${-rotation}deg)`,
+                  transitionProperty: "transform",
+                  transitionDuration: `${WHEEL_SPIN_MS}ms`,
+                  transitionTimingFunction: "cubic-bezier(.08,.72,.08,1)",
+                }}
               >
                 {label}
               </span>
