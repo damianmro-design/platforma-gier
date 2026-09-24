@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
@@ -10,7 +11,8 @@ type RoomPageProps = {
 
 export default async function AktaNocyRoomPage({ params }: RoomPageProps) {
   const { code: rawCode } = await params;
-  const code = rawCode.trim().toUpperCase();
+  const code = cleanRoomCode(rawCode);
+  if (!code) notFound();
   const [room, config] = await Promise.all([
     lookupPlatformRoom(code),
     getAktaNocyRoomConfig(code),
