@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
@@ -21,10 +22,6 @@ type RouteContext = {
   params: Promise<{ code: string }>;
 };
 
-function cleanCode(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
-
 function cookieNames(code: string) {
   return {
     host: `partyplay_host_${code}`,
@@ -34,7 +31,7 @@ function cookieNames(code: string) {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
 
   const room = await lookupPlatformRoom(code);
   if (!room) {
@@ -73,7 +70,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const body = await request.json().catch(() => ({}));
   const action = String(body.action ?? "");
   const cookieStore = await cookies();
