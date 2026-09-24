@@ -26,3 +26,10 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Local HTTP request-size integration smoke
+        run: |
+          npm run start -- -p 3100 > /tmp/zagraj-local-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          node scripts/tests/http-guard-smoke.mjs
