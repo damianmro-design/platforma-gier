@@ -55,6 +55,10 @@ root="$(cd "$ZAGRAJ_BACKUP_ROOT" && pwd -P)"
 if [[ "$root" == "$repo_root" || "$root/" == "$repo_root/"* ]]; then
   printf 'Refusing to write backups into the Git repository.\n' >&2; exit 1
 fi
+# Never chmod a generic system or home directory: use a dedicated named folder.
+if [[ "$(basename "$root")" != zagraj-backups* ]]; then
+  printf 'Use a dedicated folder named zagraj-backups (or zagraj-backups-*).\n' >&2; exit 1
+fi
 chmod 700 -- "$root"
 
 if [[ "$mode" == "--check" ]]; then
