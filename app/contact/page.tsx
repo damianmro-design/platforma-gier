@@ -1,4 +1,4 @@
-import { LEGAL_CONFIG } from "@/lib/legal-config";
+import { LEGAL_CONFIG, hasLegalContactConfigured } from "@/lib/legal-config";
 import LegalPageShell, { LegalSection } from "../legal-page-shell";
 
 export const metadata = {
@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 export default function ContactPage() {
-  const operatorConfigured = !LEGAL_CONFIG.operatorName.startsWith("[UZUPEŁNIJ");
+  const operatorConfigured = hasLegalContactConfigured();
 
   return (
     <LegalPageShell
@@ -18,10 +18,12 @@ export default function ContactPage() {
         {operatorConfigured ? (
           <p>
             <strong className="text-zinc-200">{LEGAL_CONFIG.operatorName}</strong>
+            <br />
+            {LEGAL_CONFIG.operatorAddress}, {LEGAL_CONFIG.country}
           </p>
         ) : (
           <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-amber-100">
-            Dane operatora platformy wymagają jeszcze uzupełnienia przed publicznym startem.
+            Dane identyfikacyjne i adres usługodawcy wymagają uzupełnienia przed publicznym startem.
           </div>
         )}
         <p>
