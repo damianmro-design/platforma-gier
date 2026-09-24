@@ -24,5 +24,8 @@ jobs:
       - name: Check beta preflight logic
         run: npm run test:beta
 
+      - name: Test backup safeguards with synthetic data
+        run: node --test scripts/tests/backup-supabase.test.mjs
+
       - name: Build
         run: npm run build
