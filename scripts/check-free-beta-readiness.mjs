@@ -34,6 +34,16 @@ export function validateReleaseEnv(env) {
     );
   }
 
+  // Public beta must not expose unrestricted room creation via publishable key.
+  // This is only a structural check. Verify actual database grants separately.
+  if (String(env.ZAGRAJ_ROOM_CREATION_MODE ?? "").trim() !== "server-only") {
+    errors.push("ZAGRAJ_ROOM_CREATION_MODE: require server-only before public beta.");
+  }
+  const creatorKey = String(env.SUPABASE_ROOM_CREATE_SECRET_KEY ?? "").trim();
+  if (!creatorKey || creatorKey.startsWith("sb_publishable_") || creatorKey.length < 30) {
+    errors.push("SUPABASE_ROOM_CREATE_SECRET_KEY: configure a server-only secret key.");
+  }
+
   const email = String(env.NEXT_PUBLIC_CONTACT_EMAIL ?? "").trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push("NEXT_PUBLIC_CONTACT_EMAIL: nieprawidłowy format adresu.");
