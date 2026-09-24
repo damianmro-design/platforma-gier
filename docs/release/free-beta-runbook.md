@@ -59,6 +59,8 @@ Advisory: https://supabase.com/docs/guides/observability/advisors?queryGroups=li
 - [ ] Monitorować 5xx, błędy RPC, błędy JavaScript, deployment SHA, game_id i fazę; nie wysyłać do monitoringu haseł, tokenów ani tajnych odpowiedzi.
 - [ ] Zaimplementować retention, redakcję danych w logach i kontrolę dostępu do logów.
 - [ ] Zapewnić backup i PRZETESTOWAĆ odtworzenie. Na Supabase Free nie ma automatycznych backupów — użyć bezpiecznego eksportu off-site, bez publicznych plików.
+- [x] Przygotowano skrypt szyfrowanego eksportu 2 baz i osobną procedurę odtworzenia: `scripts/backup-supabase.sh`, `docs/release/backup-restore.md`.
+- [ ] **Realny backup i test przywrócenia pozostają niewykonane**; skrypt w repo nie oznacza zabezpieczenia danych.
 - [ ] Zbudować recovery najczęstszych błędów, bez bezpośredniej ręcznej ingerencji w produkcyjną bazę.
 - [ ] 5 kolejnych pełnych gier bez P0 i pomocy autora, potem szersza grupa.
 - [ ] Powtórzyć E2E po każdej zmianie RPC, prawa dostępu, cookie i deployu.
