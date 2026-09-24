@@ -8,6 +8,8 @@ const valid = {
   NEXT_PUBLIC_LEGAL_OPERATOR_COUNTRY: "Polska",
   NEXT_PUBLIC_CONTACT_EMAIL: "support@example.org",
   NEXT_PUBLIC_PLATFORM_URL: "https://example.org",
+  BETA_OPERATOR_BASIS: "active-business",
+  BETA_LEGAL_REVIEW_CONFIRMED: "true",
 };
 
 test("complete release config passes structural check", () => {
@@ -36,6 +38,30 @@ test("invalid email and insecure site URL are blocked", () => {
   });
   assert.ok(result.some((s) => s.includes("CONTACT_EMAIL")));
   assert.ok(result.some((s) => s.includes("PLATFORM_URL")));
+});
+
+test("suspended business cannot silently pass a launch gate", () => {
+  const errors = validateReleaseEnv({
+    ...valid,
+    BETA_OPERATOR_BASIS: "suspended-business",
+  });
+  assert.ok(errors.some((error) => error.includes("BETA_OPERATOR_BASIS")));
+});
+
+test("independent noncommercial route needs explicit legal review", () => {
+  const errors = validateReleaseEnv({
+    ...valid,
+    BETA_OPERATOR_BASIS: "independent-noncommercial-reviewed",
+    BETA_LEGAL_REVIEW_CONFIRMED: "false",
+  });
+  assert.ok(errors.some((error) => error.includes("BETA_LEGAL_REVIEW_CONFIRMED")));
+});
+
+test("reviewed independent route passes the structural gate", () => {
+  assert.deepEqual(validateReleaseEnv({
+    ...valid,
+    BETA_OPERATOR_BASIS: "independent-noncommercial-reviewed",
+  }), []);
 });
 
 test("missing config does not pass silently", () => {
