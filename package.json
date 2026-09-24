@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "beta:preflight": "node scripts/check-free-beta-readiness.mjs",
-    "test:beta": "node --test scripts/tests/free-beta-preflight.test.mjs"
+    "test:beta": "node --test scripts/tests/*.test.mjs"
   },
   "dependencies": {
     "next": "16.3.3",
