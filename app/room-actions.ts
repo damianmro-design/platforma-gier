@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 "use server";
 
 import { cookies } from "next/headers";
@@ -10,14 +11,6 @@ import {
 } from "@/lib/platform-db";
 
 const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque", "szyfr"]);
-
-function normalizeCode(value: FormDataEntryValue | null) {
-  return String(value ?? "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 4);
-}
 
 export async function createRoom(formData: FormData) {
   const gameSlug = String(formData.get("gameSlug") ?? "").trim();
@@ -65,7 +58,7 @@ export async function createRoom(formData: FormData) {
 }
 
 export async function joinRoom(formData: FormData) {
-  const code = normalizeCode(formData.get("roomCode"));
+  const code = cleanRoomCode(formData.get("roomCode"));
   const rawReturnPath = String(formData.get("returnPath") ?? "").trim();
   const returnPath = ["/gry/tylko-my", "/gry/va-banque", "/gry/szyfr"].includes(rawReturnPath)
     ? rawReturnPath
@@ -74,7 +67,7 @@ export async function joinRoom(formData: FormData) {
   const errorTarget = (error: string, extra = "") =>
     `${returnPath}?roomError=${error}${extra}#dolacz`;
 
-  if (code.length !== 4) {
+  if (!code) {
     redirect(errorTarget("invalid-code"));
   }
 
