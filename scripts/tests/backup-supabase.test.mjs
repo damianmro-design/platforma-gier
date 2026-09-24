@@ -60,7 +60,7 @@ test("mock backup writes six ciphertext files, manifest, no plaintext", () => {
       writeFileSync(target, contents);
       chmodSync(target, 0o700);
     }
-    const backupRoot = join(root, "outside-repo");
+    const backupRoot = join(root, "zagraj-backups");
     const env = {
       PATH: bin + ":" + process.env.PATH,
       ZAGRAJ_BACKUP_ROOT: backupRoot,
@@ -88,7 +88,18 @@ test("backup destination inside repository is refused before export", () => {
     ZAGRAJ_BACKUP_ROOT: resolve(".backup-should-not-exist"),
     ZAGRAJ_BACKUP_RECIPIENT: "age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
   };
-  const result = run(env, "--check");
-  assert.notEqual(result.status, 0);
-  rmSync(env.ZAGRAJ_BACKUP_ROOT, { recursive: true, force: true });
+  const mocks = mkdtempSync(join(tmpdir(), "zagraj-mock-tools-"));
+  try {
+    for (const name of ["supabase", "docker", "age", "shasum"]) {
+      const file = join(mocks, name);
+      writeFileSync(file, "#!/usr/bin/env bash\\nexit 0\\n".replaceAll("\\\\n", "\\n"));
+      chmodSync(file, 0o700);
+    }
+    const result = run({ ...env, PATH: mocks + ":" + process.env.PATH }, "--check");
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Refusing to write backups into the Git repository/);
+  } finally {
+    rmSync(env.ZAGRAJ_BACKUP_ROOT, { recursive: true, force: true });
+    rmSync(mocks, { recursive: true, force: true });
+  }
 });
