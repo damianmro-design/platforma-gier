@@ -44,3 +44,22 @@ test("staged database generator is not changed in existing historic schema sourc
   assert.match(staged, /generate_series\(1,6\)/);
   assert.match(staged, /STAGED ONLY/);
 });
+
+
+test("invalid page URLs are rejected before database access", () => {
+  for (const path of [
+    "app/pokoj/[code]/page.tsx",
+    "app/gra/akta-nocy/[code]/page.tsx",
+    "app/gra/co-ludzie-powiedza/[code]/page.tsx",
+    "app/gra/pod-przykrywka/[code]/page.tsx",
+    "app/gra/szyfr/[code]/page.tsx",
+    "app/gra/tylko-my/[code]/page.tsx",
+    "app/gra/va-banque/[code]/page.tsx",
+    "app/gra/zakrecone-haslo/[code]/page.tsx",
+  ]) {
+    const code = readFileSync(path, "utf8");
+    assert.match(code, /const code = cleanRoomCode\(rawCode\);/, path);
+    assert.match(code, /if \(!code\) notFound\(\);/, path);
+    assert.doesNotMatch(code, /rawCode\.trim\(\)\.toUpperCase\(\)/, path);
+  }
+});
