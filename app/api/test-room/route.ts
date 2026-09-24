@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readJsonObjectLimited } from "@/lib/request-guards.mjs";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
@@ -26,7 +27,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Tryb testowy nie jest dostępny na tym koncie." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonObjectLimited(request);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const body = parsed.body;
   const gameSlug = String(body.gameSlug ?? "").trim();
   const botCount = BOT_COUNTS[gameSlug];
   const aktaCase = String(body.aktaCase ?? "apartament-214") === "ostatni-kurs"
