@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getPlatformPlayer, lookupPlatformRoom } from "@/lib/platform-db";
+import { getPlatformPlayer, isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
 import {
   claimVaBanqueTakeover,
   getVaBanqueState,
@@ -40,7 +40,8 @@ function messageFor(error: unknown) {
 
 async function accessFor(code: string) {
   const cookieStore = await cookies();
-  const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const hostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   return { hostToken, playerToken };
 }

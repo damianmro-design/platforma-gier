@@ -1687,6 +1687,25 @@ export async function prepareTestRoom(
   return Boolean(data);
 }
 
+// Never treat cookie presence as proof of host ownership.
+export async function isPlatformRoomHost(
+  code: string,
+  hostToken: string | null | undefined,
+) {
+  if (!hostToken || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostToken)) {
+    return false;
+  }
+
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("is_platform_room_host", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return data === true;
+}
+
 export async function isPlatformTestRoomHost(
   code: string,
   hostToken: string,

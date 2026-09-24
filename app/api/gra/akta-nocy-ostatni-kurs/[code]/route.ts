@@ -13,6 +13,7 @@ import {
   getAktaNocyPublicCast,
   getAktaNocyRoomConfig,
   isPlatformTestRoomHost,
+  isPlatformRoomHost,
   lookupPlatformRoom,
   markAktaNocyOkReady,
   openAktaNocyDossier,
@@ -251,8 +252,9 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const cookieStore = await cookies();
-  const rawHostToken =
+  const hostCookie =
     cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const rawHostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
   const playerToken =
     cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView =
@@ -489,8 +491,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const cookieStore = await cookies();
-  const rawHostToken =
+  const hostCookie =
     cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const rawHostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
   const playerToken =
     cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView =

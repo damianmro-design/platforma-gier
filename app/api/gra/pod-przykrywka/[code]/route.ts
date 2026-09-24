@@ -4,6 +4,7 @@ import {
   advancePpPhase,
   extendPpPhaseTimer,
   getPlatformPlayer,
+  isPlatformRoomHost,
   getPpState,
   lookupPlatformRoom,
   skipPpPlayer,
@@ -46,7 +47,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
-  const hostToken = testView === "player" ? null : rawHostToken;
+  const hostToken = testView === "player" || !(await isPlatformRoomHost(code, rawHostToken)) ? null : rawHostToken;
 
   if (hostToken) {
     const game = await getPpState(code);
@@ -88,7 +89,8 @@ export async function POST(request: Request, context: RouteContext) {
   const body = await request.json().catch(() => ({}));
   const action = String(body.action ?? "");
   const cookieStore = await cookies();
-  const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
 
   try {

@@ -13,6 +13,7 @@ import {
   getClpRound7State,
   getClpFinalState,
   getPlatformPlayer,
+  isPlatformRoomHost,
   lookupPlatformRoom,
   nextClpRound1Question,
   nextClpRound2Question,
@@ -56,7 +57,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
-  const hostToken = testView === "player" ? null : rawHostToken;
+  const hostToken = testView === "player" || !(await isPlatformRoomHost(code, rawHostToken)) ? null : rawHostToken;
 
   if (room.game_phase === "final" || room.game_phase === "finished") {
     const final = await getClpFinalState(code);
@@ -415,7 +416,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "advance") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -442,7 +444,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round1Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -469,7 +472,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round2Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -495,7 +499,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round3Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -522,7 +527,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round4Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -565,7 +571,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round5Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -593,7 +600,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round6Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -620,7 +628,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "round7Next") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });
@@ -647,7 +656,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "finalNext") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, rawHostToken) ? rawHostToken : null;
 
       if (!hostToken) {
         return NextResponse.json({ error: "Tylko host może przejść dalej." }, { status: 403 });

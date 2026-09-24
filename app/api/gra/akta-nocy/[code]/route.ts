@@ -13,6 +13,7 @@ import {
   getAktaNocyReconstructionHost,
   getAktaNocyReconstructionPlayer,
   lookupPlatformRoom,
+  isPlatformRoomHost,
   openAktaNocyDossier,
   revealAktaNocyEvidenceA,
   revealAktaNocyEvidenceB,
@@ -269,7 +270,8 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const cookieStore = await cookies();
-  const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
+  const rawHostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
 
@@ -548,7 +550,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "advance") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
 
       if (!hostToken) {
         return NextResponse.json(
@@ -562,7 +565,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "revealEvidenceA") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
 
       if (!hostToken) {
         return NextResponse.json(
@@ -617,7 +621,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "closeGame") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
 
       if (!hostToken) {
         return NextResponse.json(
@@ -631,7 +636,8 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "revealEvidenceB") {
-      const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value;
+      const hostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
 
       if (!hostToken) {
         return NextResponse.json(

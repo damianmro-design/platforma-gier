@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getPlatformPlayer, lookupPlatformRoom } from "@/lib/platform-db";
+import { getPlatformPlayer, isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
 import {
   getSzyfrState,
   rematchSzyfr,
@@ -30,8 +30,9 @@ function messageFor(error: unknown) {
 
 async function accessFor(code: string) {
   const cookieStore = await cookies();
+  const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   return {
-    hostToken: cookieStore.get(`partyplay_host_${code}`)?.value ?? null,
+    hostToken: await isPlatformRoomHost(code, hostCookie) ? hostCookie : null,
     playerToken: cookieStore.get(`partyplay_player_${code}`)?.value ?? null,
   };
 }
