@@ -4,10 +4,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   configureAktaNocyRoom,
-  createPlatformRoom,
   lookupPlatformRoom,
   type PlatformRoom,
 } from "@/lib/platform-db";
+import { createPlatformRoomServer } from "@/lib/platform-room-create";
 
 const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque", "szyfr"]);
 
@@ -29,7 +29,7 @@ export async function createRoom(formData: FormData) {
   let room;
 
   try {
-    room = await createPlatformRoom(gameSlug);
+    room = await createPlatformRoomServer(gameSlug);
 
     if (gameSlug === "akta-nocy") {
       const rawCase = String(formData.get("aktaCase") ?? "apartament-214").trim();
