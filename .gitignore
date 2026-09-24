@@ -30,3 +30,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Backup artifacts and private age identities (never commit user data)
+/zagraj-backups/
+/backups/
+*.sql.age
+*.agekey
+*.age-identity
