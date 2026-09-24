@@ -92,7 +92,7 @@ test("backup destination inside repository is refused before export", () => {
   try {
     for (const name of ["supabase", "docker", "age", "shasum"]) {
       const file = join(mocks, name);
-      writeFileSync(file, "#!/usr/bin/env bash\\nexit 0\\n".replaceAll("\\\\n", "\\n"));
+      writeFileSync(file, "#!/usr/bin/env bash\nexit 0\n");
       chmodSync(file, 0o700);
     }
     const result = run({ ...env, PATH: mocks + ":" + process.env.PATH }, "--check");
