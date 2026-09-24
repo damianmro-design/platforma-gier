@@ -14,6 +14,9 @@ Nie publikuj danych osobowych operatora w repozytorium; dane wymagane do publicz
 
 ## 1. Prawo i kontakt [BLOKER]
 
+- [ ] Zweryfikować status operatora. Właściciel zgłosił zawieszenie JDG: nie przedstawiać jej jako aktywnie świadczącej usługi ani nie uznawać darmowego dostępu za automatyczne wyłączenie przepisów o zawieszeniu.
+- [ ] Ustalić podstawę publicznej bety po konsultacji prawno-podatkowej: wznowiona działalność albo odrębny, rzeczywiście niekomercyjny projekt osoby fizycznej. Ustalić właściwą jurysdykcję.
+- [ ] Dla preflight potwierdzić BETA_OPERATOR_BASIS i BETA_LEGAL_REVIEW_CONFIRMED dopiero po realnej weryfikacji. Nie publikować identyfikatorów ani adresu operatora w repozytorium.
 - [ ] Ustalić prawdziwego administratora danych / usługodawcę i właściwy kraj prowadzenia działalności (Polska/Grecja/inny). Nie wnioskować tego z języka strony ani miejsca pobytu autora.
 - [ ] Ustawić publiczne: `NEXT_PUBLIC_LEGAL_OPERATOR_NAME`, `NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS`, `NEXT_PUBLIC_LEGAL_OPERATOR_COUNTRY`, `NEXT_PUBLIC_CONTACT_EMAIL`, `NEXT_PUBLIC_PLATFORM_URL` w Production na Vercel; nie zapisywać prywatnego adresu w git.
 - [ ] Potwierdzić, że adres kontaktowy odbiera i wysyła wiadomości; sprawdzić reset hasła i wiadomości usługowe.
