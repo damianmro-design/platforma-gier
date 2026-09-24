@@ -114,10 +114,9 @@ export async function POST(request: Request, context: RouteContext) {
       const recoveryCode = String(body.recoveryCode ?? "")
         .trim()
         .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6);
+        .replace(/[\\s-]/g, "");
 
-      if (!name || recoveryCode.length !== 6) {
+      if (!name || !/^[A-Z0-9]{6}$/.test(recoveryCode)) {
         return NextResponse.json(
           { error: "Wpisz imię i 6-znakowy kod powrotu." },
           { status: 400 },
