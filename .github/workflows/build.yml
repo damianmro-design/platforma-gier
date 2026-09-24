@@ -25,7 +25,7 @@ jobs:
         run: npm run test:beta
 
       - name: Test backup safeguards with synthetic data
-        run: node --test scripts/tests/backup-supabase.test.mjs
+        run: node --test scripts/tests/backup-*.test.mjs
 
       - name: Check server-only room creation rollout safety
         run: node --test scripts/tests/room-create-gateway.test.mjs
