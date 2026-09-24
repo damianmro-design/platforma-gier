@@ -483,7 +483,7 @@ export default function Home() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[.25em] text-cyan-300">Dołącz do ekipy</p>
                   <h2 className="mt-2 text-3xl font-black tracking-[-.05em]">Masz kod pokoju?</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-500">Wpisz 4 znaki, platforma sama odnajdzie właściwą grę.</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-500">Wpisz kod z zaproszenia, platforma sama odnajdzie właściwą grę.</p>
                 </div>
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-fuchsia-400/20 bg-fuchsia-400/10 text-2xl">✦</span>
               </div>
@@ -493,10 +493,10 @@ export default function Home() {
                 <input
                   id="roomCode"
                   name="roomCode"
-                  maxLength={4}
+                  maxLength={6}
                   required
                   autoComplete="off"
-                  placeholder="4JMG"
+                  placeholder="AB12CD"
                   className="w-full rounded-2xl border border-white/12 bg-black/30 px-5 py-5 text-center text-3xl font-black uppercase tracking-[.38em] text-white outline-none transition placeholder:text-zinc-700 focus:border-violet-400/70 focus:ring-4 focus:ring-violet-500/10"
                 />
                 <button type="submit" className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-4 text-sm font-black transition hover:brightness-110">

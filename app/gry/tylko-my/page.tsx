@@ -44,7 +44,7 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
   const params = (await searchParams) ?? {};
   const joinError =
     params.roomError === "invalid-code"
-      ? "Wpisz 4-znakowy kod pokoju."
+      ? "Wpisz poprawny kod pokoju (4 lub 6 znaków)."
       : params.roomError === "not-found"
         ? `Nie znaleźliśmy pokoju ${params.code ? `„${params.code}”` : "o takim kodzie"}.`
         : params.roomError === "lookup-failed"
@@ -134,18 +134,18 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
               </span>
               <h3 className="mt-1 text-base font-black">Dołącz za pomocą kodu</h3>
               <p className="mt-1 text-xs leading-5 text-zinc-500">
-                Wpisz 4 znaki wyświetlone na telefonie osoby, która utworzyła pokój.
+                Wpisz kod wyświetlony na telefonie osoby, która utworzyła pokój.
               </p>
 
               <label htmlFor="tm-room-code" className="sr-only">Kod pokoju</label>
               <input
                 id="tm-room-code"
                 name="roomCode"
-                maxLength={4}
+                maxLength={6}
                 required
                 autoComplete="off"
                 inputMode="text"
-                placeholder="AB12"
+                placeholder="AB12CD"
                 defaultValue={params.code ?? ""}
                 className="mt-4 w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3.5 text-center text-2xl font-black uppercase tracking-[.34em] text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-300/55 focus:ring-4 focus:ring-cyan-400/10"
               />

@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -40,10 +41,6 @@ import {
 import { OSTATNI_KURS_SOLUTION } from "@/lib/akta-nocy-ostatni-kurs-solution";
 
 type RouteContext = { params: Promise<{ code: string }> };
-
-function cleanCode(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
 
 function safeCast(
   rows: Awaited<ReturnType<typeof getAktaNocyPublicCast>>,
@@ -234,7 +231,7 @@ function revealForPhase(phase: string | null | undefined) {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const [room, config] = await Promise.all([
     lookupPlatformRoom(code),
     getAktaNocyRoomConfig(code),
@@ -474,7 +471,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const body = await request.json().catch(() => ({}));
   const action = String(body.action ?? "");
   const [room, config] = await Promise.all([
