@@ -29,7 +29,7 @@ if [[ "$mode" == "--help" || "$mode" == "-h" ]]; then usage; exit 0; fi
 if [[ "$mode" != "--check" && "$mode" != "--run" ]]; then usage >&2; exit 2; fi
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-for tool in supabase docker age shasum; do
+for tool in supabase docker age shasum node; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     printf 'Missing prerequisite: %s\n' "$tool" >&2
     exit 1
@@ -73,6 +73,9 @@ case "$ZAGRAJ_PLATFORM_DB_URL $ZAGRAJ_POLOWANIE_DB_URL" in
     printf 'A database URL is still a placeholder.\n' >&2; exit 1 ;;
 esac
 
+# Verify the exact project identity before connecting: never swap the two bases.
+node "$repo_root/scripts/verify-backup-targets.mjs"
+
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 work="$(mktemp -d "$root/.incomplete-$stamp-XXXXXX")"
 trap 'rm -rf -- "$work"' EXIT
@@ -92,6 +95,12 @@ dump_one() {
     printf 'Database dump is empty (%s, %s).\n' "$destination" "$stage" >&2
     return 1
   fi
+  if [[ "$stage" == "data" && "$destination" == "$work/polowanie" ]]; then
+    if ! grep -Eq '^(COPY|INSERT INTO)[[:space:]]+(auth[.]users|"auth"[.]"users")([[:space:]]|[(])' "$destination/$stage.sql"; then
+      printf 'Auth users table absent from Polowanie data dump. Refusing incomplete backup.\n' >&2
+      return 1
+    fi
+  fi
   if ! age -r "$ZAGRAJ_BACKUP_RECIPIENT" -o "$destination/$stage.sql.age" "$destination/$stage.sql" >"$work/.encrypt.log" 2>&1; then
     printf 'Encryption failed. No backup was published.\n' >&2
     return 1
@@ -105,7 +114,11 @@ for project in platform polowanie; do
   dump_one "$url" "$dest" roles --role-only
   dump_one "$url" "$dest" schema
   dump_one "$url" "$dest" data --use-copy --data-only -x "storage.buckets_vectors" -x "storage.vector_indexes"
-  (cd "$dest" && shasum -a 256 roles.sql.age schema.sql.age data.sql.age > SHA256SUMS)
+  # Preserve the CLI migration ledger too; it is not included by the normal
+  # schema/data dump and matters for safe future migrations after restoration.
+  dump_one "$url" "$dest" history_schema --schema supabase_migrations
+  dump_one "$url" "$dest" history_data --use-copy --data-only --schema supabase_migrations
+  (cd "$dest" && shasum -a 256 *.sql.age > SHA256SUMS)
 done
 
 final="$root/zagraj-$stamp"
