@@ -19,3 +19,5 @@ Wykonane w tej gałęzi:
 Następny audyt: sprawdzić p95/p99, error rate, DB CPU i liczbę RPC na użytkownika, potem ograniczone E2E z co najmniej 2 urządzeniami, następnie test obciążenia w wydzielonym, autoryzowanym środowisku. Nie twierdzić, że testy maksymalnej pojemności zostały ukończone.
 
 Dodatkowy etap: `get_va_banque_state_internal` zapisuje `last_seen_at` najwyżej raz na 4 sekundy dla aktywnego gracza, a `get_pp_state_internal` najwyżej raz na 3 sekundy. Nadal odczytują stan gry przy każdym żądaniu; to ogranicza tylko nadmiar zapisów obecności. Test syntetyczny starego i świeżego znacznika czasu przeszedł w transakcji zakończonej ROLLBACK.
+
+W API `GET /api/gra/va-banque/[code]` usunięto dodatkowe `get_platform_player`: `get_va_banque_state_internal` już weryfikuje player token, odrzuca nieznanego gracza i zwraca jego `viewer`. Dzięki temu nie dublujemy autoryzacyjnego RPC w każdym odpytywaniu. Bez zmian w uprawnieniach hosta.
