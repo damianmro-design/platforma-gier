@@ -3,9 +3,9 @@ import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
   configureAktaNocyRoom,
-  createPlatformRoom,
   prepareTestRoom,
 } from "@/lib/platform-db";
+import { createPlatformRoomServer } from "@/lib/platform-room-create";
 
 const TESTER_EMAIL = "damian.mro@wp.pl";
 
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const room = await createPlatformRoom(gameSlug);
+    const room = await createPlatformRoomServer(gameSlug);
 
     if (gameSlug === "akta-nocy") {
       const configured = await configureAktaNocyRoom(
