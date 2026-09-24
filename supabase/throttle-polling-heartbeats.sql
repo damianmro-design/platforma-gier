@@ -155,8 +155,7 @@ begin
     ) end
   );
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION app_private.get_pp_state_internal(p_code text, p_player_token uuid DEFAULT NULL::uuid)
  RETURNS jsonb
@@ -512,5 +511,4 @@ begin
 
   return payload;
 end;
-$function$
-
+$function$;
