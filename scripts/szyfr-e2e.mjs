@@ -81,7 +81,8 @@ async function submitByUi(page, game) {
   const key = game.puzzle.stepKey;
   const value = answerFor(game);
 
-  await page.getByText(game.puzzle.title, { exact: true }).waitFor({ state: "visible" });
+  await page.locator("[data-step-key=" + JSON.stringify(key) + "]").waitFor({ state: "visible" });
+  await page.waitForTimeout(140);
 
   if (game.puzzle.answerType === "choice") {
     const wanted = clean(value);
