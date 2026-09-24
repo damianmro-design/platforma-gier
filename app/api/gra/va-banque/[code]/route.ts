@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getPlatformPlayer, isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
+import { isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
 import {
   claimVaBanqueTakeover,
   getVaBanqueState,
@@ -64,13 +64,6 @@ export async function GET(_request: Request, context: RouteContext) {
     const state = await getVaBanqueState(code, playerToken, hostToken);
     if (!state) {
       return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 409 });
-    }
-
-    if (playerToken) {
-      const player = await getPlatformPlayer(code, playerToken);
-      if (!player) {
-        return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
-      }
     }
 
     return NextResponse.json(
