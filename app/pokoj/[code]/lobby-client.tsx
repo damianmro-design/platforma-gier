@@ -91,9 +91,25 @@ export default function LobbyClient({ code }: { code: string }) {
   }, [code]);
 
   useEffect(() => {
-    void loadLobby();
-    const timer = window.setInterval(() => void loadLobby(), 1400);
-    return () => window.clearInterval(timer);
+    let polling = false;
+    const refreshIfVisible = async () => {
+      if (document.hidden || polling) return;
+      polling = true;
+      try {
+        await loadLobby();
+      } finally {
+        polling = false;
+      }
+    };
+
+    void refreshIfVisible();
+    // Avoid hammering the API from background tabs or overlapping slow requests.
+    const timer = window.setInterval(() => void refreshIfVisible(), 2500);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
   }, [loadLobby]);
 
   useEffect(() => {

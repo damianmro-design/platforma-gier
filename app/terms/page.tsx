@@ -18,7 +18,8 @@ export default function TermsPage() {
           <strong className="text-zinc-200">{LEGAL_CONFIG.operatorName}</strong>.
           Kontakt:{" "}
           <strong className="text-zinc-200">{LEGAL_CONFIG.contactEmail}</strong>.
-          Platforma działa pod adresem {LEGAL_CONFIG.serviceUrl}.
+          Adres usługodawcy: <strong className="text-zinc-200">{LEGAL_CONFIG.operatorAddress}</strong>,{" "}
+          {LEGAL_CONFIG.country}. Platforma działa pod adresem {LEGAL_CONFIG.serviceUrl}.
         </p>
         <p>Regulamin obowiązuje od {LEGAL_CONFIG.effectiveDate}.</p>
       </LegalSection>
@@ -32,6 +33,15 @@ export default function TermsPage() {
         <p>
           Poszczególne gry mogą mieć własne zasady, rankingi, systemy punktowe,
           profile, osiągnięcia i wymagania techniczne.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="2a. Bezpłatna wersja beta">
+        <p>
+          W obecnej wersji beta korzystanie z udostępnionych gier i funkcji zaGRAj
+          jest bezpłatne. Wyniki, XP, poziomy i fabularne nagrody nie są środkami
+          płatniczymi ani nagrodami pieniężnymi. Przed uruchomieniem jakiejkolwiek
+          sprzedaży opublikujemy osobne warunki dotyczące odpłatnych usług.
         </p>
       </LegalSection>
 
