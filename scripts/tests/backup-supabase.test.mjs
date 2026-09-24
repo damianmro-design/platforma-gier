@@ -19,6 +19,10 @@ test("backup script passes bash syntax check", () => {
   assert.equal(spawnSync("bash", ["-n", script]).status, 0);
 });
 
+test("macOS interactive wrapper passes bash syntax check", () => {
+  assert.equal(spawnSync("bash", ["-n", resolve("scripts/backup-mac.sh")]).status, 0);
+});
+
 test("help does not require credentials or contact databases", () => {
   const result = run({}, "--help");
   assert.equal(result.status, 0);
