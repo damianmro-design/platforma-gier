@@ -385,7 +385,7 @@ export default function GameClient({ code }: { code: string }) {
           ))}
         </div>
 
-        <section className="mt-3 overflow-hidden rounded-[1.8rem] border border-cyan-200/12 bg-[#07191d]/94 shadow-[0_28px_90px_rgba(0,0,0,.42)]">
+        <section data-step-key={puzzle.stepKey} className="mt-3 overflow-hidden rounded-[1.8rem] border border-cyan-200/12 bg-[#07191d]/94 shadow-[0_28px_90px_rgba(0,0,0,.42)]">
           <div className="border-b border-cyan-200/8 bg-gradient-to-r from-teal-300/[.06] via-cyan-300/[.025] to-transparent p-5">
             <p className="text-[9px] font-black uppercase tracking-[.22em] text-teal-300/60">
               CEL ETAPU
