@@ -20,6 +20,20 @@ export function validateReleaseEnv(env) {
     }
   }
 
+  // A suspended sole proprietorship must not silently be treated as an active
+  // service operator. This flag is a release-process gate, not legal advice.
+  const basis = String(env.BETA_OPERATOR_BASIS ?? "").trim();
+  if (!["active-business", "independent-noncommercial-reviewed"].includes(basis)) {
+    errors.push(
+      "BETA_OPERATOR_BASIS: potwierdź aktywną działalność albo niezależny, prawnie zweryfikowany projekt niekomercyjny.",
+    );
+  }
+  if (String(env.BETA_LEGAL_REVIEW_CONFIRMED ?? "").trim() !== "true") {
+    errors.push(
+      "BETA_LEGAL_REVIEW_CONFIRMED: wymagany zakończony przegląd statusu operatora i dokumentów przed publicznym startem.",
+    );
+  }
+
   const email = String(env.NEXT_PUBLIC_CONTACT_EMAIL ?? "").trim();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push("NEXT_PUBLIC_CONTACT_EMAIL: nieprawidłowy format adresu.");
