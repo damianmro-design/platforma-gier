@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { lookupPlatformRoom } from "@/lib/platform-db";
@@ -9,7 +10,8 @@ type GamePageProps = {
 
 export default async function PodPrzykrywkaGamePage({ params }: GamePageProps) {
   const { code: rawCode } = await params;
-  const code = rawCode.trim().toUpperCase();
+  const code = cleanRoomCode(rawCode);
+  if (!code) notFound();
   const room = await lookupPlatformRoom(code);
 
   if (!room || room.game_slug !== "pod-przykrywka") {

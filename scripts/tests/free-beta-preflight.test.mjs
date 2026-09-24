@@ -10,6 +10,8 @@ const valid = {
   NEXT_PUBLIC_PLATFORM_URL: "https://example.org",
   BETA_OPERATOR_BASIS: "active-business",
   BETA_LEGAL_REVIEW_CONFIRMED: "true",
+  ZAGRAJ_ROOM_CREATION_MODE: "server-only",
+  SUPABASE_ROOM_CREATE_SECRET_KEY: "sb_secret_FAKE_ONLY_FOR_STRUCTURAL_TESTS",
 };
 
 test("complete release config passes structural check", () => {
@@ -62,6 +64,22 @@ test("reviewed independent route passes the structural gate", () => {
     ...valid,
     BETA_OPERATOR_BASIS: "independent-noncommercial-reviewed",
   }), []);
+});
+
+test("public create mode cannot pass public release preflight", () => {
+  const errors = validateReleaseEnv({
+    ...valid,
+    ZAGRAJ_ROOM_CREATION_MODE: "public",
+  });
+  assert.ok(errors.some((error) => error.includes("ZAGRAJ_ROOM_CREATION_MODE")));
+});
+
+test("publishable key cannot be used as privileged creation secret", () => {
+  const errors = validateReleaseEnv({
+    ...valid,
+    SUPABASE_ROOM_CREATE_SECRET_KEY: "sb_publishable_abcdefghijklmnopqrstuvw",
+  });
+  assert.ok(errors.some((error) => error.includes("SUPABASE_ROOM_CREATE_SECRET_KEY")));
 });
 
 test("missing config does not pass silently", () => {

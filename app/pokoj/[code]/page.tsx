@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
@@ -57,7 +58,8 @@ type RoomPageProps = {
 
 export default async function RoomPage({ params }: RoomPageProps) {
   const { code: rawCode } = await params;
-  const code = rawCode.trim().toUpperCase();
+  const code = cleanRoomCode(rawCode);
+  if (!code) notFound();
 
   let room;
 

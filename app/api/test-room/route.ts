@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { readJsonObjectLimited } from "@/lib/request-guards.mjs";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
   configureAktaNocyRoom,
-  createPlatformRoom,
   prepareTestRoom,
 } from "@/lib/platform-db";
+import { createPlatformRoomServer } from "@/lib/platform-room-create";
 
 const TESTER_EMAIL = "damian.mro@wp.pl";
 
@@ -26,7 +27,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Tryb testowy nie jest dostępny na tym koncie." }, { status: 403 });
   }
 
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonObjectLimited(request);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const body = parsed.body;
   const gameSlug = String(body.gameSlug ?? "").trim();
   const botCount = BOT_COUNTS[gameSlug];
   const aktaCase = String(body.aktaCase ?? "apartament-214") === "ostatni-kurs"
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const room = await createPlatformRoom(gameSlug);
+    const room = await createPlatformRoomServer(gameSlug);
 
     if (gameSlug === "akta-nocy") {
       const configured = await configureAktaNocyRoom(

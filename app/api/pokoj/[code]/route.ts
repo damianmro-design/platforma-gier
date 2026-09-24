@@ -1,5 +1,7 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { readJsonObjectLimited } from "@/lib/request-guards.mjs";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
@@ -21,10 +23,6 @@ type RouteContext = {
   params: Promise<{ code: string }>;
 };
 
-function cleanCode(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
-
 function cookieNames(code: string) {
   return {
     host: `partyplay_host_${code}`,
@@ -34,7 +32,8 @@ function cookieNames(code: string) {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
+  if (!code) return NextResponse.json({ error: "Nieprawidłowy kod pokoju." }, { status: 404 });
 
   const room = await lookupPlatformRoom(code);
   if (!room) {
@@ -73,8 +72,11 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
-  const body = await request.json().catch(() => ({}));
+  const code = cleanRoomCode(rawCode);
+  if (!code) return NextResponse.json({ error: "Nieprawidłowy kod pokoju." }, { status: 404 });
+  const parsed = await readJsonObjectLimited(request);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const body = parsed.body;
   const action = String(body.action ?? "");
   const cookieStore = await cookies();
   const names = cookieNames(code);
@@ -117,10 +119,9 @@ export async function POST(request: Request, context: RouteContext) {
       const recoveryCode = String(body.recoveryCode ?? "")
         .trim()
         .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6);
+        .replace(/[\s-]/g, "");
 
-      if (!name || recoveryCode.length !== 6) {
+      if (!name || !/^[A-Z0-9]{6}$/.test(recoveryCode)) {
         return NextResponse.json(
           { error: "Wpisz imię i 6-znakowy kod powrotu." },
           { status: 400 },

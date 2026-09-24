@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
@@ -15,10 +16,6 @@ import {
 type RouteContext = {
   params: Promise<{ code: string }>;
 };
-
-function cleanCode(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
 
 function messageFor(error: unknown) {
   const raw = error instanceof Error ? error.message : "";
@@ -48,7 +45,7 @@ async function accessFor(code: string) {
 
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
 
   try {
     const room = await lookupPlatformRoom(code);
@@ -80,7 +77,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const body = await request.json().catch(() => ({}));
   const action = String(body.action ?? "");
   const { hostToken, playerToken } = await accessFor(code);

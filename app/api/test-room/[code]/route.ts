@@ -1,3 +1,4 @@
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
@@ -8,13 +9,9 @@ import {
 
 type RouteContext = { params: Promise<{ code: string }> };
 
-function cleanCode(value: string) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
-
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? "";
 
@@ -41,7 +38,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
-  const code = cleanCode(rawCode);
+  const code = cleanRoomCode(rawCode);
   const cookieStore = await cookies();
   const hostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? "";
 

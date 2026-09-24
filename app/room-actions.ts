@@ -1,23 +1,16 @@
 "use server";
 
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   configureAktaNocyRoom,
-  createPlatformRoom,
   lookupPlatformRoom,
   type PlatformRoom,
 } from "@/lib/platform-db";
+import { createPlatformRoomServer } from "@/lib/platform-room-create";
 
 const ALLOWED_GAMES = new Set(["co-ludzie-powiedza", "zakrecone-haslo", "pod-przykrywka", "akta-nocy", "tylko-my", "va-banque", "szyfr"]);
-
-function normalizeCode(value: FormDataEntryValue | null) {
-  return String(value ?? "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 4);
-}
 
 export async function createRoom(formData: FormData) {
   const gameSlug = String(formData.get("gameSlug") ?? "").trim();
@@ -29,7 +22,7 @@ export async function createRoom(formData: FormData) {
   let room;
 
   try {
-    room = await createPlatformRoom(gameSlug);
+    room = await createPlatformRoomServer(gameSlug);
 
     if (gameSlug === "akta-nocy") {
       const rawCase = String(formData.get("aktaCase") ?? "apartament-214").trim();
@@ -65,7 +58,7 @@ export async function createRoom(formData: FormData) {
 }
 
 export async function joinRoom(formData: FormData) {
-  const code = normalizeCode(formData.get("roomCode"));
+  const code = cleanRoomCode(formData.get("roomCode"));
   const rawReturnPath = String(formData.get("returnPath") ?? "").trim();
   const returnPath = ["/gry/tylko-my", "/gry/va-banque", "/gry/szyfr"].includes(rawReturnPath)
     ? rawReturnPath
@@ -74,7 +67,7 @@ export async function joinRoom(formData: FormData) {
   const errorTarget = (error: string, extra = "") =>
     `${returnPath}?roomError=${error}${extra}#dolacz`;
 
-  if (code.length !== 4) {
+  if (!code) {
     redirect(errorTarget("invalid-code"));
   }
 
