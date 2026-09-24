@@ -19,6 +19,8 @@ export default function PrivacyPage() {
           prowadzący platformę „{LEGAL_CONFIG.serviceName}”. Kontakt w sprawach
           prywatności:{" "}
           <strong className="text-zinc-200">{LEGAL_CONFIG.contactEmail}</strong>.
+          Adres administratora: <strong className="text-zinc-200">{LEGAL_CONFIG.operatorAddress}</strong>,{" "}
+          {LEGAL_CONFIG.country}.
         </p>
         <p>
           Adres platformy: {LEGAL_CONFIG.serviceUrl}. Data obowiązywania:{" "}
