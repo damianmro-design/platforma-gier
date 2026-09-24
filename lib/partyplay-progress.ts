@@ -314,16 +314,6 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
         target: 1,
       }),
       makeBadge({
-        code: `game:${meta.slug}:first_win`,
-        title: `${meta.shortLabel}: pierwsze zwycięstwo`,
-        description: `Wygraj pierwszą rozgrywkę w „${meta.label}”.`,
-        icon: "🏅",
-        scope: "game",
-        gameSlug: meta.slug,
-        current: game.wins,
-        target: 1,
-      }),
-      makeBadge({
         code: `game:${meta.slug}:games_5`,
         title: `${meta.shortLabel}: stały bywalec`,
         description: `Ukończ 5 rozgrywek w „${meta.label}”.`,
@@ -333,17 +323,33 @@ export function calculatePartyPlayProgress(input: PartyPlayProgressInput) {
         current: game.gamesCompleted,
         target: 5,
       }),
-      makeBadge({
-        code: `game:${meta.slug}:wins_3`,
-        title: `${meta.shortLabel}: hat trick`,
-        description: `Wygraj 3 rozgrywki w „${meta.label}”.`,
-        icon: "🏆",
-        scope: "game",
-        gameSlug: meta.slug,
-        current: game.wins,
-        target: 3,
-      }),
     );
+
+    // TYLKO MY is cooperative and has no individual winner.
+    if (meta.slug !== "tylko-my") {
+      badges.push(
+        makeBadge({
+          code: `game:${meta.slug}:first_win`,
+          title: `${meta.shortLabel}: pierwsze zwycięstwo`,
+          description: `Wygraj pierwszą rozgrywkę w „${meta.label}”.`,
+          icon: "🏅",
+          scope: "game",
+          gameSlug: meta.slug,
+          current: game.wins,
+          target: 1,
+        }),
+        makeBadge({
+          code: `game:${meta.slug}:wins_3`,
+          title: `${meta.shortLabel}: hat trick`,
+          description: `Wygraj 3 rozgrywki w „${meta.label}”.`,
+          icon: "🏆",
+          scope: "game",
+          gameSlug: meta.slug,
+          current: game.wins,
+          target: 3,
+        }),
+      );
+    }
   }
 
   const partyPlayBadgesEarned = badges.filter((badge) => badge.earned).length;

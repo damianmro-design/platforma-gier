@@ -73,6 +73,7 @@ export async function GET(request: Request) {
         gamesCompleted: Number(game.gamesCompleted ?? 0),
         wins: Number(game.wins ?? 0),
       })),
+      podPrzykrywka: platformStats.podPrzykrywka,
     });
 
     let history = platformStats.history;

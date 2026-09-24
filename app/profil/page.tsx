@@ -19,6 +19,10 @@ const GAME_LABELS: Record<string, string> = {
   "floor-party": "Floor Party",
   "polowanie-na-milionera": "Polowanie na Milionera",
   "pod-przykrywka": "Pod Przykrywką",
+  "akta-nocy": "Akta Nocy",
+  "szyfr": "SZYFR",
+  "tylko-my": "TYLKO MY",
+  "va-banque": "VA BANQUE",
 };
 
 type Profile = {

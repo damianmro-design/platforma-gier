@@ -36,6 +36,20 @@ export const PARTYPLAY_GAMES: PartyPlayGameMeta[] = [
     connectedToProgress: true,
   },
   {
+    slug: "akta-nocy",
+    label: "Akta Nocy",
+    shortLabel: "Akta Nocy",
+    icon: "📁",
+    connectedToProgress: true,
+  },
+  {
+    slug: "szyfr",
+    label: "SZYFR",
+    shortLabel: "SZYFR",
+    icon: "🔐",
+    connectedToProgress: true,
+  },
+  {
     slug: "floor-party",
     label: "Floor Party",
     shortLabel: "Floor Party",
@@ -47,14 +61,14 @@ export const PARTYPLAY_GAMES: PartyPlayGameMeta[] = [
     label: "TYLKO MY",
     shortLabel: "Tylko My",
     icon: "♡",
-    connectedToProgress: false,
+    connectedToProgress: true,
   },
   {
     slug: "va-banque",
     label: "VA BANQUE",
     shortLabel: "VA BANQUE",
     icon: "◆",
-    connectedToProgress: false,
+    connectedToProgress: true,
   },
 ] as const;
 
