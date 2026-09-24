@@ -14,6 +14,7 @@ import {
   setPlatformPlayerReady,
   startPlatformRoom,
   isPlatformTestRoomHost,
+  isPlatformRoomHost,
 } from "@/lib/platform-db";
 
 type RouteContext = {
@@ -45,10 +46,11 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostToken = cookieStore.get(names.host)?.value ?? null;
   const playerToken = cookieStore.get(names.player)?.value ?? null;
 
-  const [players, currentPlayer, recoveryCode, isTest, aktaConfig] = await Promise.all([
+  const [players, currentPlayer, recoveryCode, isHost, isTest, aktaConfig] = await Promise.all([
     listPlatformLobby(code),
     playerToken ? getPlatformPlayer(code, playerToken) : Promise.resolve(null),
     playerToken ? getPlatformRecoveryCode(code, playerToken) : Promise.resolve(null),
+    hostToken ? isPlatformRoomHost(code, hostToken) : Promise.resolve(false),
     hostToken ? isPlatformTestRoomHost(code, hostToken) : Promise.resolve(false),
     room.game_slug === "akta-nocy" ? getAktaNocyRoomConfig(code) : Promise.resolve(null),
   ]);
@@ -65,7 +67,7 @@ export async function GET(_request: Request, context: RouteContext) {
     players,
     currentPlayerId: currentPlayer?.id ?? null,
     recoveryCode,
-    isHost: Boolean(hostToken),
+    isHost,
   });
 }
 
@@ -156,7 +158,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (action === "shuffle") {
       const hostToken = cookieStore.get(names.host)?.value;
-      if (!hostToken) {
+      if (!hostToken || !(await isPlatformRoomHost(code, hostToken))) {
         return NextResponse.json({ error: "Tylko host może losować drużyny." }, { status: 403 });
       }
 
@@ -170,7 +172,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (action === "start") {
       const hostToken = cookieStore.get(names.host)?.value;
-      if (!hostToken) {
+      if (!hostToken || !(await isPlatformRoomHost(code, hostToken))) {
         return NextResponse.json({ error: "Tylko host może rozpocząć grę." }, { status: 403 });
       }
 
