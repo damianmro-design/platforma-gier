@@ -63,3 +63,10 @@ test("invalid page URLs are rejected before database access", () => {
     assert.doesNotMatch(code, /rawCode\.trim\(\)\.toUpperCase\(\)/, path);
   }
 });
+
+
+test("recovery code must match exactly, not a silently truncated prefix", () => {
+  const code = readFileSync("app/api/pokoj/[code]/route.ts", "utf8");
+  assert.match(code, /!\s*\/\^\[A-Z0-9\]\{6\}\$\/\.test\(recoveryCode\)/);
+  assert.doesNotMatch(code, /\.slice\(0,\s*6\)/);
+});
