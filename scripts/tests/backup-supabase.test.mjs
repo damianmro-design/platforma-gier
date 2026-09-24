@@ -40,7 +40,10 @@ test("mock backup writes six ciphertext files, manifest, no plaintext", () => {
         '  if [[ "$1" == "-f" ]]; then out="$2"; shift 2; else shift; fi',
         "done",
         '[[ -n "$out" ]] || exit 5',
-        "printf 'synthetic dump\\n' > \"$out\"",
+        'case "$out" in',
+        '  */data.sql) printf "COPY auth.users (id) FROM stdin;\\\\n\\\\.\\\\n" > "$out" ;; ',
+        '  *) printf "synthetic dump\\\\n" > "$out" ;; ',
+        'esac',
         "",
       ].join("\n"),
       age: [
@@ -61,12 +64,14 @@ test("mock backup writes six ciphertext files, manifest, no plaintext", () => {
       chmodSync(target, 0o700);
     }
     const backupRoot = join(root, "zagraj-backups");
+    const platformRef = "glcjetxskjnlbeegirln";
+    const polowanieRef = "ggxfccvrswbnxfuavnht";
     const env = {
       PATH: bin + ":" + process.env.PATH,
       ZAGRAJ_BACKUP_ROOT: backupRoot,
       ZAGRAJ_BACKUP_RECIPIENT: "age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-      ZAGRAJ_PLATFORM_DB_URL: "postgresql://platform:fake-secret@localhost/db",
-      ZAGRAJ_POLOWANIE_DB_URL: "postgresql://polowanie:fake-secret@localhost/db",
+      ZAGRAJ_PLATFORM_DB_URL: `postgresql://postgres.${platformRef}:fake-secret@aws-0-us-east-1.pooler.supabase.com:5432/postgres`,
+      ZAGRAJ_POLOWANIE_DB_URL: `postgresql://postgres.${polowanieRef}:fake-secret@aws-0-us-east-1.pooler.supabase.com:5432/postgres`,
     };
     const result = run(env, "--run");
     assert.equal(result.status, 0, result.stderr);
@@ -75,7 +80,7 @@ test("mock backup writes six ciphertext files, manifest, no plaintext", () => {
     assert.equal(dirs.length, 1);
     for (const name of ["platform", "polowanie"]) {
       const files = readdirSync(join(backupRoot, dirs[0], name)).sort();
-      assert.deepEqual(files, ["SHA256SUMS", "data.sql.age", "roles.sql.age", "schema.sql.age"]);
+      assert.deepEqual(files, ["SHA256SUMS", "data.sql.age", "history_data.sql.age", "history_schema.sql.age", "roles.sql.age", "schema.sql.age"]);
       assert.match(readFileSync(join(backupRoot, dirs[0], name, "SHA256SUMS"), "utf8"), /roles.sql.age/);
     }
   } finally {
