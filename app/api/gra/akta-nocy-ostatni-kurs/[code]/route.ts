@@ -101,8 +101,8 @@ function reconstructionSummary(
     routeCounts.set(routeKey, (routeCounts.get(routeKey) ?? 0) + 1);
   });
 
-  const eventByKey = new Map(
-    OSTATNI_KURS_RECONSTRUCTION_EVENTS.map((item) => [item.key, item]),
+  const eventByKey = new Map<string, { title: string }>(
+    OSTATNI_KURS_RECONSTRUCTION_EVENTS.map((item) => [item.key, { title: item.title }]),
   );
 
   return {
@@ -141,10 +141,10 @@ function accusationSummary(
   const evidenceById = new Map(
     OSTATNI_KURS_ALL_EVIDENCE.map((item) => [item.id, item]),
   );
-  const motiveByKey = new Map(
+  const motiveByKey = new Map<string, string>(
     OSTATNI_KURS_MOTIVE_OPTIONS.map((item) => [item.key, item.label]),
   );
-  const methodByKey = new Map(
+  const methodByKey = new Map<string, string>(
     OSTATNI_KURS_DISAPPEARANCE_OPTIONS.map((item) => [item.key, item.label]),
   );
 
