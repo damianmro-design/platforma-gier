@@ -198,6 +198,29 @@ function accusationSummary(
   };
 }
 
+function publicAccusationSummary(
+  summary: ReturnType<typeof accusationSummary>,
+  phase: string | null | undefined,
+) {
+  if (phase === "ok_ujawnienie_5") return summary;
+
+  // Wcześniej ujawniamy wyłącznie wybory graczy. Trafność, osoba odpowiedzialna
+  // i dane rozwiązania pozostają na serwerze do ostatniej części ujawnienia.
+  return {
+    total: summary.total,
+    results: summary.results.map((item) => ({
+      playerId: item.playerId,
+      displayName: item.displayName,
+      avatar: item.avatar,
+      suspect: item.suspect,
+      motiveLabel: item.motiveLabel,
+      evidenceNo: item.evidenceNo,
+      evidenceTitle: item.evidenceTitle,
+      disappearanceLabel: item.disappearanceLabel,
+    })),
+  };
+}
+
 function revealForPhase(phase: string | null | undefined) {
   if (!phase?.startsWith("ok_ujawnienie_")) return null;
   const step = Number(phase.replace("ok_ujawnienie_", ""));
@@ -302,9 +325,17 @@ export async function GET(_request: Request, context: RouteContext) {
     room.game_phase === "ok_oskarzenie_wynik" ||
     room.game_phase?.startsWith("ok_ujawnienie_")
   ) {
-    reconstruction = reconstructionSummary(
+    const summary = reconstructionSummary(
       await getAktaNocyOkReconstructionResults(code, sessionToken),
     );
+    reconstruction =
+      room.game_phase === "ok_ujawnienie_5"
+        ? summary
+        : {
+            total: summary.total,
+            consensusTimeline: summary.consensusTimeline,
+            routes: summary.routes,
+          };
   }
 
   let accusations = null;
@@ -312,9 +343,12 @@ export async function GET(_request: Request, context: RouteContext) {
     room.game_phase === "ok_oskarzenie_wynik" ||
     room.game_phase?.startsWith("ok_ujawnienie_")
   ) {
-    accusations = accusationSummary(
-      await getAktaNocyOkAccusationResultsForSession(code, sessionToken),
-      cast,
+    accusations = publicAccusationSummary(
+      accusationSummary(
+        await getAktaNocyOkAccusationResultsForSession(code, sessionToken),
+        cast,
+      ),
+      room.game_phase,
     );
   }
 
