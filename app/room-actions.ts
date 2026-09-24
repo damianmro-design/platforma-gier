@@ -1,6 +1,6 @@
-import { cleanRoomCode } from "@/lib/room-code.mjs";
 "use server";
 
+import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import {
