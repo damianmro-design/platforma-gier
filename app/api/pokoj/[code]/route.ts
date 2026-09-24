@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { readJsonObjectLimited } from "@/lib/request-guards.mjs";
 import { getPartyPlayUserFromAccessToken } from "@/lib/partyplay-auth";
 import {
   assignPlatformTeams,
@@ -74,7 +75,9 @@ export async function GET(_request: Request, context: RouteContext) {
 export async function POST(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
   const code = cleanCode(rawCode);
-  const body = await request.json().catch(() => ({}));
+  const parsed = await readJsonObjectLimited(request);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: parsed.status });
+  const body = parsed.body;
   const action = String(body.action ?? "");
   const cookieStore = await cookies();
   const names = cookieNames(code);
