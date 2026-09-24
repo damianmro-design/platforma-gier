@@ -78,14 +78,44 @@ export default function GameClient({ code }: { code: string }) {
     }
   }, [code]);
 
+  // The local countdown updates independently, so most phases do not need
+  // a 700 ms database poll. Keep takeover contention responsive.
+  const pollInterval =
+    data?.game.phase === "takeover_open"
+      ? 700
+      : data?.game.phase === "bidding" ||
+          data?.game.phase === "tie_bid" ||
+          data?.game.phase === "question" ||
+          data?.game.phase === "takeover_question" ||
+          data?.game.phase === "final_bidding" ||
+          data?.game.phase === "final_question"
+        ? 1200
+        : 2000;
+
   useEffect(() => {
-    void load();
-    const timer = window.setInterval(() => void load(), 700);
-    return () => window.clearInterval(timer);
-  }, [load]);
+    let polling = false;
+    const refreshIfVisible = async () => {
+      if (document.hidden || polling) return;
+      polling = true;
+      try {
+        await load();
+      } finally {
+        polling = false;
+      }
+    };
+
+    void refreshIfVisible();
+    const timer = window.setInterval(() => void refreshIfVisible(), pollInterval);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
+  }, [load, pollInterval]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
+      if (document.hidden) return;
       if (!data?.game.deadline) {
         setSecondsLeft(0);
         return;
