@@ -24,7 +24,7 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const joinError =
     params.roomError === "invalid-code"
-      ? "Wpisz 4-znakowy kod pokoju."
+      ? "Wpisz poprawny kod pokoju (4 lub 6 znaków)."
       : params.roomError === "not-found"
         ? `Nie znaleźliśmy pokoju ${params.code ? `„${params.code}”` : "o takim kodzie"}.`
         : params.roomError === "lookup-failed"
@@ -85,7 +85,7 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
               <span className="text-[9px] font-black uppercase tracking-[.18em] text-teal-200">NOWA OPERACJA</span>
               <h2 className="mt-1 text-base font-black">Utwórz grę</h2>
               <p className="mt-1 text-xs leading-5 text-cyan-50/60">
-                Dostaniesz 4-znakowy kod. Każda osoba dołącza na własnym telefonie.
+                Dostaniesz kod pokoju. Każda osoba dołącza na własnym telefonie.
               </p>
               <button
                 type="submit"
@@ -106,10 +106,10 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
               <input
                 id="szyfr-room-code"
                 name="roomCode"
-                maxLength={4}
+                maxLength={6}
                 required
                 autoComplete="off"
-                placeholder="AB12"
+                placeholder="AB12CD"
                 defaultValue={params.code ?? ""}
                 className="mt-4 w-full rounded-xl border border-cyan-200/12 bg-black/25 px-4 py-3.5 text-center text-2xl font-black uppercase tracking-[.34em] text-white outline-none placeholder:text-cyan-100/15 focus:border-teal-300/45 focus:ring-4 focus:ring-teal-300/10"
               />
