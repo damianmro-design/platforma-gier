@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LEGAL_CONFIG } from "@/lib/legal-config";
 
 export default function LegalFooter() {
   return (
@@ -13,8 +14,8 @@ export default function LegalFooter() {
         <Link href="/contact" className="transition hover:text-violet-300">
           Kontakt
         </Link>
-        <a href="mailto:hej@zagraj.fun" className="transition hover:text-violet-300">
-          hej@zagraj.fun
+        <a href={`mailto:${LEGAL_CONFIG.contactEmail}`} className="transition hover:text-violet-300">
+          {LEGAL_CONFIG.contactEmail}
         </a>
       </div>
       <p className="mt-4 text-[9px] leading-4 text-zinc-700">
