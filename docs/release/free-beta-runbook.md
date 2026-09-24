@@ -64,7 +64,7 @@ Advisory: https://supabase.com/docs/guides/observability/advisors?queryGroups=li
 ## 5. Obciążenie i koszt [BLOKER przy szerokiej promocji]
 
 - [ ] Ustalić liczby faktycznych zapytań na minutę/grę oraz szczytowy ruch, p95 odpowiedzi, wielkość bazy i transfer.
-- [ ] Przeanalizować polling lobby (obecnie co 1400 ms) oraz zapis `last_seen_at` w Pod Przykrywką na odczycie; unikać nadmiarowych zapisów.
+- [ ] Przeanalizować polling lobby (po zmianie: maksymalnie co 2500 ms w widocznej karcie; sprawdzić zachowanie po powrocie do karty) oraz zapis `last_seen_at` w Pod Przykrywką na odczycie; unikać nadmiarowych zapisów.
 - [ ] Przeprowadzić autoryzowany, ograniczony test na odrębnym środowisku z osobną bazą/danymi syntetycznymi. NIE obciążać produkcji ani Vercel/Supabase bez zgodności z warunkami usług.
 - [ ] Wprowadzić stopniowe fale: mała grupa → kilkanaście pokojów → szerszy ruch. Rozszerzać dopiero po przeglądzie metryk i limitów.
 - [ ] Ustawić alerty wykorzystania i limity wydatków w Vercel/Supabase. Zostawić rezerwę, nie zakładać "nieskończonej" pojemności free tier.
