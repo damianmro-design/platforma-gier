@@ -140,7 +140,7 @@ begin
   jsonb_build_object('revision',g.revision,'draft',g.draft),
   jsonb_build_object('revision',g.revision+1,'draft',c));
  return jsonb_build_object('slug',p_slug,'revision',g.revision+1,'state','draft');
-end; $function$
+end; $function$;
 
 -- Restoring a historical publication must not inherit a newer hero introduction.
 create or replace function public.zagraj_catalog_restore_draft(
