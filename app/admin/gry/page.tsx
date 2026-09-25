@@ -4,6 +4,7 @@ import Link from "next/link";
 import GameMediaPicker from "@/components/game-media-picker";
 import AdminCatalogHistory from "@/components/admin-catalog-history";
 import { gameMediaUrl } from "@/lib/zagraj-media";
+import { announceCatalogPublication } from "@/lib/zagraj-catalog-refresh";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
@@ -146,6 +147,7 @@ export default function AdminCatalogPage() {
       await adminApi("/api/admin/catalog", token, {
         action: kind, slug: chosen.slug, expectedRevision: chosen.revision, data,
       });
+      if (kind === "publish") announceCatalogPublication();
       await load(token, chosen.slug);
       setNotice(kind === "save" ? "Szkic zapisany. Strona główna jeszcze się nie zmieniła." :
         kind === "submit" ? "Projekt przesłany do zatwierdzenia przez właściciela." :
