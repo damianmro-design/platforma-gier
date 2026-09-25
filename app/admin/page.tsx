@@ -189,7 +189,7 @@ export default function AdminPage() {
       <section className="py-10">
         <p className="text-xs font-black uppercase tracking-[.25em] text-violet-300">Centrum zarządzania</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Pulpit administratora</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">Bezpieczne zarządzanie zespołem i dostępami. Edytor katalogu i kreator gier dołączą w następnych etapach.</p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">Zarządzanie zespołem, uprawnieniami oraz edycja kart gier. Właściciel zatwierdza publikację, a kreator mechanik będzie rozwijany etapami.</p>
       </section>
 
       {message && <p role="status" className="mb-5 rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">{message}</p>}
@@ -206,14 +206,17 @@ export default function AdminPage() {
           <h2 className="text-xl font-black">Moduły administracyjne</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             {[
-              ["Gry i katalog", "Edycja treści, statusów i kart", "Etap II"],
+              ["Gry i katalog", "Edycja kart ze szkicem i zatwierdzeniem", "OTWÓRZ"],
               ["Kreator gier", "Szablony i bloki mechaniki", "Etap IV"],
               ["Biblioteka mediów", "Grafiki, audio i wideo", "Etap II"],
               ["XP i odznaki", "Tylko osoby z uprawnieniem", "Etap V"],
               ["Statystyki", "Rzeczywiste dane platformy", "Etap V"],
               ["Integracje", "Floor Party i Polowanie", "Etap VI"],
             ].map(([title, description, phase]) =>
-              <div key={title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              title === "Gry i katalog" ? <Link key={title} href="/admin/gry" className="rounded-2xl border border-violet-400/30 bg-violet-500/10 p-4 transition hover:border-violet-300/70">
+                <div className="flex items-start justify-between gap-2"><strong className="text-sm">{title}</strong><span className="whitespace-nowrap text-[10px] text-violet-200">{phase} ↗</span></div>
+                <p className="mt-2 text-xs leading-5 text-zinc-400">{description}</p>
+              </Link> : <div key={title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <div className="flex items-start justify-between gap-2"><strong className="text-sm">{title}</strong><span className="whitespace-nowrap text-[10px] text-violet-300">{phase}</span></div>
                 <p className="mt-2 text-xs leading-5 text-zinc-500">{description}</p>
               </div>)}

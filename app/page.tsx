@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { CatalogGame } from "@/lib/zagraj-catalog-defaults";
 import { joinRoom } from "./room-actions";
 import AccountMenu from "./account-menu";
 import FloorOwnerTestButton from "@/components/floor-owner-test-button";
@@ -390,6 +391,32 @@ export default function Home() {
   const [playerCount, setPlayerCount] = useState("");
   const [maxTime, setMaxTime] = useState("");
   const [mood, setMood] = useState<MoodFilter | "">("");
+  const [catalog, setCatalog] = useState<CatalogGame[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState("");
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/games/catalog", { signal: controller.signal, cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Katalog gier jest chwilowo niedostępny.");
+        return response.json();
+      })
+      .then((data: unknown) => {
+        if (!Array.isArray(data) || !data.every((entry) =>
+          entry && typeof entry === "object" &&
+          typeof entry.title === "string" && typeof entry.slug === "string" &&
+          Array.isArray(entry.tags) && Array.isArray(entry.categories) && Array.isArray(entry.moods)
+        )) throw new Error("Otrzymano nieprawidłowe dane katalogu.");
+        setCatalog(data as CatalogGame[]);
+        setCatalogError("");
+      })
+      .catch((error: Error) => {
+        if (error.name !== "AbortError") setCatalogError(error.message);
+      })
+      .finally(() => { if (!controller.signal.aborted) setCatalogLoading(false); });
+    return () => controller.abort();
+  }, []);
 
   const filters: GameFilterState = {
     category,
@@ -632,181 +659,16 @@ export default function Home() {
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <FilteredGameCard filters={filters}
-              title="Polowanie na Milionera"
-              minPlayers={6}
-              maxPlayers={14}
-              minTime={60}
-              maxTime={120}
-              categories={["strategic"]}
-              moods={["think", "compete"]}
-              eyebrow="Duża gra wieczoru"
-              description="Tajne role, zadania, blef, eliminacje i milion, który może zmieniać właściciela."
-              players="6–14 graczy"
-              time="60–120 min"
-              tags={["strategia", "reality show", "ekran lub prowadzący"]}
-              accent="gold"
-              art="millionaire"
-              href="https://polowanienamilionera.pl"
-              external
-              authHandoff="polowanie"
-              status="hit"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="Floor Party"
-              minPlayers={6}
-              maxPlayers={20}
-              minTime={25}
-              maxTime={60}
-              categories={["funny", "strategic"]}
-              moods={["laugh", "think", "compete"]}
-              eyebrow="Obroń swoją podłogę"
-              description="Zgaduj obrazy i hasła w pojedynkach, broń swojego pola i przejmuj terytorium rywali, aż cały Floor będzie należał do 1 gracza."
-              players="6–20 graczy"
-              time="25–60 min"
-              tags={["zgadywanie", "pojedynki", "wymagany prowadzący"]}
-              accent="pink"
-              art="floor"
-              href="https://floor-party.vercel.app"
-              external
-              status="hit"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="CO LUDZIE POWIEDZĄ"
-              minPlayers={4}
-              maxPlayers={14}
-              minTime={45}
-              maxTime={75}
-              categories={["funny", "team"]}
-              moods={["laugh", "compete", "cooperate"]}
-              eyebrow="Grywalna beta"
-              description="Przewiduj najpopularniejsze odpowiedzi i sprawdź, czy naprawdę znasz swoją ekipę. Najlepiej działa przy 6–10 osobach."
-              players="4–14 graczy"
-              time="45–75 min"
-              tags={["ankiety", "drużynowa", "wymagany prowadzący"]}
-              accent="yellow"
-              art="people"
-              href="/gry/co-ludzie-powiedza"
-              status="new"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="Pod Przykrywką"
-              minPlayers={6}
-              maxPlayers={14}
-              minTime={45}
-              maxTime={75}
-              categories={["strategic"]}
-              moods={["think", "compete"]}
-              eyebrow="Dedukcja i blef"
-              description="Jedna osoba działa przeciw grupie. Obserwuj, zbieraj tropy i odkryj, kto gra podwójną grę."
-              players="6–14 graczy"
-              time="45–75 min"
-              tags={["psychologiczna", "tajna rola", "wymagany prowadzący"]}
-              accent="cyan"
-              art="agent"
-              href="/gry/pod-przykrywka"
-              status="new"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="Akta Nocy"
-              minPlayers={5}
-              maxPlayers={12}
-              minTime={75}
-              maxTime={105}
-              categories={["strategic", "team"]}
-              moods={["think", "cooperate"]}
-              eyebrow="Interaktywne śledztwo"
-              description="Role, sekrety, dowody i przesłuchania. Odtwórz przebieg zbrodni i wskaż sprawcę."
-              players="5–12 graczy"
-              time="75–105 min"
-              tags={["murder mystery", "dedukcja", "wymagany prowadzący"]}
-              accent="red"
-              art="crime"
-              href="/gry/akta-nocy"
-              status="new"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="Zakręcone Hasło"
-              minPlayers={3}
-              maxPlayers={12}
-              minTime={20}
-              maxTime={35}
-              categories={["funny"]}
-              moods={["laugh", "compete"]}
-              eyebrow="Lekki teleturniej"
-              description="Hasła, litery, koło ryzyka i zwroty akcji. Krótka gra, którą łatwo odpalić na każdej imprezie."
-              players="3–12 graczy"
-              time="20–35 min"
-              tags={["słowna", "szybka", "bez prowadzącego"]}
-              accent="violet"
-              art="word"
-              href="/gry/zakrecone-haslo"
-              status="new"
-            />
-
-
-            <FilteredGameCard filters={filters}
-              title="TYLKO MY"
-              minPlayers={2}
-              maxPlayers={2}
-              minTime={20}
-              maxTime={30}
-              categories={["funny"]}
-              moods={["laugh", "cooperate"]}
-              eyebrow="Gra dla 2 osób"
-              description="Gra dla 2 osób na 2 telefonach. Przewidujcie swoje wybory, szukajcie zgodności i sprawdzajcie momenty telepatii, bez wspólnego ekranu."
-              players="2 graczy"
-              time="20–30 min"
-              tags={["dla dwojga", "2 telefony", "telepatia"]}
-              accent="pink"
-              art="duo"
-              href="/gry/tylko-my"
-              status="new"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="SZYFR"
-              minPlayers={2}
-              maxPlayers={6}
-              minTime={30}
-              maxTime={45}
-              categories={["strategic", "team"]}
-              moods={["think", "cooperate"]}
-              eyebrow="Kooperacyjna misja"
-              description="Każdy widzi inne informacje. Rozmawiajcie, łączcie tropy i rozwiązujcie kody, zanim skończy się czas."
-              players="2–6 graczy"
-              time="30–45 min"
-              tags={["kooperacyjna", "escape room", "komunikacja"]}
-              accent="cyan"
-              art="cipher"
-              href="/gry/szyfr"
-              status="new"
-            />
-
-            <FilteredGameCard filters={filters}
-              title="VA BANQUE"
-              minPlayers={2}
-              maxPlayers={8}
-              minTime={30}
-              maxTime={45}
-              categories={["strategic"]}
-              moods={["think", "compete"]}
-              eyebrow="Licytacja i ryzyko"
-              description="Licytuj kategorię, przejmuj pytania i decyduj, ile jesteś gotów postawić. Wiedza to dopiero połowa gry."
-              players="2–8 graczy"
-              time="30–45 min"
-              tags={["licytacja", "quiz", "ryzyko"]}
-              accent="gold"
-              art="auction"
-              href="/gry/va-banque"
-              status="new"
-            />
-
+            {catalogLoading ? (
+              <p className="col-span-full rounded-2xl border border-white/10 bg-white/[.03] p-7 text-sm text-zinc-400">Ładowanie katalogu gier…</p>
+            ) : catalogError ? (
+              <div role="alert" className="col-span-full rounded-2xl border border-amber-400/20 bg-amber-400/5 p-7">
+                <p className="font-bold text-amber-200">{catalogError}</p>
+                <button type="button" onClick={() => window.location.reload()} className="mt-3 text-sm font-black text-white underline">Spróbuj ponownie</button>
+              </div>
+            ) : (
+              catalog.map((game) => <FilteredGameCard key={game.slug} filters={filters} {...game} />)
+            )}
           </div>
         </section>
 

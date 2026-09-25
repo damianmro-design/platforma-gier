@@ -21,16 +21,16 @@ I.3 [x] Właściciel przypięty do potwierdzonego konta przez immutable auth UUI
 I.4 [x] SQL SECURITY DEFINER, izolacja tabel i log audytowy, brak publicznego zapisu.
 I.5 [x] Serwerowe API /api/admin/me, /dashboard, /staff.
 I.6 [x] /admin, pulpit pierwszej wersji, nadawanie / odbieranie ról, autoryzacja po stronie API.
-I.7 [ ] Testy rzeczywistego logowania, odmowy dla gościa i redaktora, nadania/revokacji; powtórka na produkcji.
+I.7 [~] Testy SQL i RPC: nadanie roli w transakcji, uprawnienia redaktora, odmowa dla anonimowego, rollback; test rzeczywistą sesją użytkownika nadal do wykonania.
 I.8 [ ] MFA / ponowne uwierzytelnienie dla operacji krytycznych (przed rozszerzeniem o publikacje i ekonomię).
 I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym połączeniu obu baz.
 
 ## II. CMS katalogu i mediów
-II.1 Centralny schemat danych katalogu + wersje, migracja wszystkich aktualnych kart.
-II.2 Edytor listy gier: tytuł, status, kolejność, widoczność, kategorie, czas, liczba graczy i tagi.
+II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
+II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
 II.3 Edytor podstrony blokowej, SEO, wariant mobilny i podgląd.
 II.4 Biblioteka mediów z walidacją, storage i referencjami.
-II.5 Workflow szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela.
+II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Przywracanie wersji oraz strony gier będą rozwijane osobno.
 II.6 Caching i unieważnianie po publikacji, testy spójności strony głównej z logiką gry.
 
 ## III. Edycja istniejących gier
@@ -69,3 +69,10 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Przygotowanie i publikacja są odrębnymi akcjami.
 - Każda zmiana uprawnień zapisuje aktora, stary i nowy stan.
 - Każda zmiana gry sprawdza aktualną wersję i nie narusza aktywnego pokoju.
+
+### Wdrożenie katalogu, zakres pierwszej wersji
+- Publiczny RPC udostępnia tylko opublikowane karty, szkice są dostępne wyłącznie uprawnionym pracownikom.
+- Pola techniczne, przekierowania i sposób logowania do osobnych aplikacji nie są edytowalne z formularza.
+- Graczy można zawężać tylko w rzeczywistych granicach silnika; wyświetlany zakres jest generowany automatycznie.
+- Podgląd, szkice i workflow działają w CMS, nowy silnik gier, przesyłanie plików i edycja podstron pozostają w roadmapie.
+- Do wdrożenia przed operacjami krytycznymi: wymuszony MFA/step-up, bezpieczna migracja konfiguracji pokojów i publikowanie nowych silników.
