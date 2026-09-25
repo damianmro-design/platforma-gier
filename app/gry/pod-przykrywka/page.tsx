@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -49,8 +50,7 @@ export default function PodPrzykrywkaPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
-            W grupie ukrywa się Oszust. W każdej misji Agenci poznają tajne hasło, a Oszust widzi tylko jego kategorię i to samo pytanie.
-            Musi blefować tak, jakby znał odpowiedź. Reszta porównuje tropy, dyskutuje i buduje listę podejrzanych.
+            <GamePageCmsIntro slug="pod-przykrywka" />
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
