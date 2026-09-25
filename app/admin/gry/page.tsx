@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
-import type { CatalogGame } from "@/lib/zagraj-catalog-defaults";
+import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
 
 type Row = {
   slug: string; published: CatalogGame; draft: CatalogGame | null;
@@ -102,6 +102,39 @@ export default function AdminCatalogPage() {
       existing.filter((item) => item !== value) : [...existing, value] });
   }
 
+  function changeSection(id: string, patch: Partial<CatalogPageSection>) {
+    setForm((prev) => prev ? {
+      ...prev, pageSections: (prev.pageSections ?? []).map((s) => s.id === id ? { ...s, ...patch } : s),
+    } : prev);
+  }
+
+  function addSection() {
+    setForm((prev) => {
+      if (!prev || (prev.pageSections ?? []).length >= 8) return prev;
+      return { ...prev, pageSections: [...(prev.pageSections ?? []), {
+        id: `section-${crypto.randomUUID()}`, kind: "info" as const,
+        title: "", body: "", bullets: [],
+      }] };
+    });
+  }
+
+  function removeSection(id: string) {
+    setForm((prev) => prev ? { ...prev,
+      pageSections: (prev.pageSections ?? []).filter((s) => s.id !== id),
+    } : prev);
+  }
+
+  function moveSection(index: number, shift: number) {
+    setForm((prev) => {
+      if (!prev) return prev;
+      const next = [...(prev.pageSections ?? [])];
+      const target = index + shift;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...prev, pageSections: next };
+    });
+  }
+
   async function action(kind: "save" | "submit" | "publish") {
     if (!chosen || !form || !token || busy) return;
     setBusy(true); setError(""); setNotice("");
@@ -165,7 +198,7 @@ export default function AdminCatalogPage() {
               <div><p className="text-xs text-violet-300">Karta: {chosen.slug}</p><h2 className="mt-1 text-xl font-black">{form.title}</h2></div>
               <span className="rounded-full bg-white/10 px-3 py-2 text-xs font-bold">Wersja {chosen.revision} · {chosen.draftState}</span>
             </div>
-            <p className="mt-3 text-xs text-zinc-400">Zmiany tekstu, ustawień katalogu i grafiki z dostępnych motywów. Granice liczby graczy są zabezpieczone zgodnie z aktualną mechaniką gry.</p>
+            <p className="mt-3 text-xs text-zinc-400">Zmieniaj kartę i dodawaj informacyjne sekcje na podstronie gry. Liczba graczy jest ograniczona rzeczywistymi parametrami silnika.</p>
           </div>
           <form className="space-y-5" onSubmit={(event: FormEvent) => { event.preventDefault(); void action("save"); }}>
             <fieldset disabled={!canEdit || busy} className="grid gap-5 rounded-2xl border border-white/10 bg-white/[.03] p-5 sm:grid-cols-2">
@@ -222,6 +255,43 @@ export default function AdminCatalogPage() {
                   <input type="checkbox" checked={form.moods.includes(key)} onChange={()=>toggleValue("moods",key)} className="accent-violet-400"/>{value}
                 </label>)}</div>
               </fieldset>
+            </fieldset>
+            <fieldset disabled={!canEdit || busy} className="space-y-4 rounded-2xl border border-white/10 bg-white/[.03] p-5">
+              <legend className="px-2 text-sm font-black">Treści podstrony gry</legend>
+              <p className="text-xs leading-5 text-zinc-400">Dodaj własne sekcje informacyjne pod opisem i zasadami danej gry. Publikujesz je razem z kartą. Treści fabuły, pytań i właściwej mechaniki pozostają bez zmian.</p>
+              <div className="space-y-4">
+                {(form.pageSections ?? []).map((section, index) => <div key={section.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <strong className="text-sm text-violet-200">Sekcja {index+1}</strong>
+                    <div className="flex gap-2">
+                      <button type="button" disabled={index===0} onClick={()=>moveSection(index,-1)} aria-label="Przesuń sekcję w górę" className="rounded-lg border border-white/15 px-3 py-1 text-sm disabled:opacity-30">↑</button>
+                      <button type="button" disabled={index===(form.pageSections?.length ?? 0)-1} onClick={()=>moveSection(index,1)} aria-label="Przesuń sekcję w dół" className="rounded-lg border border-white/15 px-3 py-1 text-sm disabled:opacity-30">↓</button>
+                      <button type="button" onClick={()=>removeSection(section.id)} className="rounded-lg border border-red-400/25 px-3 py-1 text-xs font-bold text-red-300">Usuń</button>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className={label}>Rodzaj bloku
+                      <select className={field} value={section.kind} onChange={(e)=>changeSection(section.id,{kind:e.target.value as CatalogPageSection["kind"]})}>
+                        <option value="info">Informacja</option><option value="steps">Kroki / instrukcja</option><option value="notice">Ważna informacja</option>
+                      </select>
+                    </label>
+                    <label className={label}>Nagłówek
+                      <input className={field} value={section.title} maxLength={90} required onChange={(e)=>changeSection(section.id,{title:e.target.value})}/>
+                    </label>
+                    <label className={label+" sm:col-span-2"}>Treść (maks. 1200 znaków)
+                      <textarea className={field+" min-h-28"} value={section.body} maxLength={1200} onChange={(e)=>changeSection(section.id,{body:e.target.value})}/>
+                    </label>
+                    <label className={label+" sm:col-span-2"}>Punkty listy, po 1 wierszu (maks. 6)
+                      <textarea className={field+" min-h-24"} value={section.bullets.join("\n")} onChange={(e)=>changeSection(section.id,{bullets:e.target.value.split("\n").map((v)=>v.trim()).filter(Boolean)})}/>
+                    </label>
+                  </div>
+                </div>)}
+              </div>
+              <button type="button" onClick={addSection} disabled={!canEdit || busy || (form.pageSections ?? []).length>=8}
+                className="rounded-xl border border-violet-400/35 bg-violet-400/10 px-5 py-3 text-sm font-black text-violet-200 disabled:opacity-40">
+                + Dodaj sekcję ({(form.pageSections ?? []).length}/8)
+              </button>
+              <p className="text-[11px] text-zinc-500">Podgląd opublikowanej podstrony znajdziesz po przejściu do gry. Szkic jest widoczny tylko tutaj.</p>
             </fieldset>
             <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5">
               <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Podgląd treści karty</p>

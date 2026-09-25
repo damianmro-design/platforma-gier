@@ -182,6 +182,7 @@ export default function AdminPage() {
         </div>
         <div className="flex items-center gap-3 text-xs text-zinc-300">
           <span>{access?.email}</span><span className="rounded-full bg-white/10 px-3 py-2 font-bold">{ROLE_LABELS[access?.role ?? ""] ?? access?.role}</span>
+          <Link href="/admin/bezpieczenstwo" className="text-violet-300 hover:text-white">Bezpieczeństwo konta</Link>
           <Link href="/profil" className="text-violet-300 hover:text-white">Profil gracza ↗</Link>
         </div>
       </header>
@@ -193,7 +194,7 @@ export default function AdminPage() {
       </section>
 
       {message && <p role="status" className="mb-5 rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm text-emerald-200">{message}</p>}
-      {error && <p role="alert" className="mb-5 rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>}
+      {error && <p role="alert" className="mb-5 rounded-xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-200">{error} {error.includes("2-etapową") && <Link href="/admin/bezpieczenstwo" className="ml-2 underline">Skonfiguruj zabezpieczenie ↗</Link>}</p>}
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className={panel}><p className="text-xs text-zinc-400">Aktywni administratorzy</p><strong className="mt-3 block text-4xl">{dashboard?.staffTotal ?? "—"}</strong></div>

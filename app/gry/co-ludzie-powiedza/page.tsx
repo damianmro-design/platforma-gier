@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -56,6 +57,8 @@ const rounds = [
     copy: "Wynik wcześniejszych rund daje liderowi 50 pkt przewagi. Potem 5 pytań finałowych, a ostatnie liczy się ×3. Remis uruchamia dogrywkę.",
   },
 ];
+
+export const dynamic = "force-dynamic";
 
 export default function CoLudziePowiedzaPage() {
   return (
@@ -183,6 +186,7 @@ export default function CoLudziePowiedzaPage() {
         </p>
         <Link href="/">Wróć do katalogu</Link>
       </section>
+      <GamePageCmsSections slug="co-ludzie-powiedza" />
     </main>
   );
 }

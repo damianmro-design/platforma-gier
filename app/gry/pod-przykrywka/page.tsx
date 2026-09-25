@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -17,6 +18,8 @@ const flow = [
   ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
   ["06", "Obrona i finał", "Po 5 misjach 2 najbardziej podejrzane osoby mają po 30 sekund obrony. Potem każdy głosuje na dowolnego gracza. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
 ];
+
+export const dynamic = "force-dynamic";
 
 export default function PodPrzykrywkaPage() {
   return (
@@ -141,6 +144,7 @@ export default function PodPrzykrywkaPage() {
           <p className="mt-2 text-sm leading-6 text-zinc-500">2 najbardziej podejrzane osoby dostają ostatnią szansę przekonania grupy. Dopiero potem otwiera się tajne finałowe głosowanie.</p>
         </article>
       </section>
+      <GamePageCmsSections slug="pod-przykrywka" />
     </main>
   );
 }

@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -39,6 +40,8 @@ const rounds = [
 type TylkoMyPageProps = {
   searchParams?: Promise<{ roomError?: string; code?: string }>;
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
   const params = (await searchParams) ?? {};
@@ -321,6 +324,7 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
           </article>
         </div>
       </section>
+      <GamePageCmsSections slug="tylko-my" />
     </main>
   );
 }

@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -15,6 +16,8 @@ const rules = [
   ["03", "Kup samogłoskę", "Za 200 pkt z bieżącej rundy możesz wybrać samogłoskę. Koszt płacisz zawsze, a nietrafiona samogłoska kończy Twoją kolejkę."],
   ["04", "Rozwiąż hasło", "W swojej kolejce możesz podać całe hasło. Poprawna odpowiedź daje 1000 pkt bonusu, błędna oddaje kolejkę."],
 ];
+
+export const dynamic = "force-dynamic";
 
 export default function ZakreconeHasloPage() {
   return (
@@ -140,6 +143,7 @@ export default function ZakreconeHasloPage() {
           <p className="mt-2 text-sm leading-6 text-zinc-500">Pierwsze 2 hasła są łatwe, kolejne 2 średnie, a ostatnie 2 najtrudniejsze.</p>
         </article>
       </section>
+      <GamePageCmsSections slug="zakrecone-haslo" />
     </main>
   );
 }

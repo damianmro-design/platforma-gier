@@ -40,6 +40,7 @@ export async function POST(request: Request) {
   } : { p_slug: body.slug, p_expected_revision: body.expectedRevision };
   const { data, error } = await context.client.rpc(name, params);
   if (error) {
+    if (error.message.includes("MFA_REQUIRED")) return NextResponse.json({ error: "Publikacja wymaga weryfikacji 2-etapowej. Przejdź do /admin/bezpieczenstwo.", code: "MFA_REQUIRED" }, { status: 428, headers });
     const code = error.message;
     if (code.includes("CATALOG_REVISION_CONFLICT")) return errorResponse("Ktoś zmienił tę grę. Odśwież dane i ponów operację.", 409);
     if (code.includes("GAME_EDIT_FORBIDDEN") || code.includes("OWNER_REQUIRED")) return errorResponse("Brak odpowiednich uprawnień.", 403);

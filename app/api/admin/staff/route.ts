@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     p_email: email, p_role: role, p_permissions: permissions, p_game_slugs: gameSlugs, p_active: active,
   });
   if (error) {
+    if (error.message.includes("MFA_REQUIRED")) return NextResponse.json({ error: "Przed zmianą ról włącz i potwierdź weryfikację 2-etapową w /admin/bezpieczenstwo.", code: "MFA_REQUIRED" }, { status: 428, headers: { "Cache-Control": "no-store" } });
     const message = error.message.includes("CONFIRMED_ACCOUNT_NOT_FOUND")
       ? "Ta osoba musi najpierw zarejestrować i potwierdzić konto zaGRAj."
       : error.message.includes("OWNER_IMMUTABLE")

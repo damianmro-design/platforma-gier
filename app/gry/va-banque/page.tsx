@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -20,6 +21,8 @@ const rules = [
   ["05", "Rozstrzygnij remis", "Jeśli najwyższe oferty są równe, tylko remisujący podbijają albo pasują. Gdy nadal nie ma rozstrzygnięcia, wybiera serwer."],
   ["06", "Zagraj finał", "Każdy prywatnie stawia od 0 do 100% swojego kapitału, a potem wszyscy odpowiadają na to samo finałowe pytanie."],
 ];
+
+export const dynamic = "force-dynamic";
 
 export default async function VaBanquePage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
@@ -206,6 +209,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
       <footer className="relative z-10 px-5 py-8 text-center text-xs text-amber-50/25">
         VA BANQUE · zaGRAj · 2026
       </footer>
+      <GamePageCmsSections slug="va-banque" />
     </main>
   );
 }

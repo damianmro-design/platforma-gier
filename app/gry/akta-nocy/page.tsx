@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 };
 
 const firstCase = AKTA_NOCY_CASES[0];
+
+export const dynamic = "force-dynamic";
 
 export default function AktaNocyPage() {
   return (
@@ -382,6 +385,7 @@ export default function AktaNocyPage() {
           </div>
         </section>
       </div>
+      <GamePageCmsSections slug="akta-nocy" />
     </main>
   );
 }

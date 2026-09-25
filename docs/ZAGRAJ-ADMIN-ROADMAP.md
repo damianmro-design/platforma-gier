@@ -22,13 +22,13 @@ I.4 [x] SQL SECURITY DEFINER, izolacja tabel i log audytowy, brak publicznego za
 I.5 [x] Serwerowe API /api/admin/me, /dashboard, /staff.
 I.6 [x] /admin, pulpit pierwszej wersji, nadawanie / odbieranie ról, autoryzacja po stronie API.
 I.7 [~] Testy SQL i RPC: nadanie roli w transakcji, uprawnienia redaktora, odmowa dla anonimowego, rollback; test rzeczywistą sesją użytkownika nadal do wykonania.
-I.8 [ ] MFA / ponowne uwierzytelnienie dla operacji krytycznych (przed rozszerzeniem o publikacje i ekonomię).
+I.8 [x] MFA TOTP z weryfikacją AAL2 dla nadawania ról i publikacji kart. Pozostałe operacje krytyczne obejmować tym samym mechanizmem przed uruchomieniem.
 I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym połączeniu obu baz.
 
 ## II. CMS katalogu i mediów
 II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
-II.3 Edytor podstrony blokowej, SEO, wariant mobilny i podgląd.
+II.3 [~] Edytor dodatkowych sekcji informacyjnych podstron wszystkich 7 gier wewnętrznych: tekst, instrukcja, ważna informacja, kolejność i lista punktów; szkic i publikacja właścicielska. Pozostałe istniejące sekcje, media, SEO i pełna edycja layoutu są kolejnymi podetapami.
 II.4 Biblioteka mediów z walidacją, storage i referencjami.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Przywracanie wersji oraz strony gier będą rozwijane osobno.
 II.6 Caching i unieważnianie po publikacji, testy spójności strony głównej z logiką gry.
@@ -76,3 +76,10 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Graczy można zawężać tylko w rzeczywistych granicach silnika; wyświetlany zakres jest generowany automatycznie.
 - Podgląd, szkice i workflow działają w CMS, nowy silnik gier, przesyłanie plików i edycja podstron pozostają w roadmapie.
 - Do wdrożenia przed operacjami krytycznymi: wymuszony MFA/step-up, bezpieczna migracja konfiguracji pokojów i publikowanie nowych silników.
+
+### Weryfikacja publikacji i bezpieczeństwa, 2026-09-25
+- Operacje nadawania ról i publikacji wymagają AAL2 TOTP w aktualnym JWT, egzekwowane również w SQL.
+- Własna strona /admin/bezpieczenstwo pozwala dodać i potwierdzić czynnik oraz podnieść AAL istniejącej sesji.
+- Publiczna część podstron odczytuje wyłącznie opublikowane typowane sekcje; 8 sekcji maks., brak kodu HTML/JS i dowolnych linków.
+- Treści fabuły, pytania, właściwa punktacja i silniki pozostają nienaruszone.
+- Przy późniejszej bibliotece mediów wymagana walidacja uploadu i kontrola odczytu oraz spójne warianty mobilne.

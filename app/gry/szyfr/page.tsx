@@ -1,3 +1,4 @@
+import GamePageCmsSections from "@/components/game-page-cms-sections";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -19,6 +20,8 @@ const missions = [
   ["04", "Klucz dostępu", "Najtrudniejsze relacje między danymi i ostatni fragment finału."],
   ["05", "Kod główny", "Meta-zagadka wykorzystująca cyfry odzyskane w poprzednich misjach."],
 ];
+
+export const dynamic = "force-dynamic";
 
 export default async function SzyfrPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
@@ -212,6 +215,7 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
       <footer className="relative z-10 border-t border-cyan-200/7 px-5 py-8 text-center text-xs text-cyan-50/30">
         <Link href="/">zaGRAj</Link> · SZYFR · 2026
       </footer>
+      <GamePageCmsSections slug="szyfr" />
     </main>
   );
 }
