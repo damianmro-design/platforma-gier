@@ -31,7 +31,7 @@ II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczno
 II.3 [~] Edytor dodatkowych sekcji informacyjnych podstron wszystkich 7 gier wewnętrznych: tekst, instrukcja, ważna informacja, kolejność i lista punktów; szkic i publikacja właścicielska. Pozostałe istniejące sekcje, media, SEO i pełna edycja layoutu są kolejnymi podetapami.
 II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Historia opublikowanych wersji i przywracanie jako nowy szkic z ochroną przed konfliktem rewizji są przygotowane w oddzielnym podetapie; nadal wymagane są test sesji właściciela i pełny rollback wersji silników gier.
-II.6 Caching i unieważnianie po publikacji, testy spójności strony głównej z logiką gry.
+II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po powrocie do karty, bfcache i sygnale publikacji; testy kontraktu kart, zakresów silnika i opublikowanych snapshotów. Do potwierdzenia: scenariusz publikacji na rzeczywistej sesji właściciela i kontrola w 2 otwartych kartach.
 
 ## III. Edycja istniejących gier
 III.1 Inwentaryzacja typowanych zasobów i flag bezpiecznych do edycji.
@@ -99,3 +99,11 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Aktualna walidacja karty, grafiki i limitów silnika obowiązuje także przy odtwarzaniu wersji historycznej.
 - Publikacja odzyskanego szkicu nadal wymaga oddzielnego zatwierdzenia i TOTP/AAL2.
 - Zmiany rozgrywek, pokojów, punktacji i obecnej opublikowanej wersji pozostają nietknięte do publikacji.
+
+### II.6 Spójność katalogu i podstron
+- Nie przechowujemy publicznej listy w cache serwera ani przeglądarki: endpoint `/api/games/catalog` i odczyt sekcji używają no-store.
+- Otwarta karta strony głównej odświeża listę po ponownym wyświetleniu, focusie i powrocie z bfcache; równoległe odpowiedzi są anulowane, aby stary odczyt nie nadpisał nowszego.
+- Po udanej publikacji sygnalizujemy zmianę innym kartom przez storage event i bieżącej karcie przez własne zdarzenie; w storage nie zapisujemy treści gier ani danych logowania.
+- Podstrony gier odświeżają tylko warstwę informacyjną (RSC), nie silnik aktywnego pokoju; odbudowanie sekcji działa także, gdy poprzednio lista była pusta.
+- SQL sprawdza publiczną listę vs opublikowane i widoczne rekordy, zakresy silnika oraz ostatni snapshot. Stare snapshoty bez pustego `pageSections` pozostają nienaruszone.
+- Opisy i pełne, dotąd zakodowane układy podstron nadal wymagają osobnego etapu II.3. Nie deklarujemy ich pełnej edytowalności.
