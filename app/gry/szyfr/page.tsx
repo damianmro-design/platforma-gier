@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -67,9 +68,7 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-cyan-50/65">
-            Przechwycono zaszyfrowaną transmisję. System usunie dane, jeśli nie
-            odzyskacie klucza. Każdy z Was dostał inną część informacji, więc
-            najważniejszym narzędziem jest rozmowa.
+            <GamePageCmsIntro slug="szyfr" />
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">

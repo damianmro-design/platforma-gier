@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
@@ -61,10 +62,8 @@ export default function AktaNocyPage() {
               NOCY
             </h1>
             <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-orange-50/62">
-              Każdy ma rolę. Każdy ma sekret. Jedna osoba zna prawdę o zbrodni.
-              Odtwarzacie noc z zeznań, dokumentów, śladów cyfrowych i kolejnych
-              paczek dowodów.
-            </p>
+            <GamePageCmsIntro slug="akta-nocy" />
+          </p>
 
             <div className="mt-7 flex flex-wrap gap-2 text-xs font-bold text-orange-50/70">
               {["👥 5–12 graczy", "⏱ 75–115 min", "🔎 dedukcja", "🎭 tajne role", "📁 różne sprawy", "🤖 tryb bez prowadzącego"].map((item) => (

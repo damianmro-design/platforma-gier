@@ -7,6 +7,7 @@ const home = src("app/page.tsx");
 const admin = src("app/admin/gry/page.tsx");
 const publicApi = src("app/api/games/catalog/route.ts");
 const sections = src("components/game-page-cms-sections.tsx");
+const catalogServer = src("lib/zagraj-public-catalog-server.ts");
 const sectionRefresh = src("components/game-page-catalog-refresh.tsx");
 const events = src("lib/zagraj-catalog-refresh.ts");
 const config = src("next.config.ts");
@@ -36,8 +37,8 @@ test("open homepage responds to tab focus, BFCache, visibility and a successful 
 });
 
 test("seven internal game pages have live published CMS blocks, even with no initial sections", () => {
-  assert.match(sections, /fetch\(input, \{ \.\.\.init, cache: "no-store" \}\)/);
-  assert.match(sections, /rpc\("zagraj_catalog_public"\)/);
+  assert.match(catalogServer, /fetch\(input, \{ \.\.\.init, cache: "no-store" \}\)/);
+  assert.match(catalogServer, /rpc\("zagraj_catalog_public"\)/);
   assert.match(sections, /<GamePageCatalogRefresh \/>/);
   assert.match(sections, /sections\.length > 0 && <section/);
   assert.match(sectionRefresh, /subscribeToCatalogRefresh/);
