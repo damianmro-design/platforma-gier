@@ -45,13 +45,13 @@ if [[ "$mode" == "--check" ]]; then
 fi
 
 if [[ "$mode" == "--setup" ]]; then
-  mkdir -p -- "$config_dir" "$HOME/secure" "$backup_root"
-  chmod 700 -- "$config_dir" "$HOME/secure" "$backup_root"
+  mkdir -p "$config_dir" "$HOME/secure" "$backup_root"
+  chmod 700 "$config_dir" "$HOME/secure" "$backup_root"
   if [[ -e "$identity" ]]; then
     printf 'Private identity already exists. Will not overwrite it.\n'
   else
     age-keygen -o "$identity" > /dev/null
-    chmod 600 -- "$identity"
+    chmod 600 "$identity"
     printf 'New private identity created in your macOS user account.\n'
   fi
   printf 'Public recipient (safe to use locally):\n'

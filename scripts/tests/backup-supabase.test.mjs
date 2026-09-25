@@ -19,6 +19,17 @@ test("backup script passes bash syntax check", () => {
   assert.equal(spawnSync("bash", ["-n", script]).status, 0);
 });
 
+test("backup scripts use macOS-compatible file commands", () => {
+  for (const path of ["scripts/backup-mac.sh", "scripts/backup-supabase.sh"]) {
+    const content = readFileSync(resolve(path), "utf8");
+    assert.doesNotMatch(
+      content,
+      /(?:^|\n)\s*(?:chmod|mkdir|rm|mv)\s+[^\n]*\s--\s/,
+      path,
+    );
+  }
+});
+
 test("macOS interactive wrapper passes bash syntax check", () => {
   assert.equal(spawnSync("bash", ["-n", resolve("scripts/backup-mac.sh")]).status, 0);
 });
