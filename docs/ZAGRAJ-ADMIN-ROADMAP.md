@@ -28,7 +28,7 @@ I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym 
 ## II. CMS katalogu i mediów
 II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
-II.3 [~] Edytor dodatkowych sekcji informacyjnych wszystkich 7 gier wewnętrznych i istniejącego opisu otwierającego podstronę (maks. 600 znaków, oryginalny tekst jako fallback). Szkic i publikacja właścicielska, wersjonowanie oraz przywracanie obejmują także opis. Pozostałe zasady powiązane z mechaniką, SEO i pełna edycja layoutu są kolejnymi podetapami.
+II.3 [~] Edytor dodatkowych sekcji wszystkich 7 gier i opisów otwierających podstronę, a także istniejących opisów kart zasad VA BANQUE (6) i Zakręcone Hasło (4). Numeracja, tytuły i kolejność kart są zamrożone w kodzie. Szkic, publikacja właścicielska, historia i przywracanie obejmują teksty. Pozostałe gry, SEO i pełna edycja layoutu to kolejne podetapy.
 II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Historia opublikowanych wersji i przywracanie jako nowy szkic z ochroną przed konfliktem rewizji są przygotowane w oddzielnym podetapie; nadal wymagane są test sesji właściciela i pełny rollback wersji silników gier.
 II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po powrocie do karty, bfcache i sygnale publikacji; testy kontraktu kart, zakresów silnika i opublikowanych snapshotów. Do potwierdzenia: scenariusz publikacji na rzeczywistej sesji właściciela i kontrola w 2 otwartych kartach.
@@ -116,3 +116,12 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Zapis korzysta z aktualnej funkcji walidacji karty, sprawdzania rewizji, uprawnień, powiązania mediów i audytu.
 - Publikacja nadal wymaga wysłania do zatwierdzenia, właściciela i AAL2/TOTP. Odtworzenie historycznej wersji resetuje opis, jeśli wcześniejszy snapshot go nie zawierał.
 - Przed publikacją weryfikować opis pod kątem zgodności ze stanem silnika. Reguły, pytania, fabuła, pokoje i XP nadal poza tym edytorem.
+
+### II.3b Opisy istniejących kart zasad, VA BANQUE i Zakręcone Hasło
+- Edytujemy wyłącznie tekst objaśniający istniejącą, numerowaną kartę. Stałe z kodu: numer, tytuł, kolejność i liczba kart (VA BANQUE 6, Zakręcone Hasło 4).
+- Dane CMS są wersjonowane jako `pageRules: { schema: 1, items: string[] }`. Puste/nieobecne pole oznacza dokładne oryginalne opisy. Pełna lista ma odpowiednio 6 lub 4 teksty po 1–360 znaków.
+- Kontrola backendu blokuje inne gry, błędną wersję, zmianę liczby kart, dodatkowe klucze, HTML i odnośniki; renderer w razie niezgodności lub awarii CMS pokazuje tekst oryginalny.
+- Historyczne przywrócenie resetuje nowsze teksty, jeśli stary snapshot ich nie miał; nie dotyka publicznej wersji do osobnej publikacji przez właściciela z AAL2.
+- Redaktor powinien zachowywać zgodność treści z rzeczywistym silnikiem. Walidacja strukturalna nie potrafi automatycznie potwierdzić merytorycznej prawdziwości zdań, dlatego zatwierdzenie właściciela jest obowiązkowe.
+- Nie zmieniamy aktywnych pokojów, pytań, liczb punktów, rozstrzygnięć, rozdzielania ról, XP ani definicji etapów.
+- Dalszy krok: analogiczna inwentaryzacja i mapowanie kart zasad pozostałych 5 gier, z niezależnymi definicjami dla każdej.
