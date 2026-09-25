@@ -7,6 +7,11 @@ export type CatalogPageSection = {
   imagePath?: string;
 };
 
+export type CatalogPageRules = {
+  schema: 1;
+  items: string[];
+};
+
 export type CatalogGame = {
   slug: string;
   title: string; eyebrow: string; description: string; players: string; time: string; tags: string[];
@@ -16,7 +21,7 @@ export type CatalogGame = {
   status: "hit" | "new" | "soon"; minPlayers: number; maxPlayers: number; minTime: number; maxTime: number;
   categories: Array<"funny" | "strategic" | "team">;
   moods: Array<"laugh" | "think" | "compete" | "cooperate">;
-  sortOrder: number; isVisible: boolean; pageSections?: CatalogPageSection[]; coverPath?: string; pageIntro?: string;
+  sortOrder: number; isVisible: boolean; pageSections?: CatalogPageSection[]; coverPath?: string; pageIntro?: string; pageRules?: CatalogPageRules | null;
 };
 
 // Bootstrap and outage fallback. Post-publication truth lives in the catalog database.
