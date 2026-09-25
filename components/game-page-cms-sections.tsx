@@ -1,30 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
-import { PARTYPLAY_AUTH_KEY, PARTYPLAY_AUTH_URL } from "@/lib/partyplay-auth";
-import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
+import type { CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
+import { getPublishedGameCard } from "@/lib/zagraj-public-catalog-server";
 import { gameMediaUrl } from "@/lib/zagraj-media";
 import GamePageCatalogRefresh from "@/components/game-page-catalog-refresh";
 
 // A public, server-rendered block area. It never reads draft data or runs administrator input as code.
 export default async function GamePageCmsSections({ slug }: { slug: string }) {
-  let sections: CatalogPageSection[] = [];
-  try {
-    const client = createClient(PARTYPLAY_AUTH_URL, PARTYPLAY_AUTH_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
-    });
-    const { data, error } = await client.rpc("zagraj_catalog_public");
-    if (!error && Array.isArray(data)) {
-      const game = (data as CatalogGame[]).find((item) => item.slug === slug);
-      if (game && Array.isArray(game.pageSections)) {
-        sections = game.pageSections.filter((section) =>
-          section && typeof section.title === "string" &&
-          ["info", "notice", "steps"].includes(section.kind)
-        );
-      }
-    }
-  } catch {
-    // A later focus or publication event retries the published CMS feed.
-  }
+  const card = await getPublishedGameCard(slug);
+  const sections: CatalogPageSection[] = Array.isArray(card?.pageSections)
+    ? card.pageSections.filter((section) =>
+        section && typeof section.title === "string" &&
+        ["info", "notice", "steps"].includes(section.kind)
+      )
+    : [];
 
   return (
     <>
