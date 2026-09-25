@@ -5,6 +5,7 @@ import GameMediaPicker from "@/components/game-media-picker";
 import AdminCatalogHistory from "@/components/admin-catalog-history";
 import { gameMediaUrl } from "@/lib/zagraj-media";
 import { GAME_PAGE_INTRO_FALLBACK } from "@/lib/zagraj-game-page-intros";
+import { getPageRuleDefaults, PAGE_RULE_COPY_SCHEMA } from "@/lib/zagraj-game-page-rules";
 import { announceCatalogPublication } from "@/lib/zagraj-catalog-refresh";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
@@ -85,6 +86,7 @@ export default function AdminCatalogPage() {
   }, [load]);
 
   const chosen = rows.find((r) => r.slug === selectedSlug);
+  const ruleDefaults = chosen ? getPageRuleDefaults(chosen.slug) : null;
   const canEdit = access?.role === "owner" || access?.permissions?.includes("games.edit");
   const canPublish = access?.role === "owner";
   const changed = Boolean(form && chosen && JSON.stringify(form) !== JSON.stringify(chosen.draft ?? chosen.published));
@@ -98,6 +100,19 @@ export default function AdminCatalogPage() {
 
   function setField<K extends keyof CatalogGame>(key: K, value: CatalogGame[K]) {
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+  }
+
+  function setRuleCopy(index: number, value: string) {
+    setForm((prev) => {
+      if (!prev) return prev;
+      const defaults = getPageRuleDefaults(prev.slug);
+      if (!defaults || index < 0 || index >= defaults.length) return prev;
+      const items = prev.pageRules?.schema === PAGE_RULE_COPY_SCHEMA &&
+        prev.pageRules.items.length === defaults.length
+        ? [...prev.pageRules.items] : defaults.map((rule) => rule[2]);
+      items[index] = value;
+      return { ...prev, pageRules: { schema: PAGE_RULE_COPY_SCHEMA, items } };
+    });
   }
 
   function toggleValue(key: "categories" | "moods", value: string) {
@@ -232,6 +247,41 @@ export default function AdminCatalogPage() {
                     className="rounded-lg border border-white/20 px-3 py-2 text-xs text-zinc-300">Przywróć oryginalny opis</button>
                 </div>
                 <p className="mt-3 text-xs text-zinc-300">Podgląd: {form.pageIntro?.trim() || GAME_PAGE_INTRO_FALLBACK[chosen.slug]}</p>
+              </div>}
+              {ruleDefaults && <div className="sm:col-span-2 rounded-2xl border border-cyan-300/20 bg-cyan-300/[.04] p-4">
+                <h3 className="text-sm font-black text-cyan-100">Istniejące karty zasad</h3>
+                <p className="mt-2 text-xs leading-5 text-zinc-400">
+                  Możesz poprawiać wyłącznie opisy. Numeracja, nazwy kroków, kolejność oraz parametry rozgrywki są zablokowane.
+                  Oryginalny tekst jest dostępny przy każdym kroku. Weryfikuj zgodność zmian z mechaniką przed zatwierdzeniem.
+                </p>
+                <div className="mt-4 space-y-4">
+                  {ruleDefaults.map(([no, title, original], index) => (
+                    <div key={no} className="rounded-xl border border-white/10 bg-black/20 p-4">
+                      <p className="text-sm font-black text-white"><span className="mr-2 text-cyan-200">{no}</span>{title}</p>
+                      <label className={label+" mt-3"}>Opis zasady, maks. 360 znaków
+                        <textarea className={field+" min-h-24"}
+                          maxLength={360} required
+                          value={form.pageRules?.schema === PAGE_RULE_COPY_SCHEMA &&
+                            form.pageRules.items.length === ruleDefaults.length
+                            ? form.pageRules.items[index] : original}
+                          onChange={(event) => setRuleCopy(index, event.target.value)}/>
+                      </label>
+                      <details className="mt-2 text-xs text-zinc-400">
+                        <summary className="cursor-pointer text-cyan-200">Porównaj z oryginałem</summary>
+                        <p className="mt-2 leading-5">{original}</p>
+                      </details>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs text-zinc-400">
+                    {form.pageRules?.schema === PAGE_RULE_COPY_SCHEMA ? "Zmienione opisy w szkicu" : "Domyślne opisy gry"}
+                  </span>
+                  <button type="button" onClick={() => setField("pageRules", null)}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs font-bold text-cyan-100">
+                    Przywróć wszystkie oryginalne opisy
+                  </button>
+                </div>
               </div>}
               <label className={label+" sm:col-span-2"}>Tagi (oddzielone przecinkiem, maks. 8)
                 <input className={field} value={form.tags.join(", ")} onChange={(e) => setField("tags",e.target.value.split(",").map(x=>x.trim()).filter(Boolean))}/>

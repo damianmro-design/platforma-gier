@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -14,18 +15,11 @@ type PageProps = {
   searchParams?: Promise<{ roomError?: string; code?: string }>;
 };
 
-const rules = [
-  ["01", "Poznaj kategorię", "Najpierw widzisz tylko kategorię. Pytanie pozostaje ukryte do końca licytacji."],
-  ["02", "Zalicytuj albo spasuj", "W zwykłej rundzie stawiasz maksymalnie 50% kapitału. PAS oznacza stawkę 0 pkt. Nie możesz stracić ostatnich 100 pkt przed finałem."],
-  ["03", "Odpowiedz za swoją stawkę", "Najwyższa oferta przejmuje pytanie. Dobra odpowiedź dodaje stawkę, zła odejmuje ją od kapitału."],
-  ["04", "Poluj na błąd", "Po złej odpowiedzi pierwszy z pozostałych graczy może przejąć pytanie. Ryzyko to zwykle połowa poprzedniej stawki, minimum 50 pkt i nigdy więcej niż posiadany kapitał."],
-  ["05", "Rozstrzygnij remis", "Jeśli najwyższe oferty są równe, tylko remisujący podbijają albo pasują. Gdy nadal nie ma rozstrzygnięcia, wybiera serwer."],
-  ["06", "Zagraj finał", "Każdy prywatnie stawia od 0 do 100% swojego kapitału, a potem wszyscy odpowiadają na to samo finałowe pytanie."],
-];
 
 export const dynamic = "force-dynamic";
 
 export default async function VaBanquePage({ searchParams }: PageProps) {
+  const rules = await getPublishedPageRules("va-banque");
   const params = (await searchParams) ?? {};
   const joinError =
     params.roomError === "invalid-code"
