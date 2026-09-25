@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -47,8 +48,7 @@ export default function ZakreconeHasloPage() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
-            Kręcisz kołem, odkrywasz litery i próbujesz rozwiązać hasło, zanim zrobią to inni.
-            6 rund, rosnący poziom trudności i wystarczająco dużo ryzyka, żeby prowadzenie mogło zniknąć w jednej chwili.
+            <GamePageCmsIntro slug="zakrecone-haslo" />
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
