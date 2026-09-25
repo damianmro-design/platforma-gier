@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -89,9 +90,7 @@ export default function CoLudziePowiedzaPage() {
             <span>POWIEDZĄ?!</span>
           </h1>
           <p>
-            Nie musisz znać odpowiedzi. Musisz przewidzieć ludzi. Raz próbujecie
-            odgadnąć wyniki puli ankietowej, a raz odpowiedzi osób siedzących
-            obok Was.
+            <GamePageCmsIntro slug="co-ludzie-powiedza" />
           </p>
 
           <div className="survey-meta">
