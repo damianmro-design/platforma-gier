@@ -7,6 +7,7 @@ const home = src("app/page.tsx");
 const admin = src("app/admin/gry/page.tsx");
 const publicApi = src("app/api/games/catalog/route.ts");
 const sections = src("components/game-page-cms-sections.tsx");
+const catalogServer = src("lib/zagraj-public-catalog-server.ts");
 const sectionRefresh = src("components/game-page-catalog-refresh.tsx");
 const events = src("lib/zagraj-catalog-refresh.ts");
 const config = src("next.config.ts");
