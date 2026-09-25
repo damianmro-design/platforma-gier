@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -86,9 +87,7 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400">
-            Jak dobrze potraficie przewidzieć swoje wybory? Odpowiadacie osobno, bez podglądania,
-            a gra sprawdza, kiedy naprawdę nadajecie na tej samej fali. Wystarczą 2 telefony,
-            nie potrzebujecie telewizora ani wspólnego ekranu.
+            <GamePageCmsIntro slug="tylko-my" />
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
