@@ -37,8 +37,8 @@ test("open homepage responds to tab focus, BFCache, visibility and a successful 
 });
 
 test("seven internal game pages have live published CMS blocks, even with no initial sections", () => {
-  assert.match(sections, /fetch\(input, \{ \.\.\.init, cache: "no-store" \}\)/);
-  assert.match(sections, /rpc\("zagraj_catalog_public"\)/);
+  assert.match(catalogServer, /fetch\(input, \{ \.\.\.init, cache: "no-store" \}\)/);
+  assert.match(catalogServer, /rpc\("zagraj_catalog_public"\)/);
   assert.match(sections, /<GamePageCatalogRefresh \/>/);
   assert.match(sections, /sections\.length > 0 && <section/);
   assert.match(sectionRefresh, /subscribeToCatalogRefresh/);
