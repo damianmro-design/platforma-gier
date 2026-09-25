@@ -28,7 +28,7 @@ export default function AdminCatalogHistory({
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true); setError(""); setNotice(""); setHistory([]); setSelected(null);
+    setLoading(true); setError(""); setHistory([]); setSelected(null);
     async function load() {
       try {
         const response = await fetch(`/api/admin/catalog/history?slug=${encodeURIComponent(slug)}`, {
