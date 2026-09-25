@@ -50,7 +50,7 @@ if [[ ! "$ZAGRAJ_BACKUP_RECIPIENT" =~ ^age1[a-z0-9]+$ ]]; then
 fi
 
 # Resolve canonical path so relative segments/symlinks cannot put SQL in Git.
-mkdir -p -- "$ZAGRAJ_BACKUP_ROOT"
+mkdir -p "$ZAGRAJ_BACKUP_ROOT"
 root="$(cd "$ZAGRAJ_BACKUP_ROOT" && pwd -P)"
 if [[ "$root" == "$repo_root" || "$root/" == "$repo_root/"* ]]; then
   printf 'Refusing to write backups into the Git repository.\n' >&2; exit 1
@@ -59,7 +59,7 @@ fi
 if [[ "$(basename "$root")" != zagraj-backups* ]]; then
   printf 'Use a dedicated folder named zagraj-backups (or zagraj-backups-*).\n' >&2; exit 1
 fi
-chmod 700 -- "$root"
+chmod 700 "$root"
 
 if [[ "$mode" == "--check" ]]; then
   printf 'Prerequisites and external backup directory validated. NO database accessed.\n'
@@ -78,7 +78,7 @@ node "$repo_root/scripts/verify-backup-targets.mjs"
 
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 work="$(mktemp -d "$root/.incomplete-$stamp-XXXXXX")"
-trap 'rm -rf -- "$work"' EXIT
+trap 'rm -rf "$work"' EXIT
 mkdir -m 700 "$work/platform" "$work/polowanie"
 
 # Keep CLI stderr out of ordinary CI output: connection failures can echo URLs.
@@ -90,7 +90,7 @@ dump_one() {
     printf 'Database dump failed (%s, %s). No backup was published.\n' "$destination" "$stage" >&2
     return 1
   fi
-  rm -f -- "$work/.dump.log"
+  rm -f "$work/.dump.log"
   if [[ ! -s "$destination/$stage.sql" ]]; then
     printf 'Database dump is empty (%s, %s).\n' "$destination" "$stage" >&2
     return 1
@@ -105,7 +105,7 @@ dump_one() {
     printf 'Encryption failed. No backup was published.\n' >&2
     return 1
   fi
-  rm -f -- "$work/.encrypt.log" "$destination/$stage.sql"
+  rm -f "$work/.encrypt.log" "$destination/$stage.sql"
 }
 
 for project in platform polowanie; do
@@ -125,7 +125,7 @@ final="$root/zagraj-$stamp"
 if [[ -e "$final" ]]; then
   printf 'Backup destination already exists; not overwriting.\n' >&2; exit 1
 fi
-mv -- "$work" "$final"
+mv "$work" "$final"
 trap - EXIT
 printf 'Encrypted backup complete: %s\n' "$final"
 printf 'Check SHA256SUMS and perform a RESTORE DRILL in an isolated environment.\n'
