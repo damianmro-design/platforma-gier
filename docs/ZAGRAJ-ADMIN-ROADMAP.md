@@ -22,7 +22,7 @@ I.4 [x] SQL SECURITY DEFINER, izolacja tabel i log audytowy, brak publicznego za
 I.5 [x] Serwerowe API /api/admin/me, /dashboard, /staff.
 I.6 [x] /admin, pulpit pierwszej wersji, nadawanie / odbieranie ról, autoryzacja po stronie API.
 I.7 [~] Testy SQL i RPC: nadanie roli w transakcji, uprawnienia redaktora, odmowa dla anonimowego, rollback; test rzeczywistą sesją użytkownika nadal do wykonania.
-I.8 [x] MFA TOTP z weryfikacją AAL2 dla nadawania ról i publikacji kart. Pozostałe operacje krytyczne obejmować tym samym mechanizmem przed uruchomieniem.
+I.8 [~] MFA TOTP działa i jest egzekwowane jako AAL2 dla nadawania ról i publikacji kart. Obsługa SMS w panelu jest przygotowana, lecz domyślnie wyłączona do czasu świadomego zaakceptowania kosztów dodatku Phone MFA i skonfigurowania dostawcy SMS. Test realnej dostawy SMS i końcowa aktywacja pozostają otwarte.
 I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym połączeniu obu baz.
 
 ## II. CMS katalogu i mediów
@@ -78,8 +78,14 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Do wdrożenia przed operacjami krytycznymi: wymuszony MFA/step-up, bezpieczna migracja konfiguracji pokojów i publikowanie nowych silników.
 
 ### Weryfikacja publikacji i bezpieczeństwa, 2026-09-25
-- Operacje nadawania ról i publikacji wymagają AAL2 TOTP w aktualnym JWT, egzekwowane również w SQL.
+- Operacje nadawania ról i publikacji wymagają AAL2 w aktualnym JWT, egzekwowane również w SQL; zarówno TOTP, jak i po aktywacji Phone MFA, zweryfikowany SMS mogą podnieść sesję do AAL2.
 - Własna strona /admin/bezpieczenstwo pozwala dodać i potwierdzić czynnik oraz podnieść AAL istniejącej sesji.
 - Publiczna część podstron odczytuje wyłącznie opublikowane typowane sekcje; 8 sekcji maks., brak kodu HTML/JS i dowolnych linków.
 - Treści fabuły, pytania, właściwa punktacja i silniki pozostają nienaruszone.
 - Przy późniejszej bibliotece mediów wymagana walidacja uploadu i kontrola odczytu oraz spójne warianty mobilne.
+
+### SMS MFA: decyzja kosztowa przed aktywacją
+- Kod obsługuje dodanie numeru, challenge SMS, weryfikację i wybór między TOTP a telefonem.
+- Zmienna serwerowa `ZAGRAJ_ADMIN_SMS_MFA_ENABLED` domyślnie jest wyłączona i musi zostać ustawiona dopiero po konfiguracji usługi.
+- Według dokumentacji Supabase Advanced MFA Phone jest osobno płatne, $75/miesiąc za pierwszy projekt przy ciągłym włączeniu (naliczane godzinowo), plus wiadomości u dostawcy. Nie pokrywa tego Spend Cap.
+- Nie aktywowano płatnej usługi i nie wysłano wiadomości; potrzebne potwierdzenie właściciela, konfiguracja dostawcy i realny test po stronie właściciela.
