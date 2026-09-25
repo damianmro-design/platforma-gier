@@ -30,7 +30,7 @@ II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źr
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
 II.3 [~] Edytor dodatkowych sekcji informacyjnych podstron wszystkich 7 gier wewnętrznych: tekst, instrukcja, ważna informacja, kolejność i lista punktów; szkic i publikacja właścicielska. Pozostałe istniejące sekcje, media, SEO i pełna edycja layoutu są kolejnymi podetapami.
 II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
-II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Przywracanie wersji oraz strony gier będą rozwijane osobno.
+II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Historia opublikowanych wersji i przywracanie jako nowy szkic z ochroną przed konfliktem rewizji są przygotowane w oddzielnym podetapie; nadal wymagane są test sesji właściciela i pełny rollback wersji silników gier.
 II.6 Caching i unieważnianie po publikacji, testy spójności strony głównej z logiką gry.
 
 ## III. Edycja istniejących gier
@@ -91,3 +91,11 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Nie ma usuwania i nadpisywania, żeby nie uszkodzić historii publikacji.
 - Ścieżki w opublikowanej karcie i sekcji są walidowane względem rejestru i dokładnie tej samej gry.
 - Media nie wpływają na silniki rozgrywek ani XP; brak audio/wideo w tej wersji.
+
+### II.5 Historia publikacji, bezpieczne przywrócenie
+- Historyczne snapshoty są niemodyfikowalne i widoczne tylko w obrębie przydzielonego katalogu gier.
+- Przywrócenie starszej publikacji jest akcją wyłącznie właściciela i tworzy nowy szkic, nie publikuje automatycznie.
+- Nadpisanie istniejącego szkicu wymaga potwierdzenia; konflikt rewizji jest wykrywany atomowo w bazie.
+- Aktualna walidacja karty, grafiki i limitów silnika obowiązuje także przy odtwarzaniu wersji historycznej.
+- Publikacja odzyskanego szkicu nadal wymaga oddzielnego zatwierdzenia i TOTP/AAL2.
+- Zmiany rozgrywek, pokojów, punktacji i obecnej opublikowanej wersji pozostają nietknięte do publikacji.
