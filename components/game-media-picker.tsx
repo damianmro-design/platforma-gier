@@ -50,7 +50,7 @@ export default function GameMediaPicker({
   }, [load]);
 
   async function upload(file: File | undefined) {
-    if (!file || disabled || uploading) return;
+    if (!file || disabled || uploading || loading || error) return;
     setError(""); setNotice("");
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setError("Obsługiwane formaty: JPG, PNG i WebP."); return;
@@ -131,12 +131,12 @@ export default function GameMediaPicker({
       </div>}
     <div className="rounded-xl border border-dashed border-white/20 p-4">
       <p className="text-xs font-bold">Dodaj nowy plik</p>
-      <input value={alt} disabled={disabled || uploading} maxLength={160}
+      <input value={alt} disabled={disabled || uploading || loading || Boolean(error)} maxLength={160}
         onChange={(event) => setAlt(event.target.value)}
         placeholder="Krótki opis grafiki (alt)"
         className="mt-3 w-full rounded-xl border border-white/15 bg-[#090d1d] px-3 py-2 text-xs outline-none focus:border-violet-400"/>
       <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp"
-        disabled={disabled || uploading} onChange={(event) => void upload(event.target.files?.[0])}
+        disabled={disabled || uploading || loading || Boolean(error)} onChange={(event) => void upload(event.target.files?.[0])}
         className="mt-3 block w-full text-xs text-zinc-300 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-500 file:px-3 file:py-2 file:font-bold file:text-white"/>
       <p className="mt-2 text-[11px] text-zinc-500">JPG, PNG lub WebP, do 5 MB. Każdy plik ma niezmienną nazwę, co umożliwia przywracanie starszych wersji.</p>
     </div>

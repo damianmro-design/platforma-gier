@@ -74,7 +74,7 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Publiczny RPC udostępnia tylko opublikowane karty, szkice są dostępne wyłącznie uprawnionym pracownikom.
 - Pola techniczne, przekierowania i sposób logowania do osobnych aplikacji nie są edytowalne z formularza.
 - Graczy można zawężać tylko w rzeczywistych granicach silnika; wyświetlany zakres jest generowany automatycznie.
-- Podgląd, szkice i workflow działają w CMS, nowy silnik gier, przesyłanie plików i edycja podstron pozostają w roadmapie.
+- Podgląd, szkice i workflow działają w CMS; dodawanie grafik JPG/PNG/WebP do kart i dodatkowych sekcji działa. Nowy silnik gier, audio/wideo, SEO i edycja całej podstrony pozostają w roadmapie.
 - Do wdrożenia przed operacjami krytycznymi: wymuszony MFA/step-up, bezpieczna migracja konfiguracji pokojów i publikowanie nowych silników.
 
 ### Weryfikacja publikacji i bezpieczeństwa, 2026-09-25
@@ -82,7 +82,7 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Własna strona /admin/bezpieczenstwo pozwala dodać i potwierdzić czynnik oraz podnieść AAL istniejącej sesji.
 - Publiczna część podstron odczytuje wyłącznie opublikowane typowane sekcje; 8 sekcji maks., brak kodu HTML/JS i dowolnych linków.
 - Treści fabuły, pytania, właściwa punktacja i silniki pozostają nienaruszone.
-- Przy późniejszej bibliotece mediów wymagana walidacja uploadu i kontrola odczytu oraz spójne warianty mobilne.
+- W pierwszej wersji biblioteki mediów działają walidacja MIME i wielkości pliku, kontrola uprawnień i publiczne tylko grafiki marketingowe. Dalej: kadrowanie, audio/wideo i mobilne warianty.
 
 
 ### II.4 Galeria obrazów, pierwsza wersja
