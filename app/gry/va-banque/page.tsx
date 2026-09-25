@@ -206,10 +206,10 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
         </div>
       </section>
 
+      <GamePageCmsSections slug="va-banque" />
       <footer className="relative z-10 px-5 py-8 text-center text-xs text-amber-50/25">
         VA BANQUE · zaGRAj · 2026
       </footer>
-      <GamePageCmsSections slug="va-banque" />
     </main>
   );
 }

@@ -177,6 +177,7 @@ export default function CoLudziePowiedzaPage() {
         </div>
       </section>
 
+      <GamePageCmsSections slug="co-ludzie-powiedza" />
       <section className="survey-end container">
         <span>WERSJA BETA</span>
         <h2>Mechanika całej rozgrywki jest już gotowa od pokoju do zwycięzcy.</h2>
@@ -186,7 +187,6 @@ export default function CoLudziePowiedzaPage() {
         </p>
         <Link href="/">Wróć do katalogu</Link>
       </section>
-      <GamePageCmsSections slug="co-ludzie-powiedza" />
     </main>
   );
 }

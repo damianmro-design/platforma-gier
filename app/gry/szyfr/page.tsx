@@ -212,10 +212,10 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
         </div>
       </section>
 
+      <GamePageCmsSections slug="szyfr" />
       <footer className="relative z-10 border-t border-cyan-200/7 px-5 py-8 text-center text-xs text-cyan-50/30">
         <Link href="/">zaGRAj</Link> · SZYFR · 2026
       </footer>
-      <GamePageCmsSections slug="szyfr" />
     </main>
   );
 }

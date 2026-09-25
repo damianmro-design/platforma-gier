@@ -368,6 +368,7 @@ export default function AktaNocyPage() {
           </div>
         </section>
 
+        <GamePageCmsSections slug="akta-nocy" />
         <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
           <div className="rounded-[2rem] border border-orange-200/12 bg-[linear-gradient(110deg,rgba(127,29,29,.24),rgba(124,45,18,.16),rgba(0,0,0,.1))] p-7 sm:p-10">
             <p className="text-[10px] font-black uppercase tracking-[.28em] text-red-300">
@@ -385,7 +386,6 @@ export default function AktaNocyPage() {
           </div>
         </section>
       </div>
-      <GamePageCmsSections slug="akta-nocy" />
     </main>
   );
 }
