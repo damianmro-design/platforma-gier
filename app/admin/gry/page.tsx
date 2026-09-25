@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import GameMediaPicker from "@/components/game-media-picker";
+import AdminCatalogHistory from "@/components/admin-catalog-history";
 import { gameMediaUrl } from "@/lib/zagraj-media";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
@@ -326,6 +327,9 @@ export default function AdminCatalogPage() {
             {changed && <p className="text-xs text-amber-300">Masz niezapisane zmiany. Zapisz je, zanim prześlesz projekt do zatwierdzenia.</p>}
             {chosen.draftState === "submitted" && <p className="text-xs text-cyan-300">Wersja oczekuje na decyzję właściciela. Zmiana pól przywróci status szkicu.</p>}
           </form>
+          <AdminCatalogHistory key={chosen.slug} slug={chosen.slug} token={token} currentRevision={chosen.revision}
+            draftState={chosen.draftState} isOwner={Boolean(canPublish)} pendingChanges={changed}
+            disabled={busy} onRestored={() => load(token, chosen.slug)}/>
         </section>}
       </div>
     </div>
