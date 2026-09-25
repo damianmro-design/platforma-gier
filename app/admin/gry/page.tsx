@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import GameMediaPicker from "@/components/game-media-picker";
+import { gameMediaUrl } from "@/lib/zagraj-media";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
@@ -113,7 +115,7 @@ export default function AdminCatalogPage() {
       if (!prev || (prev.pageSections ?? []).length >= 8) return prev;
       return { ...prev, pageSections: [...(prev.pageSections ?? []), {
         id: `section-${crypto.randomUUID()}`, kind: "info" as const,
-        title: "", body: "", bullets: [],
+        title: "", body: "", bullets: [], imagePath: "",
       }] };
     });
   }
@@ -170,7 +172,7 @@ export default function AdminCatalogPage() {
           <h1 className="mt-3 text-3xl font-black">Katalog gier</h1>
           <p className="mt-2 text-sm text-zinc-400">Szkic → zatwierdzenie właściciela → publikacja. Trwających gier ta edycja nie zmienia.</p>
         </div>
-        <Link href="/" className="text-xs text-zinc-400 hover:text-white">Otwórz stronę główną ↗</Link>
+        <div className="flex flex-wrap items-center gap-4"><Link href="/admin/media" className="text-xs font-bold text-violet-300 hover:text-white">Biblioteka mediów ↗</Link><Link href="/" className="text-xs text-zinc-400 hover:text-white">Otwórz stronę główną ↗</Link></div>
       </header>
 
       {error && <p role="alert" className="mt-5 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>}
@@ -241,6 +243,11 @@ export default function AdminCatalogPage() {
                   {ARTS.map(value=><option key={value} value={value}>{value}</option>)}
                 </select>
               </label>
+              <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <GameMediaPicker slug={chosen.slug} selectedPath={form.coverPath ?? ""}
+                  onSelect={(path)=>setField("coverPath",path)} disabled={!canEdit || busy}
+                  title="Własna grafika karty (zastępuje motyw domyślny)"/>
+              </div>
               <label className="flex items-center gap-3 text-sm sm:col-span-2">
                 <input type="checkbox" checked={form.isVisible} onChange={(e)=>setField("isVisible",e.target.checked)} className="accent-violet-400"/>
                 Karta widoczna w katalogu
@@ -285,6 +292,11 @@ export default function AdminCatalogPage() {
                       <textarea className={field+" min-h-24"} value={section.bullets.join("\n")} onChange={(e)=>changeSection(section.id,{bullets:e.target.value.split("\n").map((v)=>v.trim()).filter(Boolean)})}/>
                     </label>
                   </div>
+                  <div className="mt-4 border-t border-white/10 pt-4">
+                    <GameMediaPicker slug={chosen.slug} selectedPath={section.imagePath ?? ""}
+                      onSelect={(path)=>changeSection(section.id,{imagePath:path})}
+                      disabled={!canEdit || busy} title="Opcjonalna grafika tej sekcji"/>
+                  </div>
                 </div>)}
               </div>
               <button type="button" onClick={addSection} disabled={!canEdit || busy || (form.pageSections ?? []).length>=8}
@@ -295,6 +307,7 @@ export default function AdminCatalogPage() {
             </fieldset>
             <div className="rounded-2xl border border-white/10 bg-white/[.03] p-5">
               <p className="text-xs font-black uppercase tracking-widest text-zinc-400">Podgląd treści karty</p>
+              {gameMediaUrl(form.coverPath) && <img src={gameMediaUrl(form.coverPath)!} alt="Podgląd grafiki karty" className="mt-3 aspect-video w-full max-w-lg rounded-xl object-cover"/>}
               <h3 className="mt-3 text-2xl font-black">{form.title}</h3>
               <p className="mt-2 text-xs font-bold uppercase text-violet-300">{form.eyebrow}</p>
               <p className="mt-2 text-sm leading-6 text-zinc-400">{form.description}</p>

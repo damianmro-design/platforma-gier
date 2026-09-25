@@ -8,6 +8,7 @@ import AccountMenu from "./account-menu";
 import FloorOwnerTestButton from "@/components/floor-owner-test-button";
 import PolowanieOwnerTestButton from "@/components/polowanie-owner-test-button";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
+import { gameMediaUrl } from "@/lib/zagraj-media";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
@@ -29,6 +30,7 @@ type GameCardProps = {
   tags: string[];
   accent: Accent;
   art: Art;
+  coverPath?: string;
   href?: string;
   external?: boolean;
   status: "hit" | "new" | "soon";
@@ -288,7 +290,13 @@ function GameCard(props: GameCardProps) {
   const content = (
     <>
       <div className="relative">
-        <GameArt type={props.art} />
+        {gameMediaUrl(props.coverPath) ? (
+          <div className="relative h-56 overflow-hidden bg-[#05060b]">
+            <img src={gameMediaUrl(props.coverPath)!} alt="" loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"/>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#090b13] via-[#090b13]/10 to-transparent"/>
+          </div>
+        ) : <GameArt type={props.art} />}
         <div className={`pointer-events-none absolute inset-0 bg-gradient-to-b ${accent.glow}`} />
         <span className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[10px] font-black uppercase tracking-[.16em] text-white backdrop-blur-md">
           {statusLabel}

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { PARTYPLAY_AUTH_KEY, PARTYPLAY_AUTH_URL } from "@/lib/partyplay-auth";
 import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
+import { gameMediaUrl } from "@/lib/zagraj-media";
 
 // A public, server-rendered block area. It never reads draft data or runs administrator input as code.
 export default async function GamePageCmsSections({ slug }: { slug: string }) {
@@ -40,6 +41,7 @@ export default async function GamePageCmsSections({ slug }: { slug: string }) {
               {section.kind === "steps" ? "Krok po kroku" : section.kind === "notice" ? "Ważna informacja" : "Informacja"}
             </p>
             <h3 className="mt-3 text-xl font-black tracking-tight">{section.title}</h3>
+            {gameMediaUrl(section.imagePath) && <img src={gameMediaUrl(section.imagePath)!} alt={section.title} loading="lazy" className="mt-4 aspect-video w-full rounded-2xl object-cover"/>}
             {section.body && <p className="mt-3 whitespace-pre-line text-sm leading-7 text-zinc-300">{section.body}</p>}
             {!!section.bullets?.length && <ListTag className={`mt-4 space-y-2 pl-5 text-sm leading-6 text-zinc-300 ${section.kind === "steps" ? "list-decimal" : "list-disc"}`}>
               {section.bullets.map((line,index)=><li key={index}>{line}</li>)}

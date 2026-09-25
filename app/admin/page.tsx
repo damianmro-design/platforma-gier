@@ -209,12 +209,12 @@ export default function AdminPage() {
             {[
               ["Gry i katalog", "Edycja kart ze szkicem i zatwierdzeniem", "OTWÓRZ"],
               ["Kreator gier", "Szablony i bloki mechaniki", "Etap IV"],
-              ["Biblioteka mediów", "Grafiki, audio i wideo", "Etap II"],
+              ["Biblioteka mediów", "Własne grafiki gier, JPG, PNG i WebP", "OTWÓRZ"],
               ["XP i odznaki", "Tylko osoby z uprawnieniem", "Etap V"],
               ["Statystyki", "Rzeczywiste dane platformy", "Etap V"],
               ["Integracje", "Floor Party i Polowanie", "Etap VI"],
             ].map(([title, description, phase]) =>
-              title === "Gry i katalog" ? <Link key={title} href="/admin/gry" className="rounded-2xl border border-violet-400/30 bg-violet-500/10 p-4 transition hover:border-violet-300/70">
+              (title === "Gry i katalog" || title === "Biblioteka mediów") ? <Link key={title} href={title === "Biblioteka mediów" ? "/admin/media" : "/admin/gry"} className="rounded-2xl border border-violet-400/30 bg-violet-500/10 p-4 transition hover:border-violet-300/70">
                 <div className="flex items-start justify-between gap-2"><strong className="text-sm">{title}</strong><span className="whitespace-nowrap text-[10px] text-violet-200">{phase} ↗</span></div>
                 <p className="mt-2 text-xs leading-5 text-zinc-400">{description}</p>
               </Link> : <div key={title} className="rounded-2xl border border-white/10 bg-black/20 p-4">

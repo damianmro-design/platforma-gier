@@ -4,6 +4,7 @@ export type CatalogPageSection = {
   title: string;
   body: string;
   bullets: string[];
+  imagePath?: string;
 };
 
 export type CatalogGame = {
@@ -15,7 +16,7 @@ export type CatalogGame = {
   status: "hit" | "new" | "soon"; minPlayers: number; maxPlayers: number; minTime: number; maxTime: number;
   categories: Array<"funny" | "strategic" | "team">;
   moods: Array<"laugh" | "think" | "compete" | "cooperate">;
-  sortOrder: number; isVisible: boolean; pageSections?: CatalogPageSection[];
+  sortOrder: number; isVisible: boolean; pageSections?: CatalogPageSection[]; coverPath?: string;
 };
 
 // Bootstrap and outage fallback. Post-publication truth lives in the catalog database.

@@ -22,14 +22,14 @@ I.4 [x] SQL SECURITY DEFINER, izolacja tabel i log audytowy, brak publicznego za
 I.5 [x] Serwerowe API /api/admin/me, /dashboard, /staff.
 I.6 [x] /admin, pulpit pierwszej wersji, nadawanie / odbieranie ról, autoryzacja po stronie API.
 I.7 [~] Testy SQL i RPC: nadanie roli w transakcji, uprawnienia redaktora, odmowa dla anonimowego, rollback; test rzeczywistą sesją użytkownika nadal do wykonania.
-I.8 [~] MFA TOTP działa i jest egzekwowane jako AAL2 dla nadawania ról i publikacji kart. Obsługa SMS w panelu jest przygotowana, lecz domyślnie wyłączona do czasu świadomego zaakceptowania kosztów dodatku Phone MFA i skonfigurowania dostawcy SMS. Test realnej dostawy SMS i końcowa aktywacja pozostają otwarte.
+I.8 [x] TOTP i AAL2 dla nadawania ról i publikacji. SMS świadomie odłożony decyzją właściciela.
 I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym połączeniu obu baz.
 
 ## II. CMS katalogu i mediów
 II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
 II.3 [~] Edytor dodatkowych sekcji informacyjnych podstron wszystkich 7 gier wewnętrznych: tekst, instrukcja, ważna informacja, kolejność i lista punktów; szkic i publikacja właścicielska. Pozostałe istniejące sekcje, media, SEO i pełna edycja layoutu są kolejnymi podetapami.
-II.4 Biblioteka mediów z walidacją, storage i referencjami.
+II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Przywracanie wersji oraz strony gier będą rozwijane osobno.
 II.6 Caching i unieważnianie po publikacji, testy spójności strony głównej z logiką gry.
 
@@ -78,14 +78,16 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Do wdrożenia przed operacjami krytycznymi: wymuszony MFA/step-up, bezpieczna migracja konfiguracji pokojów i publikowanie nowych silników.
 
 ### Weryfikacja publikacji i bezpieczeństwa, 2026-09-25
-- Operacje nadawania ról i publikacji wymagają AAL2 w aktualnym JWT, egzekwowane również w SQL; zarówno TOTP, jak i po aktywacji Phone MFA, zweryfikowany SMS mogą podnieść sesję do AAL2.
+- Operacje nadawania ról i publikacji wymagają AAL2 w aktualnym JWT, egzekwowane również w SQL; sesję do AAL2 podnosi TOTP, SMS jest odłożony.
 - Własna strona /admin/bezpieczenstwo pozwala dodać i potwierdzić czynnik oraz podnieść AAL istniejącej sesji.
 - Publiczna część podstron odczytuje wyłącznie opublikowane typowane sekcje; 8 sekcji maks., brak kodu HTML/JS i dowolnych linków.
 - Treści fabuły, pytania, właściwa punktacja i silniki pozostają nienaruszone.
 - Przy późniejszej bibliotece mediów wymagana walidacja uploadu i kontrola odczytu oraz spójne warianty mobilne.
 
-### SMS MFA: decyzja kosztowa przed aktywacją
-- Kod obsługuje dodanie numeru, challenge SMS, weryfikację i wybór między TOTP a telefonem.
-- Zmienna serwerowa `ZAGRAJ_ADMIN_SMS_MFA_ENABLED` domyślnie jest wyłączona i musi zostać ustawiona dopiero po konfiguracji usługi.
-- Według dokumentacji Supabase Advanced MFA Phone jest osobno płatne, $75/miesiąc za pierwszy projekt przy ciągłym włączeniu (naliczane godzinowo), plus wiadomości u dostawcy. Nie pokrywa tego Spend Cap.
-- Nie aktywowano płatnej usługi i nie wysłano wiadomości; potrzebne potwierdzenie właściciela, konfiguracja dostawcy i realny test po stronie właściciela.
+
+### II.4 Galeria obrazów, pierwsza wersja
+- Publiczny bucket przechowuje wyłącznie zasoby marketingowe gier, nie dane graczy; draft ma niepubliczną listę w CMS, ale sama grafika pod znanym URL jest publiczna.
+- Upload tylko właściciel i redaktor z uprawnieniem media.manage oraz poprawnym zakresem gry; rejestracja musi potwierdzić właściciela obiektu Storage.
+- Nie ma usuwania i nadpisywania, żeby nie uszkodzić historii publikacji.
+- Ścieżki w opublikowanej karcie i sekcji są walidowane względem rejestru i dokładnie tej samej gry.
+- Media nie wpływają na silniki rozgrywek ani XP; brak audio/wideo w tej wersji.
