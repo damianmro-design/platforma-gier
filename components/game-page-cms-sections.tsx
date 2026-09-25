@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { PARTYPLAY_AUTH_KEY, PARTYPLAY_AUTH_URL } from "@/lib/partyplay-auth";
 import type { CatalogGame, CatalogPageSection } from "@/lib/zagraj-catalog-defaults";
 import { gameMediaUrl } from "@/lib/zagraj-media";
+import GamePageCatalogRefresh from "@/components/game-page-catalog-refresh";
 
 // A public, server-rendered block area. It never reads draft data or runs administrator input as code.
 export default async function GamePageCmsSections({ slug }: { slug: string }) {
@@ -12,20 +13,23 @@ export default async function GamePageCmsSections({ slug }: { slug: string }) {
       global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
     });
     const { data, error } = await client.rpc("zagraj_catalog_public");
-    if (error || !Array.isArray(data)) return null;
-    const game = (data as CatalogGame[]).find((item) => item.slug === slug);
-    if (!game || !Array.isArray(game.pageSections)) return null;
-    sections = game.pageSections.filter((section) =>
-      section && typeof section.title === "string" &&
-      ["info", "notice", "steps"].includes(section.kind)
-    );
+    if (!error && Array.isArray(data)) {
+      const game = (data as CatalogGame[]).find((item) => item.slug === slug);
+      if (game && Array.isArray(game.pageSections)) {
+        sections = game.pageSections.filter((section) =>
+          section && typeof section.title === "string" &&
+          ["info", "notice", "steps"].includes(section.kind)
+        );
+      }
+    }
   } catch {
-    return null;
+    // A later focus or publication event retries the published CMS feed.
   }
-  if (!sections.length) return null;
 
   return (
-    <section aria-label="Informacje o grze" className="relative z-10 mx-auto max-w-7xl px-5 py-12 text-white sm:px-8 lg:py-16">
+    <>
+    <GamePageCatalogRefresh />
+    {sections.length > 0 && <section aria-label="Informacje o grze" className="relative z-10 mx-auto max-w-7xl px-5 py-12 text-white sm:px-8 lg:py-16">
       <div className="mb-7">
         <p className="text-[10px] font-black uppercase tracking-[.25em] text-violet-300">Dodatkowe informacje</p>
         <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Warto wiedzieć przed grą</h2>
@@ -49,6 +53,7 @@ export default async function GamePageCmsSections({ slug }: { slug: string }) {
           </article>;
         })}
       </div>
-    </section>
+    </section>}
+    </>
   );
 }
