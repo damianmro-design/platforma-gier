@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -11,16 +12,11 @@ export const metadata: Metadata = {
     "Szybki teleturniej słowny z kołem ryzyka, literami, punktami i hasłami o rosnącym poziomie trudności.",
 };
 
-const rules = [
-  ["01", "Zakręć kołem", "Wartość z koła określa punkty za każdą trafioną spółgłoskę. BANKRUT zeruje punkty z rundy, a PAS oddaje kolejkę."],
-  ["02", "Wybierz literę", "Trafiona spółgłoska odkrywa wszystkie jej wystąpienia i grasz dalej. Pudło przekazuje ruch następnej osobie."],
-  ["03", "Kup samogłoskę", "Za 200 pkt z bieżącej rundy możesz wybrać samogłoskę. Koszt płacisz zawsze, a nietrafiona samogłoska kończy Twoją kolejkę."],
-  ["04", "Rozwiąż hasło", "W swojej kolejce możesz podać całe hasło. Poprawna odpowiedź daje 1000 pkt bonusu, błędna oddaje kolejkę."],
-];
 
 export const dynamic = "force-dynamic";
 
-export default function ZakreconeHasloPage() {
+export default async function ZakreconeHasloPage() {
+  const rules = await getPublishedPageRules("zakrecone-haslo");
   return (
     <main className="min-h-screen overflow-hidden bg-[#080512] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(139,92,246,.28),transparent_28%),radial-gradient(circle_at_85%_15%,rgba(236,72,153,.18),transparent_25%),radial-gradient(circle_at_50%_90%,rgba(59,130,246,.16),transparent_32%)]" />
