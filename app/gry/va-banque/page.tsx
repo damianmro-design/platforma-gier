@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -68,8 +69,7 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
             </span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-amber-50/65">
-            Licytuj kategorie, przejmuj pytania i decyduj, ile jesteś gotów postawić.
-            Wiedza to dopiero połowa gry.
+            <GamePageCmsIntro slug="va-banque" />
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-black">
