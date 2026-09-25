@@ -9,6 +9,7 @@ import FloorOwnerTestButton from "@/components/floor-owner-test-button";
 import PolowanieOwnerTestButton from "@/components/polowanie-owner-test-button";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
 import { gameMediaUrl } from "@/lib/zagraj-media";
+import { subscribeToCatalogRefresh } from "@/lib/zagraj-catalog-refresh";
 
 type Accent = "gold" | "pink" | "yellow" | "cyan" | "red" | "violet";
 type Art = "millionaire" | "floor" | "people" | "agent" | "crime" | "word" | "duo" | "cipher" | "auction";
@@ -404,26 +405,56 @@ export default function Home() {
   const [catalogError, setCatalogError] = useState("");
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/games/catalog", { signal: controller.signal, cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Katalog gier jest chwilowo niedostępny.");
-        return response.json();
-      })
-      .then((data: unknown) => {
-        if (!Array.isArray(data) || !data.every((entry) =>
-          entry && typeof entry === "object" &&
-          typeof entry.title === "string" && typeof entry.slug === "string" &&
-          Array.isArray(entry.tags) && Array.isArray(entry.categories) && Array.isArray(entry.moods)
-        )) throw new Error("Otrzymano nieprawidłowe dane katalogu.");
-        setCatalog(data as CatalogGame[]);
-        setCatalogError("");
-      })
-      .catch((error: Error) => {
-        if (error.name !== "AbortError") setCatalogError(error.message);
-      })
-      .finally(() => { if (!controller.signal.aborted) setCatalogLoading(false); });
-    return () => controller.abort();
+    let mounted = true;
+    let current: AbortController | null = null;
+    let lastRequestAt = 0;
+
+    const reloadCatalog = (force = false) => {
+      if (!mounted) return;
+      const now = Date.now();
+      // Visibility and focus often fire together. A publication notification
+      // bypasses the throttle so a newly published card is never missed.
+      if (!force && now - lastRequestAt < 1000) return;
+      lastRequestAt = now;
+      current?.abort();
+      const controller = new AbortController();
+      current = controller;
+
+      void fetch("/api/games/catalog", { signal: controller.signal, cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Katalog gier jest chwilowo niedostępny.");
+          return response.json();
+        })
+        .then((data: unknown) => {
+          if (!Array.isArray(data) || !data.every((entry) =>
+            entry && typeof entry === "object" &&
+            typeof entry.title === "string" && typeof entry.slug === "string" &&
+            Array.isArray(entry.tags) && Array.isArray(entry.categories) && Array.isArray(entry.moods)
+          )) throw new Error("Otrzymano nieprawidłowe dane katalogu.");
+          if (mounted && !controller.signal.aborted) {
+            setCatalog(data as CatalogGame[]);
+            setCatalogError("");
+          }
+        })
+        .catch((error: Error) => {
+          if (mounted && !controller.signal.aborted && error.name !== "AbortError") {
+            setCatalogError(error.message);
+          }
+        })
+        .finally(() => {
+          if (mounted && !controller.signal.aborted) setCatalogLoading(false);
+        });
+    };
+
+    reloadCatalog(true);
+    const unsubscribe = subscribeToCatalogRefresh((reason) => {
+      reloadCatalog(reason === "published");
+    });
+    return () => {
+      mounted = false;
+      unsubscribe();
+      current?.abort();
+    };
   }, []);
 
   const filters: GameFilterState = {
