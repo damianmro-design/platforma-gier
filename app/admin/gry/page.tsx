@@ -4,6 +4,7 @@ import Link from "next/link";
 import GameMediaPicker from "@/components/game-media-picker";
 import AdminCatalogHistory from "@/components/admin-catalog-history";
 import { gameMediaUrl } from "@/lib/zagraj-media";
+import { GAME_PAGE_INTRO_FALLBACK } from "@/lib/zagraj-game-page-intros";
 import { announceCatalogPublication } from "@/lib/zagraj-catalog-refresh";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createPartyPlayAuthClient } from "@/lib/partyplay-auth";
@@ -217,6 +218,21 @@ export default function AdminCatalogPage() {
               <label className={label+" sm:col-span-2"}>Opis na stronie głównej
                 <textarea className={field+" min-h-28"} value={form.description} maxLength={600} required onChange={(e) => setField("description",e.target.value)}/>
               </label>
+              {GAME_PAGE_INTRO_FALLBACK[chosen.slug] && <div className="sm:col-span-2 rounded-2xl border border-violet-400/20 bg-violet-400/[.045] p-4">
+                <label className={label}>Opis otwierający podstronę gry (maks. 600 znaków)
+                  <textarea className={field+" min-h-28"} value={form.pageIntro ?? ""} maxLength={600}
+                    placeholder={GAME_PAGE_INTRO_FALLBACK[chosen.slug]}
+                    onChange={(e) => setField("pageIntro", e.target.value)} />
+                </label>
+                <p className="mt-2 text-xs leading-5 text-zinc-400">Puste pole zachowuje oryginalny opis. Tekst będzie widoczny w górnej części podstrony dopiero po zatwierdzeniu i publikacji. Nie zmienia zasad ani przebiegu gry.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setField("pageIntro", GAME_PAGE_INTRO_FALLBACK[chosen.slug])}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs font-bold text-violet-200">Wczytaj oryginalny tekst do edycji</button>
+                  <button type="button" onClick={() => setField("pageIntro", "")}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs text-zinc-300">Przywróć oryginalny opis</button>
+                </div>
+                <p className="mt-3 text-xs text-zinc-300">Podgląd: {form.pageIntro?.trim() || GAME_PAGE_INTRO_FALLBACK[chosen.slug]}</p>
+              </div>}
               <label className={label+" sm:col-span-2"}>Tagi (oddzielone przecinkiem, maks. 8)
                 <input className={field} value={form.tags.join(", ")} onChange={(e) => setField("tags",e.target.value.split(",").map(x=>x.trim()).filter(Boolean))}/>
               </label>
