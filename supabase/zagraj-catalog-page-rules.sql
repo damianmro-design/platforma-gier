@@ -1,0 +1,231 @@
+-- II.3b: Versioned explanatory copy for locked, numbered rule cards of VA BANQUE and Zakręcone Hasło.
+-- Preserve current authorisation, revision checks, media validation and audit.
+-- CMS II.3: existing hero introductions as versioned, plain text.
+-- Preserve all current authorization, engine, media, section, audit and revision checks.
+-- Original page copy is a code fallback until a new text is published.
+-- Catalog art and section images can only reference registered, same-game uploaded assets.
+CREATE OR REPLACE FUNCTION public.zagraj_catalog_save_draft(p_slug text, p_expected_revision integer, p_data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare m public.zagraj_admin_members%rowtype;
+ g public.zagraj_catalog_games%rowtype;
+ c jsonb;
+ x text;
+ section jsonb;
+ sections jsonb := '[]'::jsonb;
+ raw_sections jsonb;
+ section_bullets jsonb;
+ bullet text;
+ used_ids text[] := '{}'::text[];
+ cover_path text;
+ section_path text;
+ page_intro text;
+ page_rules jsonb;
+ rule_items jsonb;
+ expected_rule_count integer;
+begin
+ select * into m from public.zagraj_admin_members where user_id=auth.uid() and active;
+ if m.user_id is null or (m.role<>'owner' and not ('games.edit'=any(m.permissions)
+     and (cardinality(m.game_slugs)=0 or p_slug=any(m.game_slugs)))) then
+   raise exception 'GAME_EDIT_FORBIDDEN' using errcode='42501'; end if;
+ select * into g from public.zagraj_catalog_games where slug=p_slug for update;
+ if g.slug is null then raise exception 'GAME_NOT_FOUND' using errcode='22023'; end if;
+ if g.revision is distinct from p_expected_revision then
+   raise exception 'CATALOG_REVISION_CONFLICT' using errcode='40001'; end if;
+ if jsonb_typeof(p_data) is distinct from 'object' then
+   raise exception 'INVALID_CARD' using errcode='22023'; end if;
+ if length(trim(coalesce(p_data->>'title',''))) not between 1 and 80
+    or length(trim(coalesce(p_data->>'eyebrow',''))) not between 1 and 90
+    or length(trim(coalesce(p_data->>'description',''))) not between 1 and 600 then
+   raise exception 'INVALID_CARD_TEXT' using errcode='22023'; end if;
+ if (p_data->>'minPlayers') !~ '^[0-9]+$' or (p_data->>'maxPlayers') !~ '^[0-9]+$'
+   or (p_data->>'minTime') !~ '^[0-9]+$' or (p_data->>'maxTime') !~ '^[0-9]+$'
+   or (p_data->>'sortOrder') !~ '^[0-9]+$' then
+   raise exception 'INVALID_CARD_NUMBER' using errcode='22023'; end if;
+ if (p_data->>'minPlayers')::integer < g.engine_min_players
+   or (p_data->>'maxPlayers')::integer > g.engine_max_players
+   or (p_data->>'minPlayers')::integer > (p_data->>'maxPlayers')::integer
+   or (p_data->>'minTime')::integer < 5
+   or (p_data->>'maxTime')::integer > 240
+   or (p_data->>'minTime')::integer > (p_data->>'maxTime')::integer
+   or (p_data->>'sortOrder')::integer > 99 then
+   raise exception 'CARD_OUTSIDE_ENGINE_LIMITS' using errcode='22023'; end if;
+ if (p_data->>'accent') not in ('gold','pink','yellow','cyan','red','violet')
+   or (p_data->>'art') not in ('millionaire','floor','people','agent','crime','word','duo','cipher','auction')
+   or (p_data->>'status') not in ('hit','new','soon')
+   or jsonb_typeof(p_data->'isVisible') is distinct from 'boolean'
+   or jsonb_typeof(p_data->'tags') is distinct from 'array'
+   or jsonb_typeof(p_data->'categories') is distinct from 'array'
+   or jsonb_typeof(p_data->'moods') is distinct from 'array'
+   or jsonb_array_length(p_data->'tags')>8
+   or jsonb_array_length(p_data->'categories')>3
+   or jsonb_array_length(p_data->'moods')>4 then
+    raise exception 'INVALID_CARD_OPTIONS' using errcode='22023'; end if;
+ if exists(select 1 from jsonb_array_elements(p_data->'tags') as v(value) where jsonb_typeof(v.value)<>'string')
+    or exists(select 1 from jsonb_array_elements(p_data->'categories') as v(value) where jsonb_typeof(v.value)<>'string')
+    or exists(select 1 from jsonb_array_elements(p_data->'moods') as v(value) where jsonb_typeof(v.value)<>'string') then
+   raise exception 'INVALID_CARD_ARRAY_TYPES' using errcode='22023'; end if;
+ for x in select jsonb_array_elements_text(p_data->'tags') loop
+   if length(trim(x)) not between 1 and 40 then raise exception 'INVALID_TAG' using errcode='22023'; end if;
+ end loop;
+ for x in select jsonb_array_elements_text(p_data->'categories') loop
+   if x not in ('funny','strategic','team') then raise exception 'INVALID_CATEGORY' using errcode='22023'; end if;
+ end loop;
+ for x in select jsonb_array_elements_text(p_data->'moods') loop
+   if x not in ('laugh','think','compete','cooperate') then raise exception 'INVALID_MOOD' using errcode='22023'; end if;
+ end loop;
+ cover_path:=coalesce(p_data->>'coverPath',g.draft->>'coverPath',g.published->>'coverPath','');
+ if cover_path<>'' and not exists(
+    select 1 from public.zagraj_admin_media a
+    where a.path=cover_path and a.game_slug=p_slug
+ ) then raise exception 'INVALID_COVER_MEDIA' using errcode='22023'; end if;
+ if p_data ? 'pageIntro' and jsonb_typeof(p_data->'pageIntro') <> 'string' then
+   raise exception 'INVALID_PAGE_INTRO_TYPE' using errcode='22023'; end if;
+ page_intro:=trim(coalesce(p_data->>'pageIntro',g.draft->>'pageIntro',g.published->>'pageIntro',''));
+ if length(page_intro)>600 then
+   raise exception 'INVALID_PAGE_INTRO_LENGTH' using errcode='22023'; end if;
+ -- Only two fixed, numbered rulesets are supported in II.3b. No rule title,
+ -- number, order, round count or game-engine parameter can be changed here.
+ if p_data ? 'pageRules' then
+   page_rules:=p_data->'pageRules';
+ else
+   page_rules:=coalesce(g.draft->'pageRules',g.published->'pageRules','null'::jsonb);
+ end if;
+ if jsonb_typeof(page_rules) is distinct from 'null' then
+   if p_slug not in ('va-banque','zakrecone-haslo')
+      or jsonb_typeof(page_rules)<>'object' then
+     raise exception 'INVALID_PAGE_RULES_GAME' using errcode='22023'; end if;
+   if jsonb_typeof(page_rules->'schema')<>'number'
+      or page_rules->>'schema'<>'1'
+      or jsonb_typeof(page_rules->'items')<>'array'
+      or exists(select 1 from jsonb_object_keys(page_rules) as key
+                where key not in ('schema','items')) then
+     raise exception 'INVALID_PAGE_RULES_SCHEMA' using errcode='22023'; end if;
+   expected_rule_count:=case p_slug when 'va-banque' then 6 else 4 end;
+   rule_items:=page_rules->'items';
+   if jsonb_array_length(rule_items)<>expected_rule_count
+      or exists (
+        select 1 from jsonb_array_elements(rule_items) item(value)
+        where jsonb_typeof(item.value)<>'string'
+           or length(trim(item.value #>> '{}')) not between 1 and 360
+           or (item.value #>> '{}') ~* '<[^>]*>|https?://|www\\.'
+      ) then
+     raise exception 'INVALID_PAGE_RULES_COPY' using errcode='22023'; end if;
+   select jsonb_build_object('schema',1,
+            'items',jsonb_agg(to_jsonb(trim(item.value)) order by item.ordinality))
+     into page_rules
+     from jsonb_array_elements_text(rule_items) with ordinality as item(value,ordinality);
+ end if;
+  raw_sections := coalesce(p_data->'pageSections',g.draft->'pageSections',g.published->'pageSections','[]'::jsonb);
+ if jsonb_typeof(raw_sections)<>'array' or jsonb_array_length(raw_sections)>8 then
+   raise exception 'INVALID_PAGE_SECTIONS' using errcode='22023'; end if;
+ for section in select value from jsonb_array_elements(raw_sections) loop
+   if jsonb_typeof(section)<>'object'
+      or coalesce(section->>'id','') !~ '^[a-zA-Z0-9_-]{1,70}$'
+      or (section->>'id')=any(used_ids)
+      or coalesce(section->>'kind','') not in ('info','steps','notice')
+      or length(trim(coalesce(section->>'title',''))) not between 1 and 90
+      or length(trim(coalesce(section->>'body','')))>1200 then
+      raise exception 'INVALID_PAGE_SECTION' using errcode='22023'; end if;
+   section_bullets:=coalesce(section->'bullets','[]'::jsonb);
+   if jsonb_typeof(section_bullets)<>'array' or jsonb_array_length(section_bullets)>6 then
+      raise exception 'INVALID_SECTION_BULLETS' using errcode='22023'; end if;
+   if exists(select 1 from jsonb_array_elements(section_bullets) as v(value)
+       where jsonb_typeof(v.value)<>'string') then
+      raise exception 'INVALID_SECTION_BULLET_TYPE' using errcode='22023'; end if;
+   for bullet in select jsonb_array_elements_text(section_bullets) loop
+     if length(trim(coalesce(bullet,''))) not between 1 and 180 then
+       raise exception 'INVALID_SECTION_BULLET' using errcode='22023'; end if;
+   end loop;
+   if trim(coalesce(section->>'body',''))='' and jsonb_array_length(section_bullets)=0 then
+     raise exception 'EMPTY_PAGE_SECTION' using errcode='22023'; end if;
+   section_path:=coalesce(section->>'imagePath','');
+   if section_path<>'' and not exists(
+     select 1 from public.zagraj_admin_media a
+     where a.path=section_path and a.game_slug=p_slug
+   ) then raise exception 'INVALID_SECTION_MEDIA' using errcode='22023'; end if;
+   sections:=sections||jsonb_build_array(jsonb_build_object(
+     'id',section->>'id','kind',section->>'kind',
+     'title',trim(section->>'title'),'body',trim(coalesce(section->>'body','')),
+     'bullets',section_bullets,'imagePath',section_path
+   ));
+   used_ids:=array_append(used_ids,section->>'id');
+ end loop;
+ -- Explicit allowlist and backend-owned technical routing. No arbitrary href, JS or auth handoff edits.
+ c:=g.published || jsonb_build_object(
+  'title',trim(p_data->>'title'),'eyebrow',trim(p_data->>'eyebrow'),
+  'description',trim(p_data->>'description'),
+  'minPlayers',(p_data->>'minPlayers')::integer,'maxPlayers',(p_data->>'maxPlayers')::integer,
+  'minTime',(p_data->>'minTime')::integer,'maxTime',(p_data->>'maxTime')::integer,
+  'players',case when (p_data->>'minPlayers')::integer=(p_data->>'maxPlayers')::integer
+         then (p_data->>'minPlayers')||' graczy'
+         else (p_data->>'minPlayers')||'–'||(p_data->>'maxPlayers')||' graczy' end,
+  'time',(p_data->>'minTime')||'–'||(p_data->>'maxTime')||' min',
+  'tags',p_data->'tags','categories',p_data->'categories','moods',p_data->'moods',
+  'accent',p_data->>'accent','art',p_data->>'art','status',p_data->>'status',
+  'sortOrder',(p_data->>'sortOrder')::integer,'isVisible',(p_data->>'isVisible')::boolean,'pageSections',sections,'coverPath',cover_path,'pageIntro',page_intro,'pageRules',page_rules
+ );
+ -- Preserve a prior draft if the editor is only changing one field.
+ update public.zagraj_catalog_games set draft=c,draft_state='draft',draft_author=auth.uid(),
+   submitted_by=null,revision=revision+1,updated_by=auth.uid(),updated_at=now()
+ where slug=p_slug;
+ insert into public.zagraj_admin_audit(actor_id,action,target_type,target_id,before_state,after_state)
+ values(auth.uid(),'catalog.draft.save','game',p_slug,
+  jsonb_build_object('revision',g.revision,'draft',g.draft),
+  jsonb_build_object('revision',g.revision+1,'draft',c));
+ return jsonb_build_object('slug',p_slug,'revision',g.revision+1,'state','draft');
+end; $function$;
+
+-- Restoring a historical publication must not inherit a newer hero introduction.
+create or replace function public.zagraj_catalog_restore_draft(
+  p_slug text, p_published_revision integer, p_expected_revision integer
+) returns jsonb language plpgsql security definer set search_path='' as $$
+declare
+  m public.zagraj_admin_members%rowtype;
+  g public.zagraj_catalog_games%rowtype;
+  h public.zagraj_catalog_history%rowtype;
+  restored jsonb;
+  outcome jsonb;
+begin
+  select * into m from public.zagraj_admin_members where user_id=auth.uid() and active;
+  if m.user_id is null or m.role <> 'owner' then
+    raise exception 'OWNER_REQUIRED' using errcode='42501';
+  end if;
+  select * into g from public.zagraj_catalog_games where slug=p_slug for update;
+  if g.slug is null then raise exception 'GAME_NOT_FOUND' using errcode='22023'; end if;
+  if g.revision is distinct from p_expected_revision then
+    raise exception 'CATALOG_REVISION_CONFLICT' using errcode='40001';
+  end if;
+  select * into h from public.zagraj_catalog_history
+  where slug=p_slug and revision=p_published_revision;
+  if h.id is null then raise exception 'HISTORY_NOT_FOUND' using errcode='22023'; end if;
+
+  -- Old bootstrap versions had no media or info-section keys. Explicit empty
+  -- values prevent the regular draft writer from inheriting newer artwork.
+  restored := h.payload || jsonb_build_object(
+    'coverPath', coalesce(h.payload->>'coverPath',''),
+    'pageIntro', coalesce(h.payload->>'pageIntro',''),
+    'pageRules', coalesce(h.payload->'pageRules','null'::jsonb),
+    'pageSections', coalesce(h.payload->'pageSections','[]'::jsonb)
+  );
+  -- Reuse current engine bounds, media reference integrity and content validation.
+  select public.zagraj_catalog_save_draft(p_slug,p_expected_revision,restored)
+  into outcome;
+  insert into public.zagraj_admin_audit(
+    actor_id,action,target_type,target_id,before_state,after_state
+  ) values (
+    auth.uid(),'catalog.history.restore_draft','game',p_slug,
+    jsonb_build_object('revision',g.revision,'draftState',g.draft_state,'draft',g.draft),
+    jsonb_build_object('sourcePublishedRevision',h.revision,'revision',(outcome->>'revision')::integer,'draftState','draft')
+  );
+  return jsonb_build_object('slug',p_slug,'revision',(outcome->>'revision')::integer,
+    'state','draft','sourcePublishedRevision',h.revision);
+end; $$;
+
+revoke all on function public.zagraj_catalog_save_draft(text,integer,jsonb) from public,anon;
+grant execute on function public.zagraj_catalog_save_draft(text,integer,jsonb) to authenticated;
+revoke all on function public.zagraj_catalog_restore_draft(text,integer,integer) from public,anon;
+grant execute on function public.zagraj_catalog_restore_draft(text,integer,integer) to authenticated;
