@@ -24,7 +24,7 @@ test("backup scripts use macOS-compatible file commands", () => {
     const content = readFileSync(resolve(path), "utf8");
     assert.doesNotMatch(
       content,
-      /(?:^|\\n)\\s*(?:chmod|mkdir|rm|mv)\\s+[^\\n]*\\s--\\s/,
+      /(?:^|\n)\s*(?:chmod|mkdir|rm|mv)\s+[^\n]*\s--\s/,
       path,
     );
   }
