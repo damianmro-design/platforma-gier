@@ -28,7 +28,7 @@ I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym 
 ## II. CMS katalogu i mediów
 II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
-II.3 [~] Edytor dodatkowych sekcji informacyjnych podstron wszystkich 7 gier wewnętrznych: tekst, instrukcja, ważna informacja, kolejność i lista punktów; szkic i publikacja właścicielska. Pozostałe istniejące sekcje, media, SEO i pełna edycja layoutu są kolejnymi podetapami.
+II.3 [~] Edytor dodatkowych sekcji informacyjnych wszystkich 7 gier wewnętrznych i istniejącego opisu otwierającego podstronę (maks. 600 znaków, oryginalny tekst jako fallback). Szkic i publikacja właścicielska, wersjonowanie oraz przywracanie obejmują także opis. Pozostałe zasady powiązane z mechaniką, SEO i pełna edycja layoutu są kolejnymi podetapami.
 II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Historia opublikowanych wersji i przywracanie jako nowy szkic z ochroną przed konfliktem rewizji są przygotowane w oddzielnym podetapie; nadal wymagane są test sesji właściciela i pełny rollback wersji silników gier.
 II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po powrocie do karty, bfcache i sygnale publikacji; testy kontraktu kart, zakresów silnika i opublikowanych snapshotów. Do potwierdzenia: scenariusz publikacji na rzeczywistej sesji właściciela i kontrola w 2 otwartych kartach.
@@ -107,3 +107,12 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Podstrony gier odświeżają tylko warstwę informacyjną (RSC), nie silnik aktywnego pokoju; odbudowanie sekcji działa także, gdy poprzednio lista była pusta.
 - SQL sprawdza publiczną listę vs opublikowane i widoczne rekordy, zakresy silnika oraz ostatni snapshot. Stare snapshoty bez pustego `pageSections` pozostają nienaruszone.
 - Opisy i pełne, dotąd zakodowane układy podstron nadal wymagają osobnego etapu II.3. Nie deklarujemy ich pełnej edytowalności.
+
+### II.3a Istniejący opis otwierający podstronę
+- Każda z 7 wewnętrznych gier odczytuje opcjonalny `pageIntro` z zatwierdzonej publikacji.
+- Jeśli nie ma nadpisania, oryginalny tekst pozostaje widoczny. Nie zmieniamy domyślnej treści, koncepcji ani zasad istniejącej gry.
+- Jest to zwykły tekst, bez HTML, JS i URL, maks. 600 znaków. Brak pola i pusty tekst oznaczają fallback.
+- Edytor umożliwia wczytanie oryginalnej treści, jej zmianę oraz przywrócenie domyślnego opisu.
+- Zapis korzysta z aktualnej funkcji walidacji karty, sprawdzania rewizji, uprawnień, powiązania mediów i audytu.
+- Publikacja nadal wymaga wysłania do zatwierdzenia, właściciela i AAL2/TOTP. Odtworzenie historycznej wersji resetuje opis, jeśli wcześniejszy snapshot go nie zawierał.
+- Przed publikacją weryfikować opis pod kątem zgodności ze stanem silnika. Reguły, pytania, fabuła, pokoje i XP nadal poza tym edytorem.
