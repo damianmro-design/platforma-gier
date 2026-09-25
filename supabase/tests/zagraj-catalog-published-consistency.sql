@@ -25,7 +25,12 @@ begin
     select 1 from public.zagraj_catalog_games g
     where not exists (
       select 1 from public.zagraj_catalog_history h
-      where h.slug=g.slug and h.payload=g.published
+      where h.slug=g.slug
+        -- The first 9 snapshots predate the empty pageSections bootstrap.
+        -- Normalize only this absent-vs-empty key; any other discrepancy fails.
+        and (h.payload-'pageSections')=(g.published-'pageSections')
+        and coalesce(h.payload->'pageSections','[]'::jsonb)
+            =coalesce(g.published->'pageSections','[]'::jsonb)
         and h.revision=(select max(h2.revision) from public.zagraj_catalog_history h2
                         where h2.slug=g.slug)
     )
