@@ -96,11 +96,11 @@ begin
  end if;
  if jsonb_typeof(page_rules) is distinct from 'null' then
    if p_slug not in ('va-banque','zakrecone-haslo')
-      or jsonb_typeof(page_rules)<>'object' then
+      or jsonb_typeof(page_rules) is distinct from 'object' then
      raise exception 'INVALID_PAGE_RULES_GAME' using errcode='22023'; end if;
-   if jsonb_typeof(page_rules->'schema')<>'number'
-      or page_rules->>'schema'<>'1'
-      or jsonb_typeof(page_rules->'items')<>'array'
+   if jsonb_typeof(page_rules->'schema') is distinct from 'number'
+      or page_rules->>'schema' is distinct from '1'
+      or jsonb_typeof(page_rules->'items') is distinct from 'array'
       or exists(select 1 from jsonb_object_keys(page_rules) as key
                 where key not in ('schema','items')) then
      raise exception 'INVALID_PAGE_RULES_SCHEMA' using errcode='22023'; end if;
@@ -179,7 +179,7 @@ begin
  return jsonb_build_object('slug',p_slug,'revision',g.revision+1,'state','draft');
 end; $function$;
 
--- Restoring a historical publication must not inherit a newer hero introduction.
+-- Restoring a historical publication must not inherit newer hero or rule text.
 create or replace function public.zagraj_catalog_restore_draft(
   p_slug text, p_published_revision integer, p_expected_revision integer
 ) returns jsonb language plpgsql security definer set search_path='' as $$
