@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -25,6 +26,7 @@ const missions = [
 export const dynamic = "force-dynamic";
 
 export default async function SzyfrPage({ searchParams }: PageProps) {
+  const howRules = await getPublishedPageRules("szyfr");
   const params = (await searchParams) ?? {};
   const joinError =
     params.roomError === "invalid-code"
@@ -172,11 +174,7 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
           <span className="text-[10px] font-black uppercase tracking-[.25em] text-teal-300">JAK TO DZIAŁA</span>
           <h2 className="mt-3 text-3xl font-black tracking-[-.045em] sm:text-4xl">Informacja jest rozproszona celowo.</h2>
           <div className="mt-7 grid gap-3 md:grid-cols-3">
-            {[
-              ["01", "Własny telefon", "Każdy widzi inne informacje. Nie pokazujcie sobie ekranów."],
-              ["02", "Rozmowa", "Możecie mówić o wszystkim, co widzicie. To jest główny mechanizm gry."],
-              ["03", "Wspólna odpowiedź", "Gdy jesteście pewni, dowolny gracz wysyła kod lub wybór dla całej drużyny."],
-            ].map(([n, title, copy]) => (
+            {howRules.map(([n, title, copy]) => (
               <div key={n} className="rounded-2xl border border-cyan-200/8 bg-[#061519]/70 p-5">
                 <p className="text-[10px] font-black tracking-[.24em] text-teal-300">{n}</p>
                 <h3 className="mt-2 text-base font-black">{title}</h3>
