@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -11,18 +12,11 @@ export const metadata: Metadata = {
     "Gra dedukcyjna dla 6–14 osób. Agenci znają tajne hasła, a Oszust widzi tylko kategorię i musi blefować.",
 };
 
-const flow = [
-  ["01", "Tajne role", "Każdy na telefonie poznaje swoją rolę. Jedna osoba jest Oszustem."],
-  ["02", "Tajne hasła", "W każdej z 5 misji Agenci poznają tajne hasło i pytanie. Oszust zna tylko kategorię oraz to samo pytanie i musi odpowiedzieć tak, jakby znał hasło."],
-  ["03", "Dowody i dyskusja", "Odpowiedzi trafiają na wspólny ekran. Agenci nie mogą zdradzić hasła wprost. Szukacie osoby, której odpowiedzi są zbyt ogólne albo wyglądają na zgadywanie."],
-  ["04", "Podejrzenia", "Po każdej misji każdy anonimowo wskazuje osobę, która wydaje mu się najbardziej podejrzana."],
-  ["05", "Punkt kontrolny", "Po 3 misjach najbardziej podejrzana osoba trafia na przesłuchanie i dostaje 30 sekund ostatniego słowa."],
-  ["06", "Obrona i finał", "Po 5 misjach 2 najbardziej podejrzane osoby mają po 30 sekund obrony. Potem każdy głosuje na dowolnego gracza. Jeśli Oszust jest jednoznacznie najczęściej wskazany, grupa wygrywa."],
-];
 
 export const dynamic = "force-dynamic";
 
-export default function PodPrzykrywkaPage() {
+export default async function PodPrzykrywkaPage() {
+  const flow = await getPublishedPageRules("pod-przykrywka");
   return (
     <main className="min-h-screen overflow-hidden bg-[#041019] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(34,211,238,.20),transparent_28%),radial-gradient(circle_at_86%_18%,rgba(14,116,144,.18),transparent_25%),radial-gradient(circle_at_50%_95%,rgba(59,130,246,.12),transparent_32%)]" />
