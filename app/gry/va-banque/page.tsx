@@ -1,15 +1,14 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
 
-export const metadata: Metadata = {
-  title: "VA BANQUE — zaGRAj",
-  description:
-    "Quiz imprezowy z licytacją, ryzykiem i przejmowaniem pytań. 2–8 graczy, każdy na swoim telefonie.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("va-banque");
+}
 
 type PageProps = {
   searchParams?: Promise<{ roomError?: string; code?: string }>;

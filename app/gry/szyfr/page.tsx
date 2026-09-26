@@ -1,15 +1,14 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
 
-export const metadata: Metadata = {
-  title: "SZYFR — zaGRAj",
-  description:
-    "Kooperacyjna misja dla 2–6 osób. Każdy widzi inne informacje, a zespół musi połączyć tropy i odszyfrować kod.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("szyfr");
+}
 
 type PageProps = {
   searchParams?: Promise<{ roomError?: string; code?: string }>;

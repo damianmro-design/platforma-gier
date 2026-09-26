@@ -1,16 +1,15 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 
-export const metadata: Metadata = {
-  title: "CO LUDZIE POWIEDZĄ — zaGRAj",
-  description:
-    "Drużynowy teleturniej imprezowy oparty na ankietach, przewidywaniu większości i znajomości własnej ekipy.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("co-ludzie-powiedza");
+}
 
 
 export const dynamic = "force-dynamic";

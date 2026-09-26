@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -16,11 +17,9 @@ import {
   OstatniKursTrainMap,
 } from "@/components/akta-nocy-ostatni-kurs-artwork";
 
-export const metadata: Metadata = {
-  title: "Akta Nocy — zaGRAj",
-  description:
-    "Interaktywna gra śledcza: fikcyjne sprawy, tajne role, dowody, rekonstrukcje i tryb z prowadzącym lub bez.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("akta-nocy");
+}
 
 const firstCase = AKTA_NOCY_CASES[0];
 
