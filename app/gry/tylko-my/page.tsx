@@ -1,16 +1,15 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 
-export const metadata: Metadata = {
-  title: "TYLKO MY — zaGRAj",
-  description:
-    "Lekka gra dla 2 osób o przewidywaniu swoich wyborów, zgodności i momentach telepatii.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("tylko-my");
+}
 
 const roundAccents = ["text-pink-200", "text-cyan-200", "text-violet-200", "text-fuchsia-200"] as const;
 
