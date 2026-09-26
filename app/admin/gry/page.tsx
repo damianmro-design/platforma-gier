@@ -321,7 +321,7 @@ export default function AdminCatalogPage() {
                 <div className="mt-4 rounded-xl border border-white/10 bg-[#090d1d] p-4">
                   <span className="text-[10px] uppercase tracking-wide text-zinc-500">Podgląd wyniku wyszukiwania</span>
                   <p className="mt-2 break-words text-sm font-bold text-sky-300">{form.pageSeo?.title ?? seoDefaults.title}</p>
-                  <p className="mt-1 break-all text-xs text-emerald-300/70">https://www.zagraj.fun/gry/{chosen.slug}</p>
+                  <p className="mt-1 break-all text-xs text-emerald-300/70">https://zagraj.fun/gry/{chosen.slug}</p>
                   <p className="mt-2 text-xs leading-5 text-zinc-400">{form.pageSeo?.description ?? seoDefaults.description}</p>
                 </div>
               </div>}
