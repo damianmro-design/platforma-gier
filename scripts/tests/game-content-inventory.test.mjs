@@ -14,7 +14,7 @@ test("III.1 maps exactly seven engines and both distinct Akta Nocy scenarios", (
   assert.deepEqual(inventory.games.filter(({slug}) => slug === "akta-nocy")
     .map(({variant}) => variant).sort(), ["apartament-214","ostatni-kurs"]);
   assert.equal(inventory.gate, "NO_ENGINE_CONTENT_EDITOR_UNTIL_ROOM_DEFINITION_PINNING");
-  assert.match(roadmap, /III\\.1 \\[x\\]/);
+  assert.ok(roadmap.includes("III.1 [x]"));
   assert.match(audit, /Brak wersji treści pokoju jest krytycznym warunkiem/);
 });
 
