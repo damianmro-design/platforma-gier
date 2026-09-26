@@ -31,7 +31,14 @@
       "roomPointers": [
         "room_id",
         "question_key",
-        "roundN_question_index"
+        "round1_question_index",
+        "round2_question_index",
+        "round3_question_index",
+        "round4_question_index",
+        "round5_question_index",
+        "round6_question_index",
+        "round7_question_index",
+        "final_question_index"
       ],
       "candidateContent": [
         "warmup question and option display labels",
@@ -228,8 +235,7 @@
       ],
       "roomPointers": [
         "room_id",
-        "question_index",
-        "room_code_seed"
+        "question_index"
       ],
       "candidateContent": [
         "prompt and option display label within fixed question identity",
@@ -263,8 +269,7 @@
       "roomPointers": [
         "room_id",
         "step_plan",
-        "step_index",
-        "step_key"
+        "step_index"
       ],
       "candidateContent": [
         "mission name, stage title and prompt",
