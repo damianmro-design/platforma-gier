@@ -70,6 +70,8 @@ for each row execute function app_private.zh_validate_active_content();
 
 insert into app_private.zh_content_versions(version_id,source_label)
 values(1,'Initial immutable copy of production zh_puzzles');
+-- Explicit identity seed must advance the sequence before later versions use DEFAULT.
+select setval('app_private.zh_content_versions_version_id_seq',1,true);
 
 insert into app_private.zh_content_puzzles(version_id,puzzle_key,category,phrase,difficulty)
 select 1,puzzle_key,category,phrase,difficulty from app_private.zh_puzzles;
