@@ -34,8 +34,8 @@ II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie pr
 II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po powrocie do karty, bfcache i sygnale publikacji; testy kontraktu kart, zakresów silnika i opublikowanych snapshotów. Do potwierdzenia: scenariusz publikacji na rzeczywistej sesji właściciela i kontrola w 2 otwartych kartach.
 
 ## III. Edycja istniejących gier
-III.1 Inwentaryzacja typowanych zasobów i flag bezpiecznych do edycji.
-III.2 Adaptery dla CO LUDZIE POWIEDZĄ, Pod Przykrywką, Akta Nocy, Zakręcone Hasło, TYLKO MY, SZYFR, VA BANQUE.
+III.1 [x] Audyt źródeł 7 silników i 2 scenariuszy Akta Nocy, typowanych banków, sekretnych danych oraz stanu pokojów; rejestr i plan blokady wersjonowania: `docs/admin/ENGINE-CONTENT-AUDIT-III1.md`.
+III.2 [ ] Wersjonowane adaptery zasobów dla CO LUDZIE POWIEDZĄ, Pod Przykrywką, 2 scenariuszy Akta Nocy, Zakręcone Hasło, TYLKO MY, SZYFR i VA BANQUE; najpierw pilotaż jednego banku i ochrona aktywnych pokojów.
 III.3 Edytory pytań, odpowiedzi, grafik, komunikatów, etapów i parametrów w granicach silnika.
 III.4 Migracje zawartości, snapshot konfiguracji pokoju, walidacja oraz rollback.
 III.5 Wspólne testy regresji obecnych gier.
@@ -143,3 +143,10 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - `/sitemap.xml` obejmuje stronę główną oraz tylko 7 wewnętrznych gier widocznych w publicznym katalogu. Niewidoczne karty, szkice i zewnętrzne serwisy nie są dodawane, a brak dostępu do katalogu nie zamienia sitemap w listę defaultów.
 - `robots.txt` wskazuje sitemap i zachowuje wykluczenie API oraz routingu pokoi i rozgrywek.
 - Test transakcyjny symuluje szkice i publikację z historią, odtwarza stare snapshoty, sprawdza izolację publicznych danych i cofa wszystkie zmiany. Weryfikacja rzeczywistą sesją właściciela nadal osobna.
+
+### III.1 Inwentaryzacja silników, 2026-09-26
+- Wynik: `docs/admin/ENGINE-CONTENT-AUDIT-III1.md`; rejestr do walidacji: `docs/admin/engine-content-inventory.json`.
+- Sprawdzono 7 gier, Akta Nocy jako 2 odrębne definicje, rzeczywiste źródła TS, banki `app_private`, RPC, RLS i brak bezpośredniego uprawnienia odczytu/zapisu tabel przez role klienta.
+- Obecne pokoje zapisują identyfikatory wybranych zadań lub indeksy, nie pełny, niezmienny snapshot treści. Otwieranie edytora silników bez wersji pokoju byłoby błędem, dlatego praca III.2 rozpoczyna się od definicji i przypinania treści.
+- W tym podetapie nie zmieniano mechaniki, pokojów, treści banków, uprawnień ani publicznego API. Test kontraktu rejestru jest częścią `npm run test:beta`.
+- III.3 pozostaje zablokowany do czasu ochrony wersji pokojów; III.4 to pełna migracja, walidacja i rollback rozgrywki, nie sam rollback kart katalogu.
