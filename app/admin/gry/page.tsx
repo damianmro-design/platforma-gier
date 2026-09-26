@@ -5,6 +5,7 @@ import GameMediaPicker from "@/components/game-media-picker";
 import AdminCatalogHistory from "@/components/admin-catalog-history";
 import { gameMediaUrl } from "@/lib/zagraj-media";
 import { GAME_PAGE_INTRO_FALLBACK } from "@/lib/zagraj-game-page-intros";
+import { getPageSeoFallback } from "@/lib/zagraj-game-page-seo";
 import { getPageRuleDefaults, PAGE_RULE_COPY_SCHEMA } from "@/lib/zagraj-game-page-rules";
 import { announceCatalogPublication } from "@/lib/zagraj-catalog-refresh";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
@@ -87,6 +88,7 @@ export default function AdminCatalogPage() {
 
   const chosen = rows.find((r) => r.slug === selectedSlug);
   const ruleDefaults = chosen ? getPageRuleDefaults(chosen.slug) : null;
+  const seoDefaults = chosen ? getPageSeoFallback(chosen.slug) : null;
   const canEdit = access?.role === "owner" || access?.permissions?.includes("games.edit");
   const canPublish = access?.role === "owner";
   const changed = Boolean(form && chosen && JSON.stringify(form) !== JSON.stringify(chosen.draft ?? chosen.published));
@@ -100,6 +102,15 @@ export default function AdminCatalogPage() {
 
   function setField<K extends keyof CatalogGame>(key: K, value: CatalogGame[K]) {
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+  }
+
+  function setSeoField(key: "title" | "description", value: string) {
+    setForm((prev) => {
+      if (!prev) return prev;
+      const original = getPageSeoFallback(prev.slug);
+      if (!original) return prev;
+      return { ...prev, pageSeo: { ...(prev.pageSeo ?? original), [key]: value } };
+    });
   }
 
   function setRuleCopy(index: number, value: string) {
@@ -281,6 +292,37 @@ export default function AdminCatalogPage() {
                     className="rounded-lg border border-white/20 px-3 py-2 text-xs font-bold text-cyan-100">
                     Przywróć wszystkie oryginalne opisy
                   </button>
+                </div>
+              </div>}
+              {seoDefaults && <div className="sm:col-span-2 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.04] p-4">
+                <h3 className="text-sm font-black text-emerald-200">SEO podstrony gry</h3>
+                <p className="mt-2 text-xs leading-5 text-zinc-400">
+                  Tytuł i opis wyszukiwarkowy są oddzielne od treści widocznej na stronie.
+                  Publikacja wymaga zatwierdzenia właściciela. Adres strony i kanoniczny URL pozostają zablokowane.
+                </p>
+                <label className={label+" mt-4"}>Tytuł SEO (maks. 70 znaków)
+                  <input className={field} maxLength={70} required
+                    value={form.pageSeo?.title ?? seoDefaults.title}
+                    onChange={(event) => setSeoField("title", event.target.value)} />
+                </label>
+                <p className="mt-1 text-right text-[11px] text-zinc-500">{(form.pageSeo?.title ?? seoDefaults.title).length}/70</p>
+                <label className={label+" mt-3"}>Meta description (maks. 180 znaków)
+                  <textarea className={field+" min-h-24"} maxLength={180} required
+                    value={form.pageSeo?.description ?? seoDefaults.description}
+                    onChange={(event) => setSeoField("description", event.target.value)} />
+                </label>
+                <p className="mt-1 text-right text-[11px] text-zinc-500">{(form.pageSeo?.description ?? seoDefaults.description).length}/180</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setField("pageSeo", { ...seoDefaults })}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs font-bold text-emerald-100">Wczytaj oryginalne SEO do edycji</button>
+                  <button type="button" onClick={() => setField("pageSeo", null)}
+                    className="rounded-lg border border-white/20 px-3 py-2 text-xs text-zinc-300">Przywróć oryginalne SEO</button>
+                </div>
+                <div className="mt-4 rounded-xl border border-white/10 bg-[#090d1d] p-4">
+                  <span className="text-[10px] uppercase tracking-wide text-zinc-500">Podgląd wyniku wyszukiwania</span>
+                  <p className="mt-2 break-words text-sm font-bold text-sky-300">{form.pageSeo?.title ?? seoDefaults.title}</p>
+                  <p className="mt-1 break-all text-xs text-emerald-300/70">https://www.zagraj.fun/gry/{chosen.slug}</p>
+                  <p className="mt-2 text-xs leading-5 text-zinc-400">{form.pageSeo?.description ?? seoDefaults.description}</p>
                 </div>
               </div>}
               <label className={label+" sm:col-span-2"}>Tagi (oddzielone przecinkiem, maks. 8)
