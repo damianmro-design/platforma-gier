@@ -23,7 +23,7 @@ declare
 begin
   initial_public:=public.zagraj_catalog_public();
   for slug in select value from jsonb_array_elements_text(
-    '["akta-nocy","co-ludzie-powiedza","pod-przykrywka","szyfr","tylko-my","va-banque","zakrecone-haslo"]'::jsonb
+    '["akta-nocy","co-ludzie-powiedza","pod-przykrywka","szyfr","va-banque","zakrecone-haslo","tylko-my"]'::jsonb
   ) t(value) loop
     select value into baseline from jsonb_array_elements(public.zagraj_catalog_my_games()) t(value)
       where value->>'slug'=slug;
