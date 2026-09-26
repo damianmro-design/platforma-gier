@@ -35,7 +35,7 @@ II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po
 
 ## III. Edycja istniejących gier
 III.1 [x] Audyt źródeł 7 silników i 2 scenariuszy Akta Nocy, typowanych banków, sekretnych danych oraz stanu pokojów; rejestr i plan blokady wersjonowania: `docs/admin/ENGINE-CONTENT-AUDIT-III1.md`.
-III.2 [ ] Wersjonowane adaptery zasobów dla CO LUDZIE POWIEDZĄ, Pod Przykrywką, 2 scenariuszy Akta Nocy, Zakręcone Hasło, TYLKO MY, SZYFR i VA BANQUE; najpierw pilotaż jednego banku i ochrona aktywnych pokojów.
+III.2 [~] Wersjonowane adaptery zasobów dla 7 gier i 2 scenariuszy Akta Nocy. III.2a: pilotaż Zakręcone Hasło, niezmienne wersje hasła i przypięcie istniejących/nowych pokojów do jednej rewizji, bez edytora i bez uprawnień publicznego zapisu. III.2b–III.2c: typowany adapter publikacji oraz pozostałe gry.
 III.3 Edytory pytań, odpowiedzi, grafik, komunikatów, etapów i parametrów w granicach silnika.
 III.4 Migracje zawartości, snapshot konfiguracji pokoju, walidacja oraz rollback.
 III.5 Wspólne testy regresji obecnych gier.
@@ -150,3 +150,8 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Obecne pokoje zapisują identyfikatory wybranych zadań lub indeksy, nie pełny, niezmienny snapshot treści. Otwieranie edytora silników bez wersji pokoju byłoby błędem, dlatego praca III.2 rozpoczyna się od definicji i przypinania treści.
 - W tym podetapie nie zmieniano mechaniki, pokojów, treści banków, uprawnień ani publicznego API. Test kontraktu rejestru jest częścią `npm run test:beta`.
 - III.3 pozostaje zablokowany do czasu ochrony wersji pokojów; III.4 to pełna migracja, walidacja i rollback rozgrywki, nie sam rollback kart katalogu.
+
+### III.2a Adapter wersjonowanych haseł Zakręcone Hasło
+- Techniczna migracja i weryfikacja: `supabase/zh-immutable-content-revisions.sql`, `supabase/tests/zh-immutable-content-revisions.sql` oraz `docs/admin/ZH-IMMUTABLE-CONTENT-III2A.md`.
+- Historyczny bank 54 haseł jest kopiowany do niemodyfikowalnej rewizji 1, dotychczasowe stany pokoi zachowują kolejność i punkty oraz dostają `content_version_id`. Nowy pokój atomowo utrwala aktywną rewizję. Odczyt i sprawdzenie odpowiedzi nigdy nie pobierają nowej publikacji dla rozpoczętego pokoju.
+- Wariant testowy rewizji 2 istnieje tylko wewnątrz transakcji z rollback; nie publikujemy nowych haseł i nie otwieramy redaktorom uprawnień do bazy rozgrywek. Etap III.2 jako całość pozostaje otwarty.
