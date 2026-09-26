@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom, joinRoom } from "../../room-actions";
@@ -11,32 +12,7 @@ export const metadata: Metadata = {
     "Lekka gra dla 2 osób o przewidywaniu swoich wyborów, zgodności i momentach telepatii.",
 };
 
-const rounds = [
-  {
-    no: "01",
-    title: "Na tej samej fali",
-    copy: "Oboje odpowiadacie na to samo pytanie. Taki sam wybór daje 1 punkt.",
-    accent: "text-pink-200",
-  },
-  {
-    no: "02",
-    title: "Czytam Ci w myślach",
-    copy: "Jedna osoba odpowiada o sobie, druga próbuje przewidzieć jej wybór. Trafienie daje 2 punkty.",
-    accent: "text-cyan-200",
-  },
-  {
-    no: "03",
-    title: "Kto z nas?",
-    copy: "Wskazujecie: Ty, ja albo oboje. Punkt wpada wtedy, gdy widzicie sytuację tak samo.",
-    accent: "text-violet-200",
-  },
-  {
-    no: "04",
-    title: "Telepatia",
-    copy: "Finałowe pytania są warte 3 punkty. Tutaj jeden wspólny wybór potrafi mocno zmienić wynik.",
-    accent: "text-fuchsia-200",
-  },
-];
+const roundAccents = ["text-pink-200", "text-cyan-200", "text-violet-200", "text-fuchsia-200"] as const;
 
 type TylkoMyPageProps = {
   searchParams?: Promise<{ roomError?: string; code?: string }>;
@@ -45,6 +21,7 @@ type TylkoMyPageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
+  const rounds = await getPublishedPageRules("tylko-my");
   const params = (await searchParams) ?? {};
   const joinError =
     params.roomError === "invalid-code"
@@ -282,16 +259,16 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
           </div>
 
           <div className="mt-9 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {rounds.map((round) => (
+            {rounds.map(([no, title, copy], index) => (
               <article
-                key={round.no}
+                key={no}
                 className="rounded-3xl border border-white/9 bg-black/20 p-5 shadow-[0_20px_60px_rgba(0,0,0,.18)]"
               >
-                <span className={"text-xs font-black tracking-[.25em] " + round.accent}>
-                  {round.no}
+                <span className={"text-xs font-black tracking-[.25em] " + roundAccents[index]}>
+                  {no}
                 </span>
-                <h3 className="mt-3 text-xl font-black">{round.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">{round.copy}</p>
+                <h3 className="mt-3 text-xl font-black">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">{copy}</p>
               </article>
             ))}
           </div>

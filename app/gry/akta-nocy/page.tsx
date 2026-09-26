@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AKTA_NOCY_CASES, AKTA_NOCY_PHASES } from "@/lib/akta-nocy";
@@ -25,7 +26,8 @@ const firstCase = AKTA_NOCY_CASES[0];
 
 export const dynamic = "force-dynamic";
 
-export default function AktaNocyPage() {
+export default async function AktaNocyPage() {
+  const introRules = await getPublishedPageRules("akta-nocy");
   return (
     <main className="min-h-screen overflow-hidden bg-[#070504] text-[#f8eee2]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(194,65,12,.22),transparent_30%),radial-gradient(circle_at_85%_18%,rgba(127,29,29,.18),transparent_27%),radial-gradient(circle_at_50%_100%,rgba(120,53,15,.13),transparent_32%)]" />
@@ -228,12 +230,7 @@ export default function AktaNocyPage() {
 
         <section id="jak-to-dziala" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
           <div className="grid gap-5 lg:grid-cols-4">
-            {[
-              ["1", "Każdy ma telefon", "Prywatne akta, sekrety i odpowiedzi nigdy nie muszą być drukowane."],
-              ["2", "Wybieracie tryb", "W Ostatnim Kursie może prowadzić jedna osoba albo system może prowadzić wszystkich automatycznie."],
-              ["3", "Rozmawiacie naprawdę", "Aplikacja daje fakty i pytania, ale śledztwo odbywa się między Wami przy jednym stole."],
-              ["4", "Oskarżacie prywatnie", "Na końcu każdy wskazuje osobę, motyw, sposób i kluczowy dowód, zanim prawda zostanie ujawniona."],
-            ].map(([no,title,copy])=>(
+            {introRules.map(([no,title,copy])=>(
               <article key={no} className="rounded-2xl border border-orange-100/9 bg-white/[.02] p-5">
                 <span className="text-2xl font-black text-red-300/70">{no}</span>
                 <h3 className="mt-3 text-lg font-black">{title}</h3>

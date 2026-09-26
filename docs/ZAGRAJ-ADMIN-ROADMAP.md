@@ -28,7 +28,7 @@ I.9 [ ] Rozszerzenie analityki pulpitu o rzeczywiste metryki gry po bezpiecznym 
 ## II. CMS katalogu i mediów
 II.1 [x] Centralny schemat katalogu, wersje i migracja 9 istniejących kart. Źródło publikacji: projekt Auth, bez zmiany baz rozgrywek.
 II.2 [~] Edytor istniejących kart: tytuł, opisy, status, kolejność, widoczność, kategorie, czas, bezpieczny zakres liczby graczy, tagi, kolory i dostępne motywy. Nowe gry dopiero z Builderem.
-II.3 [~] Edytor dodatkowych sekcji wszystkich 7 gier i opisów otwierających podstronę, a także istniejących opisów kart zasad VA BANQUE (6) i Zakręcone Hasło (4). Numeracja, tytuły i kolejność kart są zamrożone w kodzie. Szkic, publikacja właścicielska, historia i przywracanie obejmują teksty. Pozostałe gry, SEO i pełna edycja layoutu to kolejne podetapy.
+II.3 [~] Edytor dodatkowych sekcji i opisów otwierających wszystkie 7 gier wewnętrznych, a także określone istniejące karty z zasadami / przebiegiem: Akta Nocy (4 kroki wprowadzenia), CO LUDZIE POWIEDZĄ (9 kart etapów), Pod Przykrywką (6), SZYFR (3 kroki współpracy), TYLKO MY (4 rundy), VA BANQUE (6) i Zakręcone Hasło (4). Numeracja, tytuły i kolejność zamrożone w kodzie. Szkic, publikacja właścicielska, historia i przywracanie obejmują teksty; pozostałe treści specyficzne dla silnika, SEO i pełna edycja layoutu czekają na kolejne podetapy.
 II.4 [~] Biblioteka obrazów JPG, PNG i WebP, maks. 5 MB, scoped admin uploads, immutability, wybór grafiki karty i sekcji. Audio/wideo, kadrowanie i pełne zarządzanie kolekcjami w dalszych etapach.
 II.5 [~] Workflow kart: szkic → do zatwierdzenia → publikacja wyłącznie przez właściciela, audyt i rewizje. Historia opublikowanych wersji i przywracanie jako nowy szkic z ochroną przed konfliktem rewizji są przygotowane w oddzielnym podetapie; nadal wymagane są test sesji właściciela i pełny rollback wersji silników gier.
 II.6 [~] Świeżość publikacji: no-store dla publicznego RPC, odświeżanie po powrocie do karty, bfcache i sygnale publikacji; testy kontraktu kart, zakresów silnika i opublikowanych snapshotów. Do potwierdzenia: scenariusz publikacji na rzeczywistej sesji właściciela i kontrola w 2 otwartych kartach.
@@ -125,3 +125,12 @@ VI.4 Rozszerzenie biblioteki bloków i kontrolowany system dodatków.
 - Redaktor powinien zachowywać zgodność treści z rzeczywistym silnikiem. Walidacja strukturalna nie potrafi automatycznie potwierdzić merytorycznej prawdziwości zdań, dlatego zatwierdzenie właściciela jest obowiązkowe.
 - Nie zmieniamy aktywnych pokojów, pytań, liczb punktów, rozstrzygnięć, rozdzielania ról, XP ani definicji etapów.
 - Dalszy krok: analogiczna inwentaryzacja i mapowanie kart zasad pozostałych 5 gier, z niezależnymi definicjami dla każdej.
+
+### II.3c Pozostałe 5 adapterów objaśnień
+- Rozszerzono istniejące `pageRules.schema = 1`, bez naruszania dotychczasowych 2 adapterów. Dopuszczalne gry i rozmiary to: Akta Nocy 4 wstępne kroki, CO LUDZIE POWIEDZĄ 9 etapów, Pod Przykrywką 6 kroków, SZYFR 3 kroki współpracy i TYLKO MY 4 opisy rund; nadal VA BANQUE 6 i Zakręcone Hasło 4.
+- W Akta Nocy odrębne fazy spraw Apartament 214 i Ostatni Kurs oraz ich szczegóły pozostają kodem silnika. W SZYFRZE opisy konkretnych misji i parametry czasu również pozostają poza CMS. Inne stałe gier zachowują oryginalne wartości.
+- Karty na stronach zachowują obecny styl, nagłówki, kolejność, numerację, dekoracje i liczbę pozycji. Jedynie zatwierdzony tekst opisu jest pobierany z katalogu publicznego.
+- SQL egzekwuje 1–360 znaków na pozycję, dokładną liczbę opisów na podstawie `slug`, poprawną wersję oraz zakaz HTML/URL i innych pól. Podczas awarii lub niezgodności schematu strona wyświetla oryginalny tekst.
+- Testy transakcyjne obejmują wszystkie 7 adapterów, brak przecieku szkicu, przywrócenie wersji historycznej, niedozwoloną grę zewnętrzną i próbę publikacji wraz z widocznością oraz historią. Każda próba zapisu danych testowych kończy się rollback.
+- Pełna kontrola zgodności treści z zasadami gry nie jest możliwa na podstawie samej walidacji strukturalnej. Redaktor przygotowuje, a właściciel weryfikuje opis względem gry przed publikacją.
+- Dalsze podetapy II.3: SEO, wybrane pozostałe bloki podstron i teksty specyficzne dla silników po inwentaryzacji III.1–III.2.

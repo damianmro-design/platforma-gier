@@ -1,5 +1,6 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
@@ -11,57 +12,11 @@ export const metadata: Metadata = {
     "Drużynowy teleturniej imprezowy oparty na ankietach, przewidywaniu większości i znajomości własnej ekipy.",
 };
 
-const rounds = [
-  {
-    no: "00",
-    title: "Poznajmy tłum",
-    copy: "Każdy odpowiada prywatnie na 6 krótkich pytań. Te odpowiedzi wrócą później w rundach o Waszej własnej ekipie.",
-  },
-  {
-    no: "01",
-    title: "Co powiedzieli ludzie?",
-    copy: "Drużyna próbuje odkrywać odpowiedzi z tablicy. Po 2 błędach rywale dostają próbę przejęcia części puli.",
-  },
-  {
-    no: "02",
-    title: "Wasza ekipa powiedziała",
-    copy: "Przewidujecie odpowiedzi osób z tego pokoju. Do 60 pkt zależy od udziału wskazanej odpowiedzi, a 40 pkt to bonus za trafienie nr 1.",
-  },
-  {
-    no: "03",
-    title: "Top 5",
-    copy: "Ułóżcie 5 odpowiedzi od najpopularniejszej do najmniej popularnej. 15 pkt za każdą idealną pozycję i 25 pkt bonusu za 5/5.",
-  },
-  {
-    no: "04",
-    title: "Mniejszość",
-    copy: "Wskażcie odpowiedź, którą wybrało najmniej ludzi. Najmniej popularna daje 60 pkt, 2. najmniej popularna 20 pkt.",
-  },
-  {
-    no: "05",
-    title: "Jeden z Was",
-    copy: "Najpierw cała ekipa głosuje tajnie na osoby z pokoju, później drużyny przewidują wynik. 80 pkt za 1. miejsce, 30 pkt za 2.",
-  },
-  {
-    no: "06",
-    title: "Ile osób?",
-    copy: "Obstawcie, ile osób z ekipy wybrało konkretną odpowiedź wcześniej. Idealne trafienie daje 70 pkt, pomyłka o 1 daje 30 pkt.",
-  },
-  {
-    no: "07",
-    title: "Pojedynek",
-    copy: "5 szybkich starć. Z 2 odpowiedzi wybieracie tę popularniejszą. Każdy poprawny typ to 50 pkt.",
-  },
-  {
-    no: "08",
-    title: "Finał",
-    copy: "Wynik wcześniejszych rund daje liderowi 50 pkt przewagi. Potem 5 pytań finałowych, a ostatnie liczy się ×3. Remis uruchamia dogrywkę.",
-  },
-];
 
 export const dynamic = "force-dynamic";
 
-export default function CoLudziePowiedzaPage() {
+export default async function CoLudziePowiedzaPage() {
+  const rounds = await getPublishedPageRules("co-ludzie-powiedza");
   return (
     <main className="survey-page">
       <div className="survey-glow survey-glow-one" />
@@ -149,11 +104,11 @@ export default function CoLudziePowiedzaPage() {
         </div>
 
         <div className="round-grid">
-          {rounds.map((round) => (
-            <article key={round.no}>
-              <span>{round.no}</span>
-              <h3>{round.title}</h3>
-              <p>{round.copy}</p>
+          {rounds.map(([no, title, copy]) => (
+            <article key={no}>
+              <span>{no}</span>
+              <h3>{title}</h3>
+              <p>{copy}</p>
             </article>
           ))}
         </div>
