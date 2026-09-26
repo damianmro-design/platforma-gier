@@ -1,16 +1,15 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 
-export const metadata: Metadata = {
-  title: "Zakręcone Hasło — zaGRAj",
-  description:
-    "Szybki teleturniej słowny z kołem ryzyka, literami, punktami i hasłami o rosnącym poziomie trudności.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("zakrecone-haslo");
+}
 
 
 export const dynamic = "force-dynamic";
