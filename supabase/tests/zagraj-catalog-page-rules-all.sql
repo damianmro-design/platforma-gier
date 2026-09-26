@@ -27,9 +27,9 @@ begin
   public_before := public.zagraj_catalog_public();
   for slug,count_expected in
     select v.slug,v.n from (values
-      ('akta-nocy',4),('co-ludzie-powiedza',9),
-      ('pod-przykrywka',6),('szyfr',3),('tylko-my',4),
-      ('va-banque',6),('zakrecone-haslo',4)
+      ('akta-nocy',4),('pod-przykrywka',6),('szyfr',3),
+      ('tylko-my',4),('va-banque',6),('zakrecone-haslo',4),
+      ('co-ludzie-powiedza',9)
     ) as v(slug,n)
   loop
     select value into base from jsonb_array_elements(public.zagraj_catalog_my_games()) t(value)
@@ -46,7 +46,7 @@ begin
     begin
       perform public.zagraj_catalog_save_draft(slug,rev,
         base->'published'||jsonb_build_object('pageRules',
-          jsonb_build_object('schema',1,'items',copy_items-'0')));
+          jsonb_build_object('schema',1,'items',copy_items-0)));
       raise exception 'EXPECTED_INVALID_COUNT_FOR_%',slug;
     exception when sqlstate '22023' then null; end;
 
