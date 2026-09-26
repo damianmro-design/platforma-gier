@@ -1,16 +1,15 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
+import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createRoom } from "../../room-actions";
 import TestGameButton from "@/components/test-game-button";
 
-export const metadata: Metadata = {
-  title: "Pod Przykrywką — zaGRAj",
-  description:
-    "Gra dedukcyjna dla 6–14 osób. Agenci znają tajne hasła, a Oszust widzi tylko kategorię i musi blefować.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return getPublishedGamePageMetadata("pod-przykrywka");
+}
 
 
 export const dynamic = "force-dynamic";
