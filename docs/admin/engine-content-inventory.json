@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "auditedMainSha": "44a50460d054b96181336c7384d2e60369a24557",
+  "auditDate": "2026-09-26",
+  "sourceOfTruth": {
+    "marketing": "CMS in the zaGRAj Auth project, published catalog only",
+    "gameplay": "app_private schema in separate gameplay project, public RPC/API adapters",
+    "roomRegistry": "app_private.platform_rooms"
+  },
+  "gate": "NO_ENGINE_CONTENT_EDITOR_UNTIL_ROOM_DEFINITION_PINNING",
+  "games": [
+    {
+      "slug": "co-ludzie-powiedza",
+      "variant": "main",
+      "codeSources": [
+        "lib/co-ludzie-powiedza.ts"
+      ],
+      "databaseBanks": [
+        "clp_round1_questions",
+        "clp_round3_questions",
+        "clp_round4_questions",
+        "clp_round5_questions",
+        "clp_round6_questions",
+        "clp_round7_questions",
+        "clp_final_questions"
+      ],
+      "roomState": [
+        "clp_game_state",
+        "clp_answers"
+      ],
+      "roomPointers": [
+        "room_id",
+        "question_key",
+        "roundN_question_index"
+      ],
+      "candidateContent": [
+        "warmup question and option display labels",
+        "round prompts and distributions",
+        "ranking options and correct order as one validated set",
+        "round 6 source question/answer references",
+        "final prompts and multipliers as a versioned rule set"
+      ],
+      "lockedMechanics": [
+        "round transition logic",
+        "points and scoring",
+        "stage count and meanings",
+        "voting eligibility and privacy"
+      ],
+      "secretContent": [
+        "unrevealed poll distributions",
+        "final predictions",
+        "individual votes"
+      ],
+      "snapshotNeed": "Live bank reads by question key and round index; immutable question set and dependent answer references must be pinned before publishing revisions."
+    },
+    {
+      "slug": "pod-przykrywka",
+      "variant": "main",
+      "codeSources": [
+        "lib/pod-przykrywka.ts"
+      ],
+      "databaseBanks": [
+        "pp_missions",
+        "pp_hot_seat_questions",
+        "pp_interrogation_questions",
+        "pp_secret_orders"
+      ],
+      "roomState": [
+        "pp_game_state",
+        "pp_game_missions",
+        "pp_roles",
+        "pp_submissions",
+        "pp_votes"
+      ],
+      "roomPointers": [
+        "room_id",
+        "mission_id",
+        "mission_index"
+      ],
+      "candidateContent": [
+        "mission category, briefing and prompts",
+        "role-specific question/placeholder and response options",
+        "discussion prompts",
+        "active supplementary question and order banks"
+      ],
+      "lockedMechanics": [
+        "role assignment",
+        "five-mission progression",
+        "vote threshold and timers",
+        "role API contract (internal saboteur key)"
+      ],
+      "secretContent": [
+        "agent-only secret word",
+        "oszust-only view",
+        "secret order",
+        "anonymous ballots",
+        "role assignments"
+      ],
+      "snapshotNeed": "Selected mission IDs point to global mutable rows; pin full mission content and supplementary pools before edits."
+    },
+    {
+      "slug": "akta-nocy",
+      "variant": "apartament-214",
+      "codeSources": [
+        "lib/akta-nocy.ts",
+        "lib/akta-nocy-solution.ts",
+        "app/api/gra/akta-nocy/[code]/route.ts"
+      ],
+      "databaseBanks": [],
+      "roomState": [
+        "akta_nocy_room_config",
+        "akta_nocy_assignments",
+        "akta_nocy_accusations",
+        "akta_nocy_reconstructions"
+      ],
+      "roomPointers": [
+        "room_id",
+        "case_key",
+        "role_key"
+      ],
+      "candidateContent": [
+        "case premise and public introduction",
+        "structured character dossiers as an indivisible scenario pack",
+        "evidence, interrogation copy and reveal content through per-case schema"
+      ],
+      "lockedMechanics": [
+        "role keys and count compatibility",
+        "phase transitions",
+        "evidence and reconstruction identifiers",
+        "solution keys and scorer contract"
+      ],
+      "secretContent": [
+        "private character secrets",
+        "culprit and solution",
+        "unrevealed evidence",
+        "accusations and personal objectives"
+      ],
+      "snapshotNeed": "Scenario and solution are imported from executable TS per request; a versioned case pack and room-level content binding are required."
+    },
+    {
+      "slug": "akta-nocy",
+      "variant": "ostatni-kurs",
+      "codeSources": [
+        "lib/akta-nocy-ostatni-kurs.ts",
+        "lib/akta-nocy-ostatni-kurs-roles.ts",
+        "lib/akta-nocy-ostatni-kurs-solution.ts",
+        "app/api/gra/akta-nocy-ostatni-kurs/[code]/route.ts"
+      ],
+      "databaseBanks": [],
+      "roomState": [
+        "akta_nocy_room_config",
+        "akta_nocy_assignments",
+        "akta_nocy_ok_accusations",
+        "akta_nocy_ok_reconstructions",
+        "akta_nocy_ok_ready"
+      ],
+      "roomPointers": [
+        "room_id",
+        "case_key",
+        "play_mode",
+        "role_key"
+      ],
+      "candidateContent": [
+        "case premise and train map labels",
+        "structured carriage, evidence and interrogation sets",
+        "versioned reveal narrative and ending"
+      ],
+      "lockedMechanics": [
+        "phase and play mode transitions",
+        "role keys and count compatibility",
+        "route and reconstruction keys",
+        "solution and scoring integrity"
+      ],
+      "secretContent": [
+        "private role assignments and secrets",
+        "true route and culprit",
+        "unrevealed evidence",
+        "accusations"
+      ],
+      "snapshotNeed": "Separate, versioned case pack with role/evidence/solution referential integrity; cannot inherit Apartament 214 assumptions."
+    },
+    {
+      "slug": "zakrecone-haslo",
+      "variant": "main",
+      "codeSources": [
+        "lib/zakrecone-haslo.ts"
+      ],
+      "databaseBanks": [
+        "zh_puzzles"
+      ],
+      "roomState": [
+        "zh_game_state",
+        "zh_scores"
+      ],
+      "roomPointers": [
+        "room_id",
+        "puzzle_keys",
+        "puzzle_index"
+      ],
+      "candidateContent": [
+        "category",
+        "phrase",
+        "difficulty as a constrained pack"
+      ],
+      "lockedMechanics": [
+        "wheel segments",
+        "letter and vowel scoring",
+        "bankrupt and pass",
+        "round-selection requirements"
+      ],
+      "secretContent": [
+        "phrase before reveal",
+        "unrevealed letters"
+      ],
+      "snapshotNeed": "Room stores puzzle keys but reads mutable global phrase rows; immutable puzzle revisions or a room snapshot are required."
+    },
+    {
+      "slug": "tylko-my",
+      "variant": "main",
+      "codeSources": [
+        "lib/tylko-my.ts",
+        "app/api/gra/tylko-my/[code]/route.ts"
+      ],
+      "databaseBanks": [],
+      "roomState": [
+        "tylko_my_games",
+        "tylko_my_answers"
+      ],
+      "roomPointers": [
+        "room_id",
+        "question_index",
+        "room_code_seed"
+      ],
+      "candidateContent": [
+        "prompt and option display label within fixed question identity",
+        "final narration copy after independent validation"
+      ],
+      "lockedMechanics": [
+        "question IDs and option values",
+        "four round types and point weights",
+        "20-question sequence",
+        "34-point maximum",
+        "deterministic seeded draw and player A/B meaning"
+      ],
+      "secretContent": [
+        "individual selections before both submit",
+        "prediction subjects"
+      ],
+      "snapshotNeed": "Deterministic question order is recalculated from the current TS arrays and room code; pin selected 20-item pack and scoring schema before content releases."
+    },
+    {
+      "slug": "szyfr",
+      "variant": "main",
+      "codeSources": [
+        "lib/szyfr-db.ts"
+      ],
+      "databaseBanks": [
+        "szyfr_puzzles"
+      ],
+      "roomState": [
+        "szyfr_games"
+      ],
+      "roomPointers": [
+        "room_id",
+        "step_plan",
+        "step_index",
+        "step_key"
+      ],
+      "candidateContent": [
+        "mission name, stage title and prompt",
+        "role-scoped clues and hints",
+        "answer options with canonical answer as a whole validated puzzle"
+      ],
+      "lockedMechanics": [
+        "step plan structure",
+        "fragment digit and finale ordering",
+        "timers, penalties and phase transitions",
+        "answer normalization and step-key identity"
+      ],
+      "secretContent": [
+        "canonical answer",
+        "player-specific clue set",
+        "future steps and final code",
+        "hints not yet used"
+      ],
+      "snapshotNeed": "A room pins step keys, not full puzzle rows; no mutable puzzle edit until the whole puzzle/answer/clue bundle is immutable and pinned."
+    },
+    {
+      "slug": "va-banque",
+      "variant": "main",
+      "codeSources": [
+        "lib/va-banque-db.ts"
+      ],
+      "databaseBanks": [
+        "va_banque_questions"
+      ],
+      "roomState": [
+        "va_banque_games",
+        "va_banque_players"
+      ],
+      "roomPointers": [
+        "room_id",
+        "question_id",
+        "used_question_ids",
+        "round_index"
+      ],
+      "candidateContent": [
+        "category, prompt and explanation",
+        "four options and correct index as one atomic validated pack",
+        "difficulty with category distribution checks"
+      ],
+      "lockedMechanics": [
+        "bid limits and capital",
+        "tie escalation and visibility",
+        "takeover logic",
+        "timers, final and scoring"
+      ],
+      "secretContent": [
+        "hidden question during auction",
+        "correct answer before reveal",
+        "sealed bids and final answers"
+      ],
+      "snapshotNeed": "Question ID and used ID array refer to live rows; keep immutable question revisions pinned for each room, including rematch policy."
+    }
+  ]
+}
