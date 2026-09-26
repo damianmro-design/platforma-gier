@@ -34,13 +34,13 @@ test("five existing engine functions select exclusively pinned puzzles, keeping 
   for (const fn of funcs) {
     const chunks=migration.split("CREATE OR REPLACE FUNCTION app_private."+fn+"(");
     assert.equal(chunks.length,2,fn);
-    const body=chunks[1].split("$function$;")[0];
+    const body=chunks[1].split(/\$function\$\s*;/)[0];
     assert.ok(body.includes("app_private.zh_content_puzzles"),fn+" pinned source");
     assert.ok(body.includes("content_version_id")||body.includes("chosen_version"),fn+" version");
     assert.doesNotMatch(body,/from app_private\.zh_puzzles\b/,fn+" old mutable read");
   }
   for (const fn of funcs.slice(1)) {
-    const body=migration.split("CREATE OR REPLACE FUNCTION app_private."+fn+"(")[1].split("$function$;")[0];
+    const body=migration.split("CREATE OR REPLACE FUNCTION app_private."+fn+"(")[1].split(/\$function\$\s*;/)[0];
     assert.match(body,/ZH_PINNED_PUZZLE_MISSING/);
   }
   assert.match(migration,/where singleton=true for share/);
