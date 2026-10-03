@@ -23,6 +23,7 @@ type GameFilterState = {
 };
 
 type GameCardProps = {
+  slug: string;
   title: string;
   eyebrow: string;
   description: string;
@@ -283,6 +284,25 @@ async function openPolowanieWithAccount(href: string) {
   );
 }
 
+async function openFloorWithAccount(href: string) {
+  const supabase = createPartyPlayAuthClient();
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
+
+  if (!session) {
+    window.location.assign(href);
+    return;
+  }
+
+  const hash = new URLSearchParams({
+    access_token: session.access_token,
+  });
+
+  window.location.assign(
+    `${href.replace(/\/$/, "")}/#${hash.toString()}`,
+  );
+}
+
 function GameCard(props: GameCardProps) {
   const accent = accentMap[props.accent];
   const statusLabel =
@@ -347,12 +367,17 @@ function GameCard(props: GameCardProps) {
         href={props.href}
         className={className}
         onClick={
-          props.authHandoff === "polowanie"
+          props.slug === "floor-party"
             ? (event) => {
                 event.preventDefault();
-                void openPolowanieWithAccount(props.href!);
+                void openFloorWithAccount(props.href!);
               }
-            : undefined
+            : props.authHandoff === "polowanie"
+              ? (event) => {
+                  event.preventDefault();
+                  void openPolowanieWithAccount(props.href!);
+                }
+              : undefined
         }
       >
         {content}
