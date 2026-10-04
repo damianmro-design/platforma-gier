@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import {
   getPlatformPlayer,
   getPlatformRecoveryCode,
+  listPlatformRejoinRequests,
+  approvePlatformRejoin,
   isPlatformRoomHost,
   getZhState,
   lookupPlatformRoom,
@@ -52,6 +54,9 @@ export async function GET(request: Request, context: RouteContext) {
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
   const hostToken = testView === "player" || !(await isPlatformRoomHost(code, rawHostToken)) ? null : rawHostToken;
   const game = await getZhState(code);
+  const rejoinRequests = hostToken
+    ? await listPlatformRejoinRequests(code, hostToken)
+    : [];
 
   if (!game) {
     return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
@@ -81,6 +86,8 @@ export async function GET(request: Request, context: RouteContext) {
       player,
       game,
       recoveryCode,
+      isHost: Boolean(hostToken),
+      rejoinRequests,
       canAutoAdvance: true,
     });
   }
@@ -90,6 +97,8 @@ export async function GET(request: Request, context: RouteContext) {
       role: "host",
       room: { code: room.code, status: room.status, phase: room.game_phase },
       game,
+      isHost: true,
+      rejoinRequests,
       canAutoAdvance: true,
     });
   }
@@ -108,6 +117,24 @@ export async function POST(request: Request, context: RouteContext) {
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
 
   try {
+    if (action === "approveRejoin") {
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko host może zaakceptować powrót gracza." }, { status: 403 });
+      }
+
+      const requestId = String(body.requestId ?? "").trim();
+      if (!requestId) {
+        return NextResponse.json({ error: "Brak prośby do zaakceptowania." }, { status: 400 });
+      }
+
+      const ok = await approvePlatformRejoin(code, hostToken, requestId);
+      if (!ok) {
+        return NextResponse.json({ error: "Ta prośba wygasła albo została już obsłużona." }, { status: 400 });
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
     if (action === "next") {
       const controlToken = hostToken ?? playerToken;
       if (!controlToken) {
