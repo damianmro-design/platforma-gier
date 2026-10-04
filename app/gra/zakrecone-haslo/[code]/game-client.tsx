@@ -568,7 +568,7 @@ function RejoinRequestsPanel({
               onClick={() => onApprove(request.request_id)}
               className="shrink-0 rounded-xl bg-emerald-300 px-3 py-2 text-[10px] font-black text-emerald-950 disabled:opacity-40"
             >
-              WPUŚĆ Z POWROTEM
+              WPUŚĆ Z POWROTEM
             </button>
           </div>
         ))}
