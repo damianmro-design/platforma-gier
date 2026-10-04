@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   getPlatformPlayer,
+  getPlatformRecoveryCode,
   isPlatformRoomHost,
   getZhState,
   lookupPlatformRoom,
@@ -72,11 +73,14 @@ export async function GET(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Nie znaleziono gracza." }, { status: 401 });
     }
 
+    const recoveryCode = await getPlatformRecoveryCode(code, playerToken);
+
     return NextResponse.json({
       role: "player",
       room: { code: room.code, status: room.status, phase: room.game_phase },
       player,
       game,
+      recoveryCode,
       canAutoAdvance: true,
     });
   }
