@@ -38,6 +38,7 @@ type PlayerState = {
   player: Player;
   game: ZhGameState;
   recoveryCode?: string | null;
+  isHost?: boolean;
   canAutoAdvance?: boolean;
 };
 
@@ -814,6 +815,8 @@ function PlayerGame({
   const canSpin = hasUnusedConsonants(game);
   const canBuyVowel = hasUnusedVowels(game);
   const [panel, setPanel] = useState<"main" | "vowel" | "solve">("main");
+  const [recoveryBusyPlayerId, setRecoveryBusyPlayerId] = useState<string | null>(null);
+  const [recoveryResult, setRecoveryResult] = useState<{ playerId: string; code: string } | null>(null);
 
   useEffect(() => {
     if (!isMyTurn || game.mode === "round_over" || game.mode === "game_over") {
@@ -825,6 +828,28 @@ function PlayerGame({
     const ok = await send({ action: "solve", guess });
     if (ok) setPanel("main");
     return ok;
+  }
+
+  async function resetRecoveryCode(playerId: string) {
+    setRecoveryBusyPlayerId(playerId);
+    setRecoveryResult(null);
+
+    try {
+      const response = await fetch(`/api/gra/zakrecone-haslo/${data.room.code}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "resetRecoveryCode", playerId }),
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result.recoveryCode) {
+        return;
+      }
+
+      setRecoveryResult({ playerId, code: String(result.recoveryCode) });
+    } finally {
+      setRecoveryBusyPlayerId(null);
+    }
   }
 
   const ranking = useMemo(
@@ -894,6 +919,46 @@ function PlayerGame({
               </strong>
             </div>
           )}
+          {data.isHost && (
+            <details className="mb-4 rounded-xl border border-white/10 bg-white/[.025] p-3">
+              <summary className="cursor-pointer text-[10px] font-black uppercase tracking-[.14em] text-zinc-300">
+                Pomoc w powrocie gracza
+              </summary>
+              <p className="mt-2 text-[10px] leading-4 text-zinc-500">
+                Jeśli ktoś utracił sesję, wygeneruj mu nowy kod. Nie zmieni to jego punktów ani miejsca w grze.
+              </p>
+              <div className="mt-3 space-y-2">
+                {game.players
+                  .filter((player) => player.id !== data.player.id)
+                  .map((player) => {
+                    const generated = recoveryResult?.playerId === player.id ? recoveryResult.code : null;
+                    return (
+                      <div key={player.id} className="rounded-lg border border-white/8 bg-black/20 p-2.5">
+                        <div className="flex items-center gap-2">
+                          <PlayerAvatar player={player} small />
+                          <strong className="min-w-0 flex-1 truncate text-xs">{player.displayName}</strong>
+                          <button
+                            type="button"
+                            disabled={recoveryBusyPlayerId === player.id}
+                            onClick={() => void resetRecoveryCode(player.id)}
+                            className="rounded-lg border border-violet-300/20 bg-violet-300/[.07] px-2.5 py-2 text-[9px] font-black text-violet-100 disabled:opacity-40"
+                          >
+                            {recoveryBusyPlayerId === player.id ? "GENERUJĘ…" : "NOWY KOD"}
+                          </button>
+                        </div>
+                        {generated && (
+                          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-emerald-300/15 bg-emerald-300/[.06] px-3 py-2">
+                            <span className="text-[9px] font-bold text-emerald-100/70">Podaj ten kod graczowi:</span>
+                            <strong className="text-sm font-black tracking-[.18em] text-emerald-100">{generated}</strong>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </details>
+          )}
+
           {data.canAutoAdvance && (
             <a
               href={`/ekran/zakrecone-haslo/${data.room.code}`}
