@@ -172,14 +172,28 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "start") {
-      const hostToken = cookieStore.get(names.host)?.value;
-      if (!hostToken || !(await isPlatformRoomHost(code, hostToken))) {
+      const hostToken = cookieStore.get(names.host)?.value ?? null;
+      const playerToken = cookieStore.get(names.player)?.value ?? null;
+      const room = await lookupPlatformRoom(code);
+
+      const wordGamePlayerCanStart =
+        room?.game_slug === "zakrecone-haslo" && Boolean(playerToken);
+
+      if (
+        !wordGamePlayerCanStart &&
+        (!hostToken || !(await isPlatformRoomHost(code, hostToken)))
+      ) {
         return NextResponse.json({ error: "Tylko host może rozpocząć grę." }, { status: 403 });
       }
 
-      const room = await lookupPlatformRoom(code);
-      const ok = await startPlatformRoom(code, hostToken);
+      const startToken = wordGamePlayerCanStart ? playerToken! : hostToken!;
+      const ok = await startPlatformRoom(code, startToken);
       if (!ok) {
+        const latestRoom = await lookupPlatformRoom(code);
+        if (latestRoom?.status === "active") {
+          return NextResponse.json({ ok: true });
+        }
+
         const message =
           room?.game_slug === "zakrecone-haslo"
             ? "Do startu potrzeba 3–12 graczy i wszyscy muszą być gotowi."
