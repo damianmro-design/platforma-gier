@@ -715,6 +715,16 @@ function PlayerGame({
         </header>
 
         <div className="p-4">
+          {data.canAutoAdvance && (
+            <a
+              href={`/ekran/zakrecone-haslo/${data.room.code}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-4 flex min-h-11 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/[.07] px-3 text-[10px] font-black text-cyan-100"
+            >
+              🖥 OTWÓRZ EKRAN GŁÓWNY NA TV / LAPTOPIE
+            </a>
+          )}
           <div className="flex items-center justify-between gap-3">
             <div>
               <span className="text-[8px] font-black uppercase tracking-[.17em] text-zinc-500">
