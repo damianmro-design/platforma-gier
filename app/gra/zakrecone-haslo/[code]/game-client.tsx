@@ -25,10 +25,20 @@ type Player = {
   ready: boolean;
 };
 
+type RejoinRequest = {
+  request_id: string;
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  created_at: string;
+};
+
 type HostState = {
   role: "host";
   room: RoomInfo;
   game: ZhGameState;
+  isHost?: boolean;
+  rejoinRequests?: RejoinRequest[];
   canAutoAdvance?: boolean;
 };
 
@@ -38,6 +48,8 @@ type PlayerState = {
   player: Player;
   game: ZhGameState;
   recoveryCode?: string | null;
+  isHost?: boolean;
+  rejoinRequests?: RejoinRequest[];
   canAutoAdvance?: boolean;
 };
 
@@ -523,17 +535,61 @@ function GameHeader({ room, game }: { room: RoomInfo; game: ZhGameState }) {
   );
 }
 
+function RejoinRequestsPanel({
+  requests,
+  busy,
+  onApprove,
+}: {
+  requests: RejoinRequest[];
+  busy: boolean;
+  onApprove: (requestId: string) => void;
+}) {
+  if (!requests.length) return null;
+
+  return (
+    <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/[.07] p-4">
+      <span className="text-[9px] font-black uppercase tracking-[.18em] text-emerald-300">
+        PROŚBA O POWRÓT
+      </span>
+      <div className="mt-3 space-y-2">
+        {requests.map((request) => (
+          <div
+            key={request.request_id}
+            className="flex items-center gap-3 rounded-xl border border-white/8 bg-black/20 p-3"
+          >
+            <PlayerAvatar player={{ avatar: request.avatar }} small />
+            <div className="min-w-0 flex-1">
+              <strong className="block truncate text-sm">{request.display_name}</strong>
+              <span className="text-[10px] text-emerald-100/55">prosi o powrót do swojej postaci</span>
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => onApprove(request.request_id)}
+              className="shrink-0 rounded-xl bg-emerald-300 px-3 py-2 text-[10px] font-black text-emerald-950 disabled:opacity-40"
+            >
+              WPUŚĆ Z POWROTEM
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HostGame({
   data,
   busy,
   error,
   onNext,
+  onApproveRejoin,
   displayOnly = false,
 }: {
   data: HostState | DisplayState;
   busy: boolean;
   error: string;
   onNext: () => void;
+  onApproveRejoin: (requestId: string) => void;
   displayOnly?: boolean;
 }) {
   const game = data.game;
@@ -592,6 +648,15 @@ function HostGame({
             {sound.enabled ? "🔊 DŹWIĘK WŁĄCZONY" : "🔇 WŁĄCZ DŹWIĘK"}
           </button>
         </div>
+        {data.role === "host" && (data.rejoinRequests?.length ?? 0) > 0 && (
+          <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6">
+            <RejoinRequestsPanel
+              requests={data.rejoinRequests ?? []}
+              busy={busy}
+              onApprove={onApproveRejoin}
+            />
+          </div>
+        )}
         <section className="mx-auto grid max-w-7xl gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1.25fr_.75fr]">
           <div className="min-w-0 space-y-5">
             <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-5 sm:p-7">
@@ -894,6 +959,15 @@ function PlayerGame({
               </strong>
             </div>
           )}
+          {data.isHost && (data.rejoinRequests?.length ?? 0) > 0 && (
+            <div className="mb-4">
+              <RejoinRequestsPanel
+                requests={data.rejoinRequests ?? []}
+                busy={busy}
+                onApprove={(requestId) => void send({ action: "approveRejoin", requestId })}
+              />
+            </div>
+          )}
           {data.canAutoAdvance && (
             <a
               href={`/ekran/zakrecone-haslo/${data.room.code}`}
@@ -1139,6 +1213,7 @@ export default function GameClient({ code, displayMode = false }: { code: string
         busy={busy}
         error={error}
         onNext={() => void send({ action: "next" })}
+        onApproveRejoin={(requestId) => void send({ action: "approveRejoin", requestId })}
         displayOnly={data.role === "display"}
       />
     );
