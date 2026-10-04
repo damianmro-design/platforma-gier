@@ -1,7 +1,7 @@
 import { cleanRoomCode } from "@/lib/room-code.mjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
+import { getPlatformRecoveryCode, isPlatformRoomHost, lookupPlatformRoom } from "@/lib/platform-db";
 import {
   claimVaBanqueTakeover,
   getVaBanqueState,
@@ -63,10 +63,15 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 409 });
     }
 
+    const recoveryCode = playerToken
+      ? await getPlatformRecoveryCode(code, playerToken)
+      : null;
+
     return NextResponse.json(
       {
         room: { code: room.code, status: room.status, phase: room.game_phase },
         game: state,
+        recoveryCode,
       },
       { headers: { "Cache-Control": "no-store" } },
     );
