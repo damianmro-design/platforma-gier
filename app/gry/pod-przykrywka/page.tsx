@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -95,6 +96,8 @@ export default async function PodPrzykrywkaPage() {
           </div>
         </div>
       </section>
+
+      <GamePlaySetup slug="pod-przykrywka" />
 
       <section id="zasady" className="relative z-10 border-y border-white/8 bg-white/[.018]">
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
