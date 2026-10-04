@@ -484,7 +484,7 @@ function HostGame({
             <p className="mt-5 text-[10px] font-black uppercase tracking-[.25em] text-cyan-300">TAJNE ROLE ROZDANE</p>
             <h1 className="mt-3 text-4xl font-black tracking-[-.055em] sm:text-5xl">Każdy sprawdza swój telefon.</h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-400">
-              W grupie jest dokładnie 1 Oszust. W każdej misji Agenci poznają tajne hasło, a Oszust zobaczy tylko jego kategorię i to samo pytanie. Host nie zna tożsamości Oszusta.
+              W grupie jest dokładnie 1 Oszust. W każdej misji Agenci poznają tajne hasło, a Oszust zobaczy tylko jego kategorię i to samo pytanie. Prowadzący nie zna tożsamości Oszusta.
             </p>
             <button type="button" disabled={busy} onClick={onAdvance} className="mt-7 rounded-2xl bg-gradient-to-r from-cyan-300 to-sky-500 px-7 py-4 text-sm font-black text-slate-950 disabled:opacity-50">
               {busy ? "CHWILA…" : "ROZPOCZNIJ MISJĘ 1 →"}
@@ -1259,7 +1259,7 @@ function PlayerGame({
                       className="mt-3 w-full resize-none rounded-2xl border border-white/10 bg-black/25 px-4 py-4 text-base font-bold text-white outline-none placeholder:text-zinc-700 focus:border-cyan-300/45"
                     />
                     <div className="mt-2 flex items-center justify-between text-xs text-zinc-600">
-                      <span>{me.answer ? "Możesz zmienić odpowiedź, dopóki host jej nie odkryje." : "Krótko i konkretnie."}</span>
+                      <span>{me.answer ? "Możesz zmienić odpowiedź, dopóki prowadzący jej nie odkryje." : "Krótko i konkretnie."}</span>
                       <span>{answer.length}/120</span>
                     </div>
                   </>
@@ -1267,7 +1267,7 @@ function PlayerGame({
 
                 {game.mission.responseMode === "choice" && (
                   <p className="mt-3 text-xs leading-5 text-zinc-600">
-                    Wybierz jedną odpowiedź. Możesz ją zmienić, dopóki host nie pokaże wyników.
+                    Wybierz jedną odpowiedź. Możesz ją zmienić, dopóki prowadzący nie pokaże wyników.
                   </p>
                 )}
 
@@ -1294,8 +1294,8 @@ function PlayerGame({
                   {game.mission.modifier === "anonymous"
                     ? "Najpierw oceniajcie tylko treść. Autorzy zostaną ujawnieni dopiero w chwili rozpoczęcia głosowania."
                     : game.mission.modifier === "hot_seat"
-                      ? "Host pokazuje odpowiedzi i prowadzi dyskusję. Za chwilę jedna osoba trafi na gorące krzesło."
-                      : "Host pokazuje wszystkie odpowiedzi. Broń swojej i zadawaj pytania innym."}
+                      ? "Prowadzący pokazuje odpowiedzi i prowadzi dyskusję. Za chwilę jedna osoba trafi na gorące krzesło."
+                      : "Prowadzący pokazuje wszystkie odpowiedzi. Broń swojej i zadawaj pytania innym."}
                 </p>
               </div>
             )}
@@ -1311,7 +1311,7 @@ function PlayerGame({
                     ? "Bez rozmowy. Przeczytaj odpowiedzi i oddaj głos."
                     : game.mission.modifier === "anonymous"
                       ? "Autorzy zostali ujawnieni. Nie ma już dodatkowej dyskusji, teraz liczy się Twój głos."
-                      : "Nie możesz wskazać siebie. Możesz zmienić głos, dopóki host nie pokaże wyniku."}
+                      : "Nie możesz wskazać siebie. Możesz zmienić głos, dopóki prowadzący nie pokaże wyniku."}
                 </p>
 
                 {(game.mission.modifier === "silent" || game.mission.modifier === "anonymous") && (

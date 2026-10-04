@@ -314,7 +314,7 @@ export default function GameClient({ code }: { code: string }) {
               </div>
             ) : (
               <p className="mt-7 rounded-2xl border border-cyan-200/8 bg-black/20 p-4 text-xs font-bold text-cyan-50/45">
-                Host może uruchomić ponowną próbę lub nowy zestaw misji.
+                Osoba, która utworzyła pokój, może uruchomić ponowną próbę lub nowy zestaw misji.
               </p>
             )}
 
@@ -423,7 +423,7 @@ export default function GameClient({ code }: { code: string }) {
               </>
             ) : (
               <div className="rounded-2xl border border-cyan-200/10 bg-cyan-200/[.035] p-5 text-center">
-                <p className="text-sm font-black">Tryb obserwatora hosta</p>
+                <p className="text-sm font-black">Tryb obserwatora twórcy pokoju</p>
                 <p className="mt-2 text-xs leading-6 text-cyan-50/45">
                   Prywatne wskazówki widzą wyłącznie gracze, którzy dołączyli do pokoju.
                 </p>

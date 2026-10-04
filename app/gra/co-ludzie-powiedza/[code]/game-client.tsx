@@ -646,7 +646,7 @@ function PlayerRound1({
         {round.mode === "between" ? (
           <div className="clp-r1-wait-box">
             <strong>Pytanie zakończone</strong>
-            <p>Czekamy, aż host uruchomi kolejne.</p>
+            <p>Czekamy, aż prowadzący uruchomi kolejne.</p>
           </div>
         ) : isMyTurn ? (
           <form className="clp-r1-guess-form" onSubmit={submit}>

@@ -244,7 +244,7 @@ export async function POST(request: Request, context: RouteContext) {
     if (action === "shuffle") {
       const hostToken = cookieStore.get(names.host)?.value;
       if (!hostToken || !(await isPlatformRoomHost(code, hostToken))) {
-        return NextResponse.json({ error: "Tylko host może losować drużyny." }, { status: 403 });
+        return NextResponse.json({ error: "Tylko osoba, która utworzyła pokój, może losować drużyny." }, { status: 403 });
       }
 
       const ok = await assignPlatformTeams(code, hostToken);
@@ -267,7 +267,7 @@ export async function POST(request: Request, context: RouteContext) {
         !wordGamePlayerCanStart &&
         (!hostToken || !(await isPlatformRoomHost(code, hostToken)))
       ) {
-        return NextResponse.json({ error: "Tylko host może rozpocząć grę." }, { status: 403 });
+        return NextResponse.json({ error: "Tylko osoba, która utworzyła pokój, może rozpocząć grę." }, { status: 403 });
       }
 
       const startToken = wordGamePlayerCanStart ? playerToken! : hostToken!;

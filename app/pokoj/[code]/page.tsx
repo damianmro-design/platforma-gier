@@ -43,7 +43,7 @@ const GAME_LOBBY: Record<string, { theme: string; title: string; copy: string }>
   "va-banque": {
     theme: "room-theme-va-banque",
     title: "Stół gotowy. Zbieramy graczy.",
-    copy: "Każdy gra na swoim telefonie. Stawki pozostają prywatne aż do końca licytacji, a host rozpoczyna grę, gdy wszyscy są gotowi.",
+    copy: "Każdy gra na swoim telefonie. Stawki pozostają prywatne aż do końca licytacji, a osoba, która utworzyła pokój, uruchamia grę, gdy wszyscy są gotowi.",
   },
   "szyfr": {
     theme: "room-theme-szyfr",
