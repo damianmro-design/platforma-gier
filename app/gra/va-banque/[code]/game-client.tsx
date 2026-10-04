@@ -8,6 +8,7 @@ import type { VaBanquePlayer, VaBanqueState } from "@/lib/va-banque-db";
 type ApiState = {
   room: { code: string; status: string; phase: string | null };
   game: VaBanqueState;
+  recoveryCode: string | null;
 };
 
 const phaseLabels: Partial<Record<VaBanqueState["phase"], string>> = {
@@ -534,17 +535,35 @@ export default function GameClient({ code }: { code: string }) {
         )}
 
         {viewer && game.phase !== "finished" && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-amber-200/8 bg-black/20 px-4 py-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <PartyPlayAvatar id={viewer.avatar} size={38} />
-              <div className="min-w-0">
-                <span className="block truncate text-xs font-black">{viewer.name}</span>
-                <small className="text-[9px] font-bold uppercase tracking-[.12em] text-amber-200/35">
-                  Twój kapitał
-                </small>
+          <div className="mt-4 rounded-2xl border border-amber-200/8 bg-black/20 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <PartyPlayAvatar id={viewer.avatar} size={38} />
+                <div className="min-w-0">
+                  <span className="block truncate text-xs font-black">{viewer.name}</span>
+                  <small className="text-[9px] font-bold uppercase tracking-[.12em] text-amber-200/35">
+                    Twój kapitał
+                  </small>
+                </div>
               </div>
+              <strong className="text-xl font-black tabular-nums text-amber-200">{money(viewer.points)}</strong>
             </div>
-            <strong className="text-xl font-black tabular-nums text-amber-200">{money(viewer.points)}</strong>
+
+            {data.recoveryCode && (
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-amber-200/8 pt-3">
+                <div>
+                  <small className="block text-[8px] font-black uppercase tracking-[.16em] text-amber-200/35">
+                    Kod powrotu
+                  </small>
+                  <span className="mt-0.5 block text-[10px] leading-4 text-amber-50/45">
+                    Zapisz go, jeśli zamkniesz kartę lub zmienisz urządzenie.
+                  </span>
+                </div>
+                <strong className="shrink-0 rounded-xl border border-amber-300/15 bg-amber-300/[.06] px-3 py-2 text-sm font-black tracking-[.18em] text-amber-100">
+                  {data.recoveryCode}
+                </strong>
+              </div>
+            )}
           </div>
         )}
 
