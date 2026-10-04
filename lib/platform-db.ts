@@ -152,6 +152,22 @@ export async function getPlatformRecoveryCode(code: string, playerToken: string)
   return (data ?? null) as string | null;
 }
 
+export async function resetPlatformRecoveryCode(
+  code: string,
+  hostToken: string,
+  playerId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("reset_platform_recovery_code", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_player_id: playerId,
+  });
+
+  if (error) throw new Error(error.message);
+  return data ? String(data) : null;
+}
+
 export async function recoverPlatformPlayer(
   code: string,
   displayName: string,
