@@ -369,7 +369,7 @@ export default function LobbyClient({ code }: { code: string }) {
           <span className="lobby-label">ROZGRYWKA JUŻ TRWA</span>
           <h2>Wróć do swojej postaci</h2>
           <p>
-            Wybierz swoje imię i poproś hosta o wpuszczenie Cię z powrotem.
+            Wybierz swoje imię i poproś osobę, która utworzyła pokój, o wpuszczenie Cię z powrotem.
             Po akceptacji wrócisz z tym samym wynikiem i stanem gry.
           </p>
 
@@ -394,7 +394,7 @@ export default function LobbyClient({ code }: { code: string }) {
           {rejoinRequested ? (
             <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.06] p-4 text-center">
               <strong className="block text-sm font-black text-emerald-100">
-                Prośba wysłana do hosta
+                Prośba wysłana do twórcy pokoju
               </strong>
               <p className="mt-1 text-xs leading-5 text-emerald-100/60">
                 Zostań na tej stronie. Po akceptacji wrócisz do gry automatycznie.
@@ -407,7 +407,7 @@ export default function LobbyClient({ code }: { code: string }) {
               disabled={busy || !recoverName}
               onClick={() => void requestRejoin()}
             >
-              {busy ? "Wysyłanie…" : "Poproś hosta o powrót"}
+              {busy ? "Wysyłanie…" : "Poproś o powrót"}
             </button>
           )}
 
