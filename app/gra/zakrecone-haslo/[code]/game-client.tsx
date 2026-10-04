@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartyPlayAvatar } from "@/components/partyplay-avatar";
 import {
   ZH_ALPHABET,
@@ -103,6 +103,155 @@ function hasUnusedConsonants(game: ZhGameState) {
 
 function hasUnusedVowels(game: ZhGameState) {
   return [...ZH_VOWELS].some((letter) => !game.usedLetters.includes(letter));
+}
+
+type BrowserAudioContext = AudioContext;
+
+function getAudioContext() {
+  if (typeof window === "undefined") return null;
+  const AudioContextClass =
+    window.AudioContext ??
+    (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  return AudioContextClass ? new AudioContextClass() : null;
+}
+
+function playTone(
+  context: BrowserAudioContext,
+  frequency: number,
+  duration: number,
+  volume = 0.055,
+  startDelay = 0,
+  type: OscillatorType = "sine",
+) {
+  const start = context.currentTime + Math.max(0, startDelay);
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.03);
+}
+
+function playWheelTicks(context: BrowserAudioContext) {
+  const ticks = 30;
+  for (let index = 0; index < ticks; index += 1) {
+    const progress = index / (ticks - 1);
+    const delay = 5.65 * progress * progress;
+    const frequency = 980 - progress * 260;
+    playTone(context, frequency, 0.035, 0.028, delay, "square");
+  }
+}
+
+function playWheelLanding(context: BrowserAudioContext, event: ZhLastEvent) {
+  if (event?.type === "bankrupt") {
+    playTone(context, 190, 0.42, 0.09, 5.95, "sawtooth");
+    playTone(context, 125, 0.52, 0.07, 6.12, "sawtooth");
+    return;
+  }
+
+  if (event?.type === "pass") {
+    playTone(context, 520, 0.12, 0.045, 5.95, "triangle");
+    playTone(context, 360, 0.22, 0.045, 6.08, "triangle");
+    return;
+  }
+
+  playTone(context, 660, 0.12, 0.05, 5.95, "triangle");
+  playTone(context, 880, 0.24, 0.065, 6.08, "triangle");
+}
+
+function useZhSoundEffects(game: ZhGameState) {
+  const [enabled, setEnabled] = useState(false);
+  const contextRef = useRef<BrowserAudioContext | null>(null);
+  const lastEventRef = useRef<string | null>(null);
+
+  const enable = useCallback(async () => {
+    let context = contextRef.current;
+    if (!context) {
+      context = getAudioContext();
+      contextRef.current = context;
+    }
+    if (!context) return;
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    lastEventRef.current = game.lastEvent?.at ?? null;
+    setEnabled(true);
+    playTone(context, 660, 0.08, 0.035, 0, "triangle");
+    playTone(context, 880, 0.12, 0.04, 0.09, "triangle");
+  }, [game.lastEvent?.at]);
+
+  const disable = useCallback(() => {
+    setEnabled(false);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled || !game.lastEvent?.at) return;
+    if (lastEventRef.current === game.lastEvent.at) return;
+
+    lastEventRef.current = game.lastEvent.at;
+    const context = contextRef.current;
+    if (!context || context.state !== "running") return;
+
+    const event = game.lastEvent;
+
+    if (isWheelEvent(event)) {
+      playWheelTicks(context);
+      playWheelLanding(context, event);
+      return;
+    }
+
+    if (event.type === "letter" || event.type === "vowel") {
+      if (event.correct) {
+        playTone(context, 740, 0.1, 0.05, 0, "triangle");
+        playTone(context, 980, 0.18, 0.06, 0.11, "triangle");
+      } else {
+        playTone(context, 220, 0.25, 0.065, 0, "sawtooth");
+      }
+      return;
+    }
+
+    if (event.type === "solve") {
+      if (event.correct) {
+        playTone(context, 523, 0.16, 0.06, 0, "triangle");
+        playTone(context, 659, 0.16, 0.06, 0.16, "triangle");
+        playTone(context, 784, 0.28, 0.075, 0.32, "triangle");
+      } else {
+        playTone(context, 245, 0.18, 0.06, 0, "square");
+        playTone(context, 185, 0.28, 0.06, 0.18, "square");
+      }
+      return;
+    }
+
+    if (event.type === "round_start") {
+      playTone(context, 520, 0.1, 0.035, 0, "triangle");
+      playTone(context, 680, 0.14, 0.04, 0.1, "triangle");
+      return;
+    }
+
+    if (event.type === "game_over") {
+      playTone(context, 523, 0.18, 0.055, 0, "triangle");
+      playTone(context, 659, 0.18, 0.055, 0.18, "triangle");
+      playTone(context, 784, 0.18, 0.065, 0.36, "triangle");
+      playTone(context, 1047, 0.45, 0.075, 0.54, "triangle");
+    }
+  }, [enabled, game.lastEvent?.at, game.lastEvent?.type, game.lastEvent?.correct]);
+
+  useEffect(() => {
+    return () => {
+      void contextRef.current?.close();
+    };
+  }, []);
+
+  return { enabled, enable, disable };
 }
 
 function scoreFor(player: ZhPlayerScore) {
@@ -388,6 +537,7 @@ function HostGame({
 }) {
   const game = data.game;
   const wheelSpinning = useWheelSpinning(game);
+  const sound = useZhSoundEffects(game);
   const roundWinner = game.players.find((player) => player.id === game.roundWinnerId);
   const ranking = [...game.players].sort((a, b) => scoreFor(b) - scoreFor(a));
   const topScore = ranking[0] ? scoreFor(ranking[0]) : 0;
@@ -428,7 +578,20 @@ function HostGame({
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(139,92,246,.22),transparent_28%),radial-gradient(circle_at_86%_22%,rgba(236,72,153,.14),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(34,211,238,.1),transparent_32%)]" />
       <div className="relative z-10">
         <GameHeader room={data.room} game={game} />
-        <section className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[1.25fr_.75fr]">
+        <div className="mx-auto flex max-w-7xl justify-end px-4 pt-3 sm:px-6">
+          <button
+            type="button"
+            onClick={() => void (sound.enabled ? sound.disable() : sound.enable())}
+            className={`rounded-xl border px-3 py-2 text-[9px] font-black transition ${
+              sound.enabled
+                ? "border-emerald-300/30 bg-emerald-300/[.09] text-emerald-100"
+                : "border-white/10 bg-white/[.04] text-zinc-300 hover:bg-white/[.07]"
+            }`}
+          >
+            {sound.enabled ? "🔊 DŹWIĘK WŁĄCZONY" : "🔇 WŁĄCZ DŹWIĘK"}
+          </button>
+        </div>
+        <section className="mx-auto grid max-w-7xl gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[1.25fr_.75fr]">
           <div className="min-w-0 space-y-5">
             <div className="rounded-[1.75rem] border border-white/10 bg-black/25 p-5 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-3">
