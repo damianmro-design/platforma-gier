@@ -77,7 +77,7 @@ export async function GET(request: Request, context: RouteContext) {
       room: { code: room.code, status: room.status, phase: room.game_phase },
       player,
       game,
-      canAutoAdvance: Boolean(hostToken),
+      canAutoAdvance: true,
     });
   }
 
@@ -105,12 +105,27 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     if (action === "next") {
-      if (!hostToken) {
-        return NextResponse.json({ error: "Tylko host steruje przejściem dalej." }, { status: 403 });
+      const controlToken = hostToken ?? playerToken;
+      if (!controlToken) {
+        return NextResponse.json({ error: "Brak dostępu do przejścia dalej." }, { status: 403 });
       }
 
-      const phase = await nextZhRound(code, hostToken);
-      return NextResponse.json({ ok: true, phase });
+      try {
+        const phase = await nextZhRound(code, controlToken);
+        return NextResponse.json({ ok: true, phase });
+      } catch (error) {
+        const raw = error instanceof Error ? error.message : "";
+        if (raw.includes("Round is not over")) {
+          const latest = await getZhState(code);
+          if (latest && latest.mode !== "round_over") {
+            return NextResponse.json({
+              ok: true,
+              phase: latest.mode === "game_over" ? "game_over" : "playing",
+            });
+          }
+        }
+        throw error;
+      }
     }
 
     if (!playerToken) {
