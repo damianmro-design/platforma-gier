@@ -35,7 +35,7 @@ function messageFor(error: unknown) {
   return "Nie udało się wykonać tej akcji.";
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
   const code = cleanRoomCode(rawCode);
   const room = await lookupPlatformRoom(code);
@@ -44,6 +44,7 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Nie znaleziono gry." }, { status: 404 });
   }
 
+  const displayMode = new URL(request.url).searchParams.get("display") === "1";
   const cookieStore = await cookies();
   const rawHostToken = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
@@ -53,6 +54,15 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (!game) {
     return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
+  }
+
+  if (displayMode) {
+    return NextResponse.json({
+      role: "display",
+      room: { code: room.code, status: room.status, phase: room.game_phase },
+      game,
+      canAutoAdvance: false,
+    });
   }
 
   if (playerToken) {

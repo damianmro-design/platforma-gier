@@ -40,7 +40,14 @@ type PlayerState = {
   canAutoAdvance?: boolean;
 };
 
-type GameState = HostState | PlayerState;
+type DisplayState = {
+  role: "display";
+  room: RoomInfo;
+  game: ZhGameState;
+  canAutoAdvance?: boolean;
+};
+
+type GameState = HostState | PlayerState | DisplayState;
 
 const DIFFICULTY: Record<number, string> = {
   1: "ŁATWE",
@@ -366,7 +373,19 @@ function GameHeader({ room, game }: { room: RoomInfo; game: ZhGameState }) {
   );
 }
 
-function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolean; error: string; onNext: () => void }) {
+function HostGame({
+  data,
+  busy,
+  error,
+  onNext,
+  displayOnly = false,
+}: {
+  data: HostState | DisplayState;
+  busy: boolean;
+  error: string;
+  onNext: () => void;
+  displayOnly?: boolean;
+}) {
   const game = data.game;
   const wheelSpinning = useWheelSpinning(game);
   const roundWinner = game.players.find((player) => player.id === game.roundWinnerId);
@@ -432,14 +451,20 @@ function HostGame({ data, busy, error, onNext }: { data: HostState; busy: boolea
                   {roundWinner?.displayName ?? "Gracz"} wygrywa rundę
                 </h2>
                 <p className="mt-2 text-sm text-zinc-400">Punkty z rundy zostaną dopisane po przejściu dalej.</p>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={onNext}
-                  className="mt-5 rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black disabled:opacity-50"
-                >
-                  {busy ? "CHWILA…" : game.roundNumber >= game.puzzleCount ? "POKAŻ WYNIKI →" : "DALEJ TERAZ →"}
-                </button>
+                {displayOnly ? (
+                  <p className="mt-5 text-xs font-bold text-zinc-500">
+                    Ekran podglądu · dalsze sterowanie odbywa się na telefonach graczy.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={onNext}
+                    className="mt-5 rounded-2xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 px-6 py-4 text-sm font-black disabled:opacity-50"
+                  >
+                    {busy ? "CHWILA…" : game.roundNumber >= game.puzzleCount ? "POKAŻ WYNIKI →" : "DALEJ TERAZ →"}
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -838,17 +863,20 @@ function PlayerGame({
   );
 }
 
-export default function GameClient({ code }: { code: string }) {
+export default function GameClient({ code, displayMode = false }: { code: string; displayMode?: boolean }) {
   const [data, setData] = useState<GameState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     try {
-      const response = await fetch(`/api/gra/zakrecone-haslo/${code}`, { cache: "no-store" });
+      const response = await fetch(
+        `/api/gra/zakrecone-haslo/${code}${displayMode ? "?display=1" : ""}`,
+        { cache: "no-store" },
+      );
 
       if (response.status === 401) {
-        window.location.assign(`/pokoj/${code}`);
+        if (!displayMode) window.location.assign(`/pokoj/${code}`);
         return;
       }
 
@@ -857,7 +885,7 @@ export default function GameClient({ code }: { code: string }) {
     } catch {
       // Kolejna próba pollingu spróbuje ponownie.
     }
-  }, [code]);
+  }, [code, displayMode]);
 
   useEffect(() => {
     void load();
@@ -915,8 +943,16 @@ export default function GameClient({ code }: { code: string }) {
     );
   }
 
-  if (data.role === "host") {
-    return <HostGame data={data} busy={busy} error={error} onNext={() => void send({ action: "next" })} />;
+  if (data.role === "host" || data.role === "display") {
+    return (
+      <HostGame
+        data={data}
+        busy={busy}
+        error={error}
+        onNext={() => void send({ action: "next" })}
+        displayOnly={data.role === "display"}
+      />
+    );
   }
 
   return <PlayerGame data={data} busy={busy} error={error} send={send} />;
