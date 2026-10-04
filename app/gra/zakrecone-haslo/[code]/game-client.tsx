@@ -37,6 +37,7 @@ type PlayerState = {
   room: RoomInfo;
   player: Player;
   game: ZhGameState;
+  recoveryCode?: string | null;
   canAutoAdvance?: boolean;
 };
 
@@ -878,6 +879,21 @@ function PlayerGame({
         </header>
 
         <div className="p-4">
+          {data.recoveryCode && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.06] px-3 py-3">
+              <div>
+                <span className="block text-[8px] font-black uppercase tracking-[.16em] text-violet-300">
+                  KOD POWROTU
+                </span>
+                <span className="mt-0.5 block text-[10px] text-zinc-500">
+                  Zachowaj go, jeśli zamkniesz kartę lub zmienisz urządzenie.
+                </span>
+              </div>
+              <strong className="shrink-0 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-sm font-black tracking-[.18em] text-violet-100">
+                {data.recoveryCode}
+              </strong>
+            </div>
+          )}
           {data.canAutoAdvance && (
             <a
               href={`/ekran/zakrecone-haslo/${data.room.code}`}
