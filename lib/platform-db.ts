@@ -185,6 +185,70 @@ export async function recoverPlatformPlayer(
   return (player ?? null) as JoinedPlayer | null;
 }
 
+export type PlatformRejoinRequest = {
+  request_id: string;
+  player_id: string;
+  display_name: string;
+  avatar: string;
+  created_at: string;
+};
+
+export async function requestPlatformRejoin(code: string, displayName: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("request_platform_rejoin", {
+    p_code: code,
+    p_display_name: displayName,
+  });
+
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  return row
+    ? {
+        requestToken: String(row.request_token),
+        displayName: String(row.display_name),
+      }
+    : null;
+}
+
+export async function listPlatformRejoinRequests(code: string, hostToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("list_platform_rejoin_requests", {
+    p_code: code,
+    p_host_token: hostToken,
+  });
+
+  if (error) throw new Error(error.message);
+  return (Array.isArray(data) ? data : []) as PlatformRejoinRequest[];
+}
+
+export async function approvePlatformRejoin(
+  code: string,
+  hostToken: string,
+  requestId: string,
+) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("approve_platform_rejoin", {
+    p_code: code,
+    p_host_token: hostToken,
+    p_request_id: requestId,
+  });
+
+  if (error) throw new Error(error.message);
+  return Boolean(data);
+}
+
+export async function consumePlatformRejoin(code: string, requestToken: string) {
+  const supabase = getClient();
+  const { data, error } = await supabase.rpc("consume_platform_rejoin", {
+    p_code: code,
+    p_request_token: requestToken,
+  });
+
+  if (error) throw new Error(error.message);
+  const player = Array.isArray(data) ? data[0] : data;
+  return (player ?? null) as JoinedPlayer | null;
+}
+
 export async function setPlatformPlayerReady(code: string, playerToken: string, ready: boolean) {
   const supabase = getClient();
   const { data, error } = await supabase.rpc("set_player_ready", {
