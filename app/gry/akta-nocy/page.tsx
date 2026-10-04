@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -140,6 +141,8 @@ export default async function AktaNocyPage() {
             </div>
           </div>
         </section>
+
+      <GamePlaySetup slug="akta-nocy" />
 
         <section id="sprawy" className="border-y border-orange-100/8 bg-[#090707]">
           <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:py-24">

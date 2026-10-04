@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -167,6 +168,8 @@ export default async function SzyfrPage({ searchParams }: PageProps) {
           </div>
         </div>
       </section>
+
+      <GamePlaySetup slug="szyfr" />
 
       <section className="relative z-10 border-y border-cyan-200/7 bg-white/[.015]">
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">

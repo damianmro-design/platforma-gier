@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -218,6 +219,8 @@ export default async function TylkoMyPage({ searchParams }: TylkoMyPageProps) {
           </div>
         </div>
       </section>
+
+      <GamePlaySetup slug="tylko-my" />
 
       <section className="relative z-10 mx-auto max-w-7xl px-5 pb-14 sm:px-8">
         <div className="rounded-[2rem] border border-white/9 bg-white/[.025] p-6 sm:p-8">

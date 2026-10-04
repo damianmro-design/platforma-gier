@@ -86,7 +86,7 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     "tags": [
       "zgadywanie",
       "pojedynki",
-      "wymagany prowadzący"
+      "z prowadzącym lub bez"
     ],
     "external": true,
     "slug": "floor-party",
@@ -182,7 +182,7 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     "tags": [
       "murder mystery",
       "dedukcja",
-      "wymagany prowadzący"
+      "prowadzący lub automat"
     ],
     "external": false,
     "slug": "akta-nocy",
@@ -212,7 +212,7 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     ],
     "tags": [
       "słowna",
-      "szybka",
+      "ekran główny",
       "bez prowadzącego"
     ],
     "external": false,
@@ -244,7 +244,7 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     "tags": [
       "dla dwojga",
       "2 telefony",
-      "telepatia"
+      "bez wspólnego ekranu"
     ],
     "external": false,
     "slug": "tylko-my",
@@ -275,8 +275,8 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     ],
     "tags": [
       "kooperacyjna",
-      "escape room",
-      "komunikacja"
+      "bez telewizora",
+      "bez prowadzącego"
     ],
     "external": false,
     "slug": "szyfr",
@@ -307,7 +307,7 @@ export const DEFAULT_GAME_CARDS: CatalogGame[] = [
     "tags": [
       "licytacja",
       "quiz",
-      "ryzyko"
+      "bez prowadzącego"
     ],
     "external": false,
     "slug": "va-banque",

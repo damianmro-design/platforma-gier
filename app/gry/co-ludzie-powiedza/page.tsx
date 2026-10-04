@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -79,6 +80,8 @@ export default async function CoLudziePowiedzaPage() {
           </div>
         </div>
       </section>
+
+      <GamePlaySetup slug="co-ludzie-powiedza" />
 
       <section className="survey-principle">
         <div className="container">
