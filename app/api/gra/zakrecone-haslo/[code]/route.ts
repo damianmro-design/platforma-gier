@@ -8,6 +8,7 @@ import {
   getZhState,
   lookupPlatformRoom,
   nextZhRound,
+  resetPlatformRecoveryCode,
   spinZh,
   submitZhLetter,
   submitZhSolve,
@@ -81,6 +82,7 @@ export async function GET(request: Request, context: RouteContext) {
       player,
       game,
       recoveryCode,
+      isHost: Boolean(hostToken),
       canAutoAdvance: true,
     });
   }
@@ -108,6 +110,24 @@ export async function POST(request: Request, context: RouteContext) {
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
 
   try {
+    if (action === "resetRecoveryCode") {
+      if (!hostToken) {
+        return NextResponse.json({ error: "Tylko twórca pokoju może wygenerować nowy kod powrotu." }, { status: 403 });
+      }
+
+      const playerId = String(body.playerId ?? "").trim();
+      if (!playerId) {
+        return NextResponse.json({ error: "Wybierz gracza." }, { status: 400 });
+      }
+
+      const recoveryCode = await resetPlatformRecoveryCode(code, hostToken, playerId);
+      if (!recoveryCode) {
+        return NextResponse.json({ error: "Nie udało się wygenerować nowego kodu." }, { status: 400 });
+      }
+
+      return NextResponse.json({ ok: true, recoveryCode });
+    }
+
     if (action === "next") {
       const controlToken = hostToken ?? playerToken;
       if (!controlToken) {
