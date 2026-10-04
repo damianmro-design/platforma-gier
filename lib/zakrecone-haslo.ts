@@ -7,7 +7,7 @@ export const ZH_VOWELS: ReadonlySet<string> = new Set(["A","Ą","E","Ę","I","O"
 
 export const ZH_WHEEL_SEGMENTS = [
   "100","150","200","BANKRUT","250","300","PAS","350","400",
-  "500","BANKRUT","600","700","PAS","800","1000","450","300",
+  "500","550","600","700","750","800","1000","450","300",
 ] as const;
 
 export type ZhPlayerScore = {
