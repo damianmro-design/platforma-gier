@@ -73,8 +73,17 @@ function useWheelSpinning(game: ZhGameState) {
       return;
     }
 
+    const eventTime = game.lastEvent?.at ? new Date(game.lastEvent.at).getTime() : Date.now();
+    const elapsed = Math.max(0, Date.now() - eventTime);
+    const remaining = Math.max(0, WHEEL_REVEAL_MS - elapsed);
+
+    if (remaining <= 0) {
+      setSpinning(false);
+      return;
+    }
+
     setSpinning(true);
-    const timer = window.setTimeout(() => setSpinning(false), WHEEL_REVEAL_MS);
+    const timer = window.setTimeout(() => setSpinning(false), remaining);
     return () => window.clearTimeout(timer);
   }, [game.lastEvent?.at, game.lastEvent?.segmentIndex, game.lastEvent?.type]);
 
@@ -695,6 +704,15 @@ function PlayerGame({
 
           <div className="mt-4 rounded-2xl border border-white/8 bg-black/25 p-4">
             <div className="scale-[.82] sm:scale-90">{formatPhrase(game.phrase)}</div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-violet-300/15 bg-black/20 p-3">
+            <span className="block text-center text-[8px] font-black uppercase tracking-[.18em] text-violet-300">
+              KOŁO RYZYKA
+            </span>
+            <div className="mx-auto mt-2 max-w-[310px]">
+              <Wheel game={game} spinning={wheelSpinning} />
+            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
