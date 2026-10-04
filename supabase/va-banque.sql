@@ -569,7 +569,7 @@ begin
         v_delta:=g.winning_bid;
       else
         update app_private.va_banque_players
-        set points=greatest(0,points-g.winning_bid)
+        set points=greatest(100,points-g.winning_bid)
         where room_id=r.id and player_id=g.winning_player_id;
         v_delta:=-g.winning_bid;
       end if;
@@ -631,7 +631,7 @@ begin
         v_delta:=v_risk;
       else
         update app_private.va_banque_players
-        set points=greatest(0,points-v_risk)
+        set points=greatest(100,points-v_risk)
         where room_id=r.id and player_id=g.takeover_player_id;
         v_delta:=-v_risk;
       end if;
@@ -928,7 +928,7 @@ begin
   if p.player_id is null then raise exception 'Player not found'; end if;
   if p.bid_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=floor((p.points*0.5)/50.0)::integer*50;
+  v_max:=greatest(0,least(floor((p.points*0.5)/50.0)::integer*50,floor(greatest(0,p.points-100)/50.0)::integer*50));
   v_min:=least(100,v_max);
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -977,7 +977,7 @@ begin
   end if;
   if p.tie_locked then raise exception 'Bid already locked'; end if;
 
-  v_max:=floor((p.points*0.5)/50.0)::integer*50;
+  v_max:=greatest(0,least(floor((p.points*0.5)/50.0)::integer*50,floor(greatest(0,p.points-100)/50.0)::integer*50));
   v_min:=g.winning_bid+50;
 
   if p_bid<>0 and (p_bid<v_min or p_bid>v_max or p_bid%50<>0) then
@@ -1074,11 +1074,11 @@ begin
   where rp.room_id=r.id and rp.player_token=p_player_token
   limit 1;
 
-  if v_player is null or v_player=g.winning_player_id or v_points<=0 then
+  if v_player is null or v_player=g.winning_player_id or v_points<=100 then
     return jsonb_build_object('won',false);
   end if;
 
-  v_risk:=least(v_points,greatest(50,round((g.winning_bid*0.5)/50.0)::integer*50));
+  v_risk:=least(v_points-100,greatest(50,round((g.winning_bid*0.5)/50.0)::integer*50));
 
   update app_private.va_banque_players
   set answer_index=null,answer_locked=false
