@@ -318,7 +318,7 @@ export default function LobbyClient({ code }: { code: string }) {
     ? true
     : Boolean(data?.players.length && data.players.every((player) => player.team));
   const canStart = Boolean(
-    data?.isHost &&
+    (data?.isHost || (isWordGame && data?.currentPlayerId)) &&
     data.players.length >= minPlayers &&
     data.players.length <= maxPlayers &&
     allReady &&
