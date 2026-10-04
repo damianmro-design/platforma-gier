@@ -33,6 +33,7 @@ export default function LobbyClient({ code }: { code: string }) {
   const [avatar, setAvatar] = useState("avatar-01");
   const [recoverName, setRecoverName] = useState("");
   const [recoverCode, setRecoverCode] = useState("");
+  const [rejoinRequested, setRejoinRequested] = useState(false);
   const [accountSignedIn, setAccountSignedIn] = useState(false);
   const [accountProfileReady, setAccountProfileReady] = useState(false);
   const autoJoinAttempted = useRef(false);
@@ -295,6 +296,20 @@ export default function LobbyClient({ code }: { code: string }) {
     });
   }
 
+  async function requestRejoin() {
+    if (!recoverName.trim()) {
+      setError("Wybierz swoje imię.");
+      return;
+    }
+
+    const ok = await send({
+      action: "requestRejoin",
+      name: recoverName,
+    });
+
+    if (ok) setRejoinRequested(true);
+  }
+
   const me = data?.players.find((player) => player.id === data.currentPlayerId) ?? null;
   const isWordGame = data?.room.gameSlug === "zakrecone-haslo";
   const isUndercoverGame = data?.room.gameSlug === "pod-przykrywka";
@@ -350,44 +365,77 @@ export default function LobbyClient({ code }: { code: string }) {
   return (
     <div className="lobby-live">
       {activeWithoutSession ? (
-        <form className="player-join-panel room-already-started" onSubmit={recover}>
+        <section className="player-join-panel room-already-started">
           <span className="lobby-label">ROZGRYWKA JUŻ TRWA</span>
-          <h2>Nowi gracze nie mogą już dołączyć.</h2>
+          <h2>Wróć do swojej postaci</h2>
           <p>
-            Jeśli wcześniej brałeś udział w tej grze, odzyskaj swoją postać
-            za pomocą imienia i kodu powrotu pokazanego w lobby.
+            Wybierz swoje imię i poproś hosta o wpuszczenie Cię z powrotem.
+            Po akceptacji wrócisz z tym samym wynikiem i stanem gry.
           </p>
 
           <label className="player-name-label" htmlFor="recoverName">Twoje imię</label>
-          <input
+          <select
             id="recoverName"
             className="player-name-input"
             value={recoverName}
-            onChange={(event) => setRecoverName(event.target.value)}
-            maxLength={20}
-            autoComplete="off"
-            placeholder="np. Damian"
-          />
+            onChange={(event) => {
+              setRecoverName(event.target.value);
+              setRejoinRequested(false);
+            }}
+          >
+            <option value="">Wybierz gracza</option>
+            {data.players.map((player) => (
+              <option key={player.id} value={player.display_name}>
+                {player.display_name}
+              </option>
+            ))}
+          </select>
 
-          <label className="player-name-label" htmlFor="recoverCode">Kod powrotu</label>
-          <input
-            id="recoverCode"
-            className="player-name-input"
-            value={recoverCode}
-            onChange={(event) =>
-              setRecoverCode(
-                event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6),
-              )
-            }
-            maxLength={6}
-            autoComplete="off"
-            placeholder="ABC234"
-          />
+          {rejoinRequested ? (
+            <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-300/[.06] p-4 text-center">
+              <strong className="block text-sm font-black text-emerald-100">
+                Prośba wysłana do hosta
+              </strong>
+              <p className="mt-1 text-xs leading-5 text-emerald-100/60">
+                Zostań na tej stronie. Po akceptacji wrócisz do gry automatycznie.
+              </p>
+            </div>
+          ) : (
+            <button
+              className="join-player-button"
+              type="button"
+              disabled={busy || !recoverName}
+              onClick={() => void requestRejoin()}
+            >
+              {busy ? "Wysyłanie…" : "Poproś hosta o powrót"}
+            </button>
+          )}
 
-          <button className="join-player-button" type="submit" disabled={busy}>
-            {busy ? "Odzyskiwanie…" : "Odzyskaj swoją postać"}
-          </button>
-        </form>
+          <details className="mt-5 rounded-2xl border border-white/10 bg-black/15 p-4">
+            <summary className="cursor-pointer text-xs font-black text-zinc-300">
+              Mam kod powrotu
+            </summary>
+            <form className="mt-4" onSubmit={recover}>
+              <label className="player-name-label" htmlFor="recoverCode">Kod powrotu</label>
+              <input
+                id="recoverCode"
+                className="player-name-input"
+                value={recoverCode}
+                onChange={(event) =>
+                  setRecoverCode(
+                    event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6),
+                  )
+                }
+                maxLength={6}
+                autoComplete="off"
+                placeholder="ABC234"
+              />
+              <button className="join-player-button" type="submit" disabled={busy || !recoverName}>
+                {busy ? "Odzyskiwanie…" : "Odzyskaj kodem"}
+              </button>
+            </form>
+          </details>
+        </section>
       ) : !me ? (
         data.isHost && data.room.isTest ? (
           <section className="player-join-panel">
