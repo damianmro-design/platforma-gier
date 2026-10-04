@@ -1,4 +1,5 @@
 import GamePageCmsSections from "@/components/game-page-cms-sections";
+import GamePlaySetup from "@/components/game-play-setup";
 import GamePageCmsIntro from "@/components/game-page-cms-intro";
 import { getPublishedGamePageMetadata } from "@/lib/zagraj-public-page-seo";
 import { getPublishedPageRules } from "@/lib/zagraj-public-page-rules";
@@ -176,6 +177,8 @@ export default async function VaBanquePage({ searchParams }: PageProps) {
           </div>
         </div>
       </section>
+
+      <GamePlaySetup slug="va-banque" />
 
       <section id="zasady" className="relative z-10 border-y border-amber-200/8 bg-amber-100/[.015]">
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8">
