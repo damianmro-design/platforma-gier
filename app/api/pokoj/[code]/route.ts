@@ -13,6 +13,8 @@ import {
   recoverPlatformPlayer,
   requestPlatformRejoin,
   consumePlatformRejoin,
+  listPlatformRejoinRequests,
+  approvePlatformRejoin,
   listPlatformLobby,
   lookupPlatformRoom,
   setPlatformPlayerReady,
@@ -58,13 +60,16 @@ export async function GET(_request: Request, context: RouteContext) {
     }
   }
 
-  const [players, currentPlayer, recoveryCode, isHost, isTest, aktaConfig] = await Promise.all([
+  const [players, currentPlayer, recoveryCode, isHost, isTest, aktaConfig, rejoinRequests] = await Promise.all([
     listPlatformLobby(code),
     playerToken ? getPlatformPlayer(code, playerToken) : Promise.resolve(null),
     playerToken ? getPlatformRecoveryCode(code, playerToken) : Promise.resolve(null),
     hostToken ? isPlatformRoomHost(code, hostToken) : Promise.resolve(false),
     hostToken ? isPlatformTestRoomHost(code, hostToken) : Promise.resolve(false),
     room.game_slug === "akta-nocy" ? getAktaNocyRoomConfig(code) : Promise.resolve(null),
+    hostToken && room.status === "active"
+      ? listPlatformRejoinRequests(code, hostToken)
+      : Promise.resolve([]),
   ]);
 
   const response = NextResponse.json({
@@ -80,6 +85,7 @@ export async function GET(_request: Request, context: RouteContext) {
     currentPlayerId: currentPlayer?.id ?? null,
     recoveryCode,
     isHost,
+    rejoinRequests,
   });
 
   if (restoredPlayerToken) {
@@ -164,6 +170,32 @@ export async function POST(request: Request, context: RouteContext) {
         maxAge: 60 * 10,
       });
       return response;
+    }
+
+    if (action === "approveRejoin") {
+      const hostToken = cookieStore.get(names.host)?.value ?? null;
+      const requestId = String(body.requestId ?? "").trim();
+
+      if (!hostToken || !(await isPlatformRoomHost(code, hostToken))) {
+        return NextResponse.json(
+          { error: "Tylko osoba, która utworzyła pokój, może zatwierdzić powrót." },
+          { status: 403 },
+        );
+      }
+
+      if (!requestId) {
+        return NextResponse.json({ error: "Brak prośby o powrót." }, { status: 400 });
+      }
+
+      const ok = await approvePlatformRejoin(code, hostToken, requestId);
+      if (!ok) {
+        return NextResponse.json(
+          { error: "Ta prośba wygasła albo została już obsłużona." },
+          { status: 409 },
+        );
+      }
+
+      return NextResponse.json({ ok: true });
     }
 
     if (action === "recover") {
