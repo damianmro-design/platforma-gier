@@ -261,7 +261,7 @@ function scoreFor(player: ZhPlayerScore) {
 function formatPhrase(phrase: string) {
   const words = phrase.split(" ");
   return (
-    <div className="flex flex-wrap justify-center gap-x-4 gap-y-3">
+    <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 sm:gap-x-10 sm:gap-y-5">
       {words.map((word, wordIndex) => (
         <span key={`${word}-${wordIndex}`} className="inline-flex gap-1.5">
           {[...word].map((character, index) => {
