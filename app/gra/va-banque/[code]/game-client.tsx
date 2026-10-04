@@ -193,14 +193,20 @@ export default function GameClient({ code }: { code: string }) {
   const isTakeoverAnswerer = Boolean(viewer && viewer.id === game.takeoverPlayerId);
   const canTakeover = Boolean(
     viewer &&
-      viewer.points > 0 &&
+      viewer.points > 100 &&
       game.phase === "takeover_open" &&
       viewer.id !== game.winningPlayerId &&
       !game.takeoverPlayerId,
   );
 
   const normalMax = viewer
-    ? Math.floor((viewer.points * 0.5) / 50) * 50
+    ? Math.max(
+        0,
+        Math.min(
+          Math.floor((viewer.points * 0.5) / 50) * 50,
+          Math.floor(Math.max(0, viewer.points - 100) / 50) * 50,
+        ),
+      )
     : 0;
   const normalMin = normalMax >= 100 ? 100 : normalMax;
 
@@ -382,7 +388,7 @@ export default function GameClient({ code }: { code: string }) {
               canTakeover ? (
                 <TakeoverPanel
                   risk={Math.min(
-                    viewer?.points ?? 0,
+                    Math.max(0, (viewer?.points ?? 0) - 100),
                     Math.max(50, Math.round((Number(game.winningBid ?? 0) * 0.5) / 50) * 50),
                   )}
                   onClaim={async () => {
@@ -396,13 +402,13 @@ export default function GameClient({ code }: { code: string }) {
                   title={
                     viewer?.id === game.winningPlayerId
                       ? "Pozostali mogą przejąć pytanie."
-                      : viewer && viewer.points <= 0
-                        ? "Nie masz punktów na przejęcie."
+                      : viewer && viewer.points <= 100
+                        ? "Nie masz zapasu punktów na przejęcie."
                         : "Kto pierwszy?"
                   }
                   copy={
-                    viewer && viewer.points <= 0
-                      ? "Możesz obserwować dalszy przebieg rundy. Do przejęcia potrzebujesz dodatniego kapitału."
+                    viewer && viewer.points <= 100
+                      ? "Możesz obserwować dalszy przebieg rundy. Przed finałem zachowujesz minimum 100 pkt."
                       : "Okno przejęcia jest krótkie. Serwer przyzna pytanie tylko jednej osobie."
                   }
                 />
@@ -811,7 +817,10 @@ function BidReveal({ game, title }: { game: VaBanqueState; title: string }) {
       const bid = bidFor(game, player.id);
       return {
         player,
-        amount: bid?.tieBid && game.phase === "tie_reveal" ? bid.tieBid : bid?.bid ?? 0,
+        amount:
+          game.phase === "tie_reveal" && bid?.tieBid != null
+            ? bid.tieBid
+            : bid?.bid ?? 0,
       };
     })
     .sort((a, b) => b.amount - a.amount);
