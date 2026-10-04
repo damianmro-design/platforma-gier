@@ -11,6 +11,8 @@ import {
   joinPlatformRoom,
   joinPlatformRoomAccount,
   recoverPlatformPlayer,
+  requestPlatformRejoin,
+  consumePlatformRejoin,
   listPlatformLobby,
   lookupPlatformRoom,
   setPlatformPlayerReady,
@@ -27,6 +29,7 @@ function cookieNames(code: string) {
   return {
     host: `partyplay_host_${code}`,
     player: `partyplay_player_${code}`,
+    rejoin: `partyplay_rejoin_${code}`,
   };
 }
 
@@ -43,7 +46,17 @@ export async function GET(_request: Request, context: RouteContext) {
   const cookieStore = await cookies();
   const names = cookieNames(code);
   const hostToken = cookieStore.get(names.host)?.value ?? null;
-  const playerToken = cookieStore.get(names.player)?.value ?? null;
+  let playerToken = cookieStore.get(names.player)?.value ?? null;
+  const rejoinToken = cookieStore.get(names.rejoin)?.value ?? null;
+  let restoredPlayerToken: string | null = null;
+
+  if (!playerToken && rejoinToken && room.status === "active") {
+    const restored = await consumePlatformRejoin(code, rejoinToken);
+    if (restored?.player_token) {
+      playerToken = restored.player_token;
+      restoredPlayerToken = restored.player_token;
+    }
+  }
 
   const [players, currentPlayer, recoveryCode, isHost, isTest, aktaConfig] = await Promise.all([
     listPlatformLobby(code),
@@ -54,7 +67,7 @@ export async function GET(_request: Request, context: RouteContext) {
     room.game_slug === "akta-nocy" ? getAktaNocyRoomConfig(code) : Promise.resolve(null),
   ]);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     room: {
       code: room.code,
       gameSlug: room.game_slug,
@@ -68,6 +81,19 @@ export async function GET(_request: Request, context: RouteContext) {
     recoveryCode,
     isHost,
   });
+
+  if (restoredPlayerToken) {
+    response.cookies.set(names.player, restoredPlayerToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 12,
+    });
+    response.cookies.delete(names.rejoin);
+  }
+
+  return response;
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -110,6 +136,32 @@ export async function POST(request: Request, context: RouteContext) {
         secure: process.env.NODE_ENV === "production",
         path: "/",
         maxAge: 60 * 60 * 12,
+      });
+      return response;
+    }
+
+    if (action === "requestRejoin") {
+      const name = String(body.name ?? "").trim().slice(0, 20);
+      if (!name) {
+        return NextResponse.json({ error: "Wybierz swoje imię." }, { status: 400 });
+      }
+
+      const request = await requestPlatformRejoin(code, name);
+      if (!request) {
+        return NextResponse.json({ error: "Nie znaleziono gracza o takim imieniu." }, { status: 404 });
+      }
+
+      const response = NextResponse.json({
+        ok: true,
+        pending: true,
+        displayName: request.displayName,
+      });
+      response.cookies.set(names.rejoin, request.requestToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 10,
       });
       return response;
     }
