@@ -574,6 +574,16 @@ export default function LobbyClient({ code }: { code: string }) {
             </h3>
           </div>
           <div className="host-buttons">
+            {isWordGame && (
+              <a
+                href={`/ekran/zakrecone-haslo/${code}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-cyan-300/25 bg-cyan-300/[.08] px-4 py-3 text-xs font-black text-cyan-100 transition hover:bg-cyan-300/[.13]"
+              >
+                🖥 OTWÓRZ EKRAN GŁÓWNY
+              </a>
+            )}
             {!isIndividualGame && (
               <button
                 type="button"
