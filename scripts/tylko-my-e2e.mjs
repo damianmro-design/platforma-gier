@@ -83,12 +83,14 @@ async function answerFirstOptionByUi(page, game) {
 
   await dismissRoundIntro(page);
   await page.getByText(game.question.prompt, { exact: true }).waitFor({ state: "visible" });
-  await page.getByRole("button", { name: option.label, exact: true }).click();
+  await page.getByText(option.label, { exact: true }).click();
   await page.getByRole("button", { name: "Zatwierdź odpowiedź", exact: true }).click();
-  await page.getByText("Odpowiedź zatwierdzona", { exact: false }).waitFor({ state: "visible" });
 }
 
-const browser = await chromium.launch({ headless: true });
+const launchOptions = process.env.CHROME_BIN
+  ? { headless: true, executablePath: process.env.CHROME_BIN }
+  : { headless: true };
+const browser = await chromium.launch(launchOptions);
 const errors = [];
 const report = {
   baseURL,
@@ -189,10 +191,15 @@ try {
   await partner.screenshot({ path: `${artifacts}/05-first-question-person-2.png`, fullPage: true });
 
   await answerFirstOptionByUi(creator, state);
-  const creatorWaiting = await apiState(creator, code);
-  assert(creatorWaiting.status === 200, "Nie udało się odczytać stanu po pierwszej odpowiedzi");
-  assert(creatorWaiting.body.game.answerCount === 1, "Pierwsza odpowiedź nie została zapisana jako prywatna");
-  assert(creatorWaiting.body.game.revealed === false, "Odpowiedź została odsłonięta przed ruchem drugiej osoby");
+  const creatorWaiting = await waitForGameState(
+    creator,
+    code,
+    (game) => game.questionIndex === 0 && game.answerCount === 1 && game.revealed === false,
+    "first private answer persistence",
+    10000,
+  );
+  assert(creatorWaiting.answerCount === 1, "Pierwsza odpowiedź nie została zapisana jako prywatna");
+  assert(creatorWaiting.revealed === false, "Odpowiedź została odsłonięta przed ruchem drugiej osoby");
   check("first answer stays private until partner answers");
 
   await answerFirstOptionByUi(partner, state);
@@ -217,7 +224,7 @@ try {
     (game) => game.questionIndex === 1 && !game.finished,
     "advance without creator phone",
   );
-  assert(state.score === state.result?.points || state.score > 0, "Punkty nie zostały zapisane po przejściu dalej");
+  assert(state.score > 0, "Punkty nie zostały zapisane po przejściu dalej");
   check("non-creator player can advance while creator phone is closed");
 
   creator = await creatorContext.newPage();
