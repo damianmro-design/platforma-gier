@@ -1,4 +1,5 @@
 import { cleanRoomCode } from "@/lib/room-code.mjs";
+import GameLobbyPreparation from "@/components/game-lobby-preparation";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
@@ -130,6 +131,12 @@ export default async function RoomPage({ params }: RoomPageProps) {
           <h1>{lobby.title}</h1>
           <p>{lobby.copy}</p>
         </section>
+
+        <GameLobbyPreparation
+          slug={room.game_slug}
+          aktaMode={aktaConfig?.play_mode ?? null}
+          aktaCase={aktaConfig?.case_key ?? null}
+        />
 
         <LobbyClient code={room.code} />
 
