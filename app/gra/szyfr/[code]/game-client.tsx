@@ -293,8 +293,11 @@ export default function GameClient({ code }: { code: string }) {
               <Stat label="WYNIK" value={success ? String(game.score ?? 0) : "—"} />
             </div>
 
-            {game.isHost ? (
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+            <div className="mt-7">
+              <p className="mb-3 text-xs font-bold text-cyan-50/45">
+                Dowolna osoba z zespołu może uruchomić kolejną próbę.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   disabled={busy}
@@ -312,11 +315,7 @@ export default function GameClient({ code }: { code: string }) {
                   Nowa misja
                 </button>
               </div>
-            ) : (
-              <p className="mt-7 rounded-2xl border border-cyan-200/8 bg-black/20 p-4 text-xs font-bold text-cyan-50/45">
-                Osoba, która utworzyła pokój, może uruchomić ponowną próbę lub nowy zestaw misji.
-              </p>
-            )}
+            </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <Link href="/gry/szyfr" className="rounded-xl border border-white/8 bg-white/[.03] px-4 py-3 text-xs font-black text-white/60">

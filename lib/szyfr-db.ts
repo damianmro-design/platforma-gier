@@ -161,14 +161,14 @@ export function useSzyfrHint(
   });
 }
 
-export async function retrySzyfr(code: string, hostToken: string) {
+export async function retrySzyfr(code: string, accessToken: string) {
   return Boolean(
-    await rpc("retry_szyfr", { p_code: code, p_host_token: hostToken }),
+    await rpc("retry_szyfr", { p_code: code, p_host_token: accessToken }),
   );
 }
 
-export async function rematchSzyfr(code: string, hostToken: string) {
+export async function rematchSzyfr(code: string, accessToken: string) {
   return Boolean(
-    await rpc("rematch_szyfr", { p_code: code, p_host_token: hostToken }),
+    await rpc("rematch_szyfr", { p_code: code, p_host_token: accessToken }),
   );
 }

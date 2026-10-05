@@ -97,15 +97,17 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "retry") {
-      if (!hostToken) return NextResponse.json({ error: "Tylko host może ponowić rozgrywkę." }, { status: 403 });
-      const ok = await retrySzyfr(code, hostToken);
+      const accessToken = playerToken ?? hostToken;
+      if (!accessToken) return NextResponse.json({ error: "Ta akcja wymaga uczestnika pokoju." }, { status: 403 });
+      const ok = await retrySzyfr(code, accessToken);
       if (!ok) return NextResponse.json({ error: "Ponowienie nie jest teraz dostępne." }, { status: 400 });
       return NextResponse.json({ ok: true });
     }
 
     if (action === "rematch") {
-      if (!hostToken) return NextResponse.json({ error: "Tylko host może uruchomić nową misję." }, { status: 403 });
-      const ok = await rematchSzyfr(code, hostToken);
+      const accessToken = playerToken ?? hostToken;
+      if (!accessToken) return NextResponse.json({ error: "Ta akcja wymaga uczestnika pokoju." }, { status: 403 });
+      const ok = await rematchSzyfr(code, accessToken);
       if (!ok) return NextResponse.json({ error: "Nowa misja nie jest teraz dostępna." }, { status: 400 });
       return NextResponse.json({ ok: true });
     }
