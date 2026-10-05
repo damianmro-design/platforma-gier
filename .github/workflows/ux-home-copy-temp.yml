@@ -1,0 +1,46 @@
+name: Temporary homepage UX copy updater
+
+on:
+  push:
+    branches: [ux-home-play-model-2026-10-05]
+
+permissions:
+  contents: write
+
+jobs:
+  update-copy:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ux-home-play-model-2026-10-05
+          fetch-depth: 0
+
+      - name: Update homepage play-model copy
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('app/page.tsx')
+          text = path.read_text()
+          replacements = {
+              'Jeden ekran, telefony i gotowe. Teleturnieje, blef, dedukcja, quizy i gry, które naprawdę angażują całą ekipę.':
+                  'Każda gra podpowiada, czego potrzebujecie, czasem wystarczą telefony, czasem przyda się wspólny ekran albo prowadzący. Bez instalowania aplikacji.',
+              '["03", "Gracie od razu", "Platforma prowadzi Was przez rozgrywkę."],':
+                  '["03", "Wiecie, jak grać", "Przed startem zobaczycie role, urządzenia i zasady."],',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'Missing expected homepage text: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply homepage play-model UX copy"
+          git push origin HEAD:ux-home-play-model-2026-10-05
