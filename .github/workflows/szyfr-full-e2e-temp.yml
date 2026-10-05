@@ -29,7 +29,7 @@ jobs:
           npm run dev > /tmp/zagraj-szyfr.log 2>&1 &
           echo $! > /tmp/zagraj-szyfr.pid
           for i in {1..90}; do
-            if curl -fsS --max-time 10 http://127.0.0.1:3000/gry/szyfr >/dev/null; then
+            if curl -fsS --max-time 10 http://localhost:3000/gry/szyfr >/dev/null; then
               exit 0
             fi
             sleep 1
@@ -39,7 +39,7 @@ jobs:
 
       - name: Run full SZYFR E2E
         env:
-          SZYFR_BASE_URL: http://127.0.0.1:3000
+          SZYFR_BASE_URL: http://localhost:3000
         run: node scripts/szyfr-e2e.mjs
 
       - name: Show server log on failure
