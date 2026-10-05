@@ -1,0 +1,69 @@
+name: TYLKO MY production E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "app/gra/tylko-my/**"
+      - "app/api/gra/tylko-my/**"
+      - "app/gry/tylko-my/**"
+      - "app/pokoj/**"
+      - "app/api/pokoj/**"
+      - "lib/tylko-my*"
+      - "lib/platform-db*"
+      - "components/live-game-guidance.tsx"
+      - "scripts/tylko-my-e2e.mjs"
+      - ".github/workflows/tylko-my-production-e2e.yml"
+
+jobs:
+  tylko-my-production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TYLKO_MY_BASE_URL: https://zagraj.fun
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Give Vercel production time to publish push
+        if: github.event_name == 'push'
+        run: sleep 75
+
+      - name: Wait for production landing page
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 20 "$TYLKO_MY_BASE_URL/gry/tylko-my" || true)"
+            if echo "$HTML" | grep -q "Odpowiadajcie osobno"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run TYLKO MY production browser E2E
+        run: node scripts/tylko-my-e2e.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tylko-my-production-e2e
+          path: artifacts/tylko-my
+          if-no-files-found: ignore
