@@ -118,14 +118,19 @@ async function postAnswer(page, code, stepKey, answer) {
 
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+let expectedRecovery401 = false;
 
 function watch(page, label) {
   page.on("pageerror", (error) => errors.push(`${label} pageerror: ${error.message}`));
   page.on("console", (message) => {
     if (message.type() === "error") {
       const text = message.text();
-      if (!text.includes("favicon") && !text.includes("qrserver")) {
-        const location = message.location();
+      const location = message.location();
+      const expectedLostSessionError =
+        expectedRecovery401 &&
+        text.includes("401 (Unauthorized)") &&
+        location.url.includes("/api/gra/szyfr/");
+      if (!expectedLostSessionError && !text.includes("favicon") && !text.includes("qrserver")) {
         errors.push(`${label} console: ${text} @ ${location.url || "unknown"}:${location.lineNumber || 0}`);
       }
     }
@@ -219,6 +224,7 @@ try {
   const cookies = await agentContext.cookies();
   const playerCookie = cookies.find((cookie) => cookie.name === `partyplay_player_${code}`);
   assert(playerCookie, "Agent player cookie missing before recovery test");
+  expectedRecovery401 = true;
   await agentContext.clearCookies({ name: playerCookie.name });
   await agent.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded" });
   await agent.getByText("ROZGRYWKA JUŻ TRWA").waitFor();
@@ -229,11 +235,13 @@ try {
   await host.getByText("Gracz chce wrócić").waitFor({ timeout: 10000 });
   await host.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();
   await agent.waitForURL(new RegExp(`/gra/szyfr/${code}$`), { timeout: 10000 });
+  expectedRecovery401 = false;
 
   const restoredCookies = await agentContext.cookies();
   const restoredPlayerCookie = restoredCookies.find((cookie) => cookie.name === `partyplay_player_${code}`);
   assert(restoredPlayerCookie, "Player cookie missing after owner-approved rejoin");
 
+  expectedRecovery401 = true;
   await agentContext.clearCookies({ name: restoredPlayerCookie.name });
   await agent.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded" });
   await agent.getByText("ROZGRYWKA JUŻ TRWA").waitFor();
@@ -242,6 +250,7 @@ try {
   await agent.locator("#recoverCode").fill(agentRecovery);
   await agent.getByRole("button", { name: "Odzyskaj kodem" }).click();
   await agent.waitForURL(new RegExp(`/gra/szyfr/${code}$`), { timeout: 10000 });
+  expectedRecovery401 = false;
 
   state = (await apiState(host, code)).body.game;
   state.roomCode = code;
