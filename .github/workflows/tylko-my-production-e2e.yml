@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "23 3 * * *"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/tylko-my-e2e.mjs"
+      - ".github/workflows/tylko-my-production-e2e.yml"
   push:
     branches: [main]
     paths:
