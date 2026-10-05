@@ -92,7 +92,7 @@ export async function submitTmAnswer(
 
 export async function advanceTmQuestion(
   code: string,
-  hostToken: string,
+  accessToken: string,
   expectedQuestionIndex: number,
   scoreDelta: number,
   totalQuestions: number,
@@ -100,7 +100,7 @@ export async function advanceTmQuestion(
   const supabase = getClient();
   const { data, error } = await supabase.rpc("advance_tm_question", {
     p_code: code,
-    p_host_token: hostToken,
+    p_host_token: accessToken,
     p_expected_question_index: expectedQuestionIndex,
     p_score_delta: scoreDelta,
     p_total_questions: totalQuestions,

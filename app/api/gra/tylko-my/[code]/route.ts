@@ -127,7 +127,7 @@ function messageFor(error: unknown) {
   if (raw.includes("Waiting for answers")) return "Poczekaj, aż obie osoby odpowiedzą.";
   if (raw.includes("Player not found")) return "Nie znaleziono gracza w tym pokoju.";
   if (raw.includes("Game is finished")) return "Ta rozgrywka już się zakończyła.";
-  if (raw.includes("Host access required")) return "Tylko osoba, która utworzyła pokój, może przejść dalej.";
+  if (raw.includes("Host access required")) return "Nie masz dostępu do tej rozgrywki.";
   if (raw.includes("Invalid answer")) return "Ta odpowiedź nie pasuje do bieżącego pytania.";
 
   return "Nie udało się wykonać tej akcji.";
@@ -169,7 +169,7 @@ export async function GET(_request: Request, context: RouteContext) {
       role: "player",
       room: { code: room.code, status: room.status, phase: room.game_phase },
       player,
-      canAdvance: Boolean(rawHostToken && testView !== "player"),
+      canAdvance: true,
       game,
     });
   }
@@ -232,14 +232,15 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     if (action === "next") {
-      if (!hostToken) {
+      const advanceToken = playerToken ?? hostToken;
+      if (!advanceToken) {
         return NextResponse.json(
-          { error: "Tylko osoba, która utworzyła pokój, może przejść dalej." },
+          { error: "Nie masz dostępu do tej rozgrywki." },
           { status: 403 },
         );
       }
 
-      const state = await getTmState(code, null, hostToken);
+      const state = await getTmState(code, playerToken, hostToken);
       if (!state || state.finished) {
         return NextResponse.json({ error: "Gra nie jest aktywna." }, { status: 400 });
       }
@@ -253,7 +254,7 @@ export async function POST(request: Request, context: RouteContext) {
 
       const nextIndex = await advanceTmQuestion(
         code,
-        hostToken,
+        advanceToken,
         state.question_index,
         result.points,
         TYLKO_MY_QUESTION_COUNT,
