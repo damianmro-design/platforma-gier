@@ -43,7 +43,7 @@ jobs:
       - name: Install app dependencies
         run: npm ci
 
-      - name: Install Playwright driver and use runner Chrome
+      - name: Install Playwright driver and prepare runner Chrome
         run: |
           npm install --no-save --package-lock=false playwright@1.55.0
           CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
@@ -53,9 +53,32 @@ jobs:
           fi
           "$CHROME_BIN" --version
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
-          sed -i 's/chromium\.launch({ headless: true })/chromium.launch({ headless: true, executablePath: process.env.CHROME_BIN })/' scripts/tylko-my-e2e.mjs
-          sed -i 's/page\.getByRole("button", { name: option\.label, exact: true })\.click()/page.getByText(option.label, { exact: true }).click()/' scripts/tylko-my-e2e.mjs
-          sed -i '/getByText("Odpowiedź zatwierdzona".*waitFor/d' scripts/tylko-my-e2e.mjs
+
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/tylko-my-e2e.mjs")
+          text = path.read_text()
+
+          text = text.replace(
+              'const browser = await chromium.launch({ headless: true });',
+              'const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_BIN });',
+          )
+          text = text.replace(
+              'await page.getByRole("button", { name: option.label, exact: true }).click();',
+              'await page.getByText(option.label, { exact: true }).click();',
+          )
+          text = text.replace(
+              '  await page.getByText("Odpowiedź zatwierdzona", { exact: false }).waitFor({ state: "visible" });\n',
+              '',
+          )
+          old = '''  const creatorWaiting = await apiState(creator, code);\n  assert(creatorWaiting.status === 200, "Nie udało się odczytać stanu po pierwszej odpowiedzi");\n  assert(creatorWaiting.body.game.answerCount === 1, "Pierwsza odpowiedź nie została zapisana jako prywatna");\n  assert(creatorWaiting.body.game.revealed === false, "Odpowiedź została odsłonięta przed ruchem drugiej osoby");\n'''
+          new = '''  const creatorWaiting = await waitForGameState(\n    creator,\n    code,\n    (game) => game.questionIndex === 0 && game.answerCount === 1 && game.revealed === false,\n    "first private answer persistence",\n    10000,\n  );\n  assert(creatorWaiting.answerCount === 1, "Pierwsza odpowiedź nie została zapisana jako prywatna");\n  assert(creatorWaiting.revealed === false, "Odpowiedź została odsłonięta przed ruchem drugiej osoby");\n'''
+          if old not in text:
+              raise SystemExit("Expected private-answer assertion block not found")
+          text = text.replace(old, new)
+          path.write_text(text)
+          PY
 
       - name: Give Vercel production time to publish push
         if: github.event_name == 'push'
