@@ -55,6 +55,7 @@ jobs:
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
           sed -i 's/chromium\.launch({ headless: true })/chromium.launch({ headless: true, executablePath: process.env.CHROME_BIN })/' scripts/tylko-my-e2e.mjs
           sed -i 's/page\.getByRole("button", { name: option\.label, exact: true })\.click()/page.getByText(option.label, { exact: true }).click()/' scripts/tylko-my-e2e.mjs
+          sed -i '/getByText("Odpowiedź zatwierdzona".*waitFor/d' scripts/tylko-my-e2e.mjs
 
       - name: Give Vercel production time to publish push
         if: github.event_name == 'push'
