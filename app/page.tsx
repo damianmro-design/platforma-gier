@@ -540,7 +540,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-zinc-400 sm:text-xl">
-              Jeden ekran, telefony i gotowe. Teleturnieje, blef, dedukcja, quizy i gry, które naprawdę angażują całą ekipę.
+              Każda gra podpowiada, czego potrzebujecie, czasem wystarczą telefony, czasem przyda się wspólny ekran albo prowadzący. Bez instalowania aplikacji.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -556,7 +556,7 @@ export default function Home() {
               {[
                 ["01", "Wybierz grę", "Dopasuj ją do ekipy i czasu."],
                 ["02", "Znajomi dołączają", "Telefonem, bez instalowania aplikacji."],
-                ["03", "Gracie od razu", "Platforma prowadzi Was przez rozgrywkę."],
+                ["03", "Wiecie, jak grać", "Przed startem zobaczycie role, urządzenia i zasady."],
               ].map(([step, title, copy]) => (
                 <div key={step} className="rounded-2xl border border-white/8 bg-white/[.025] p-4">
                   <p className="text-[10px] font-black tracking-[.24em] text-violet-300">{step}</p>
