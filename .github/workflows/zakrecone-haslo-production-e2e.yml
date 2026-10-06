@@ -55,6 +55,7 @@ jobs:
           fi
           "$CHROME_BIN" --version
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          sed -i 's/selectOption(player2Id)/selectOption({ label: "E2E Koło 2" })/' scripts/zakrecone-haslo-e2e.mjs
 
       - name: Give Vercel production time to publish push
         if: github.event_name == 'push'
