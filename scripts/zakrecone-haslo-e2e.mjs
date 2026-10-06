@@ -96,22 +96,28 @@ try {
 
   await Promise.all(pages.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
   await Promise.all(pages.map(page => page.waitForURL(new RegExp(`/gra/zakrecone-haslo/${code}$`), { timeout: 15000 })));
+  await Promise.all(pages.map(page => page.getByText("GRASZ JAKO", { exact: true }).waitFor({ timeout: 12000 })));
   check("game auto-started without separate host");
 
   const initialStates = await Promise.all(pages.map(page => readState(page, code)));
+  const playerMapDetails = initialStates.map((state, index) => ({
+    index,
+    playerId: state.body?.player?.id,
+    name: state.body?.player?.display_name,
+    role: state.body?.role,
+  }));
   const pageByPlayerId = new Map(initialStates.map((state, index) => [state.body?.player?.id, pages[index]]));
   const initial = initialStates[0].body.game;
   assert(initial.puzzleCount === 6, `Oczekiwano 6 haseł, jest ${initial.puzzleCount}`);
   assert(initial.roundNumber === 1, `Gra nie zaczęła się od rundy 1: ${initial.roundNumber}`);
   assert(initial.phrase.includes("□"), "Publiczny stan ujawnił pełne hasło przed końcem rundy");
-  check("public game state keeps phrase masked", { category: initial.category, difficulty: initial.difficulty });
+  check("public game state keeps phrase masked", { category: initial.category, difficulty: initial.difficulty, activePlayerId: initial.activePlayerId, players: playerMapDetails });
 
   const tvContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const tv = await tvContext.newPage();
   watch(tv, "tv");
   await tv.goto(`${baseURL}/ekran/zakrecone-haslo/${code}`, { waitUntil: "domcontentloaded" });
   const tvState = await waitForState(tv, code, (game, body) => body.role === "display" && game.roundNumber === 1, "TV display state", 10000, true);
-  assert(tvState.body?.role === undefined || true, "");
   assert(tvState.role === "display", "Ekran TV nie działa w roli display");
   assert(tvState.game.phrase === initial.phrase, "Ekran TV pokazuje inny stan hasła niż telefony");
   await tv.screenshot({ path: `${artifacts}/01-tv-round-1.png`, fullPage: true });
@@ -121,9 +127,29 @@ try {
   let regularSpin = null;
   for (let attempt = 0; attempt < 10; attempt += 1) {
     const activePage = pageByPlayerId.get(state.activePlayerId);
-    assert(activePage, `Brak strony aktywnego gracza ${state.activePlayerId}`);
-    await activePage.getByRole("button", { name: /ZAKRĘĆ KOŁEM/ }).click();
-    const afterSpin = await waitForState(activePage, code, game => game.lastEvent?.type === "spin" || game.lastEvent?.type === "pass" || game.lastEvent?.type === "bankrupt", `wheel outcome ${attempt + 1}`);
+    assert(activePage, `Brak strony aktywnego gracza ${state.activePlayerId}; map=${JSON.stringify(playerMapDetails)}`);
+
+    await activePage.reload({ waitUntil: "domcontentloaded" });
+    await activePage.getByText("GRASZ JAKO", { exact: true }).waitFor({ timeout: 10000 });
+    const activeUiState = await readState(activePage, code);
+    const activeUiBody = (await activePage.locator("body").innerText()).slice(0, 3000);
+    await activePage.screenshot({ path: `${artifacts}/02-active-player-before-spin-${attempt + 1}.png`, fullPage: true });
+    assert(
+      activeUiState.body?.player?.id === state.activePlayerId,
+      `Telefon aktywnego gracza ma inną sesję. expected=${state.activePlayerId}, actual=${activeUiState.body?.player?.id}, body=${activeUiBody}`,
+    );
+
+    const spinButton = activePage.getByText("ZAKRĘĆ KOŁEM", { exact: false });
+    assert(await spinButton.count() > 0, `Aktywny gracz nie widzi przycisku koła. mode=${state.mode}; body=${activeUiBody}`);
+    await spinButton.first().click();
+
+    const beforeEventAt = state.lastEvent?.at ?? null;
+    const afterSpin = await waitForState(
+      activePage,
+      code,
+      game => Boolean(game.lastEvent?.at && game.lastEvent.at !== beforeEventAt && ["spin", "pass", "bankrupt"].includes(game.lastEvent.type)),
+      `wheel outcome ${attempt + 1}`,
+    );
     state = afterSpin.game;
     if (state.mode === "choose_letter" && state.wheel?.value) {
       regularSpin = state.lastEvent;
@@ -159,7 +185,6 @@ try {
   state = afterWrongSolve.game;
   check("wrong solve safely passes turn to next player");
 
-  // Rejoin approval: gracz 2 traci sesję, prosi twórcę pokoju o powrót i zostaje wpuszczony.
   const player2State = await readState(player2, code);
   const player2Id = player2State.body.player.id;
   const player2CookieName = `partyplay_player_${code}`;
@@ -187,9 +212,9 @@ try {
   assert(refreshed.status === 200 && refreshed.body.game.roundNumber === state.roundNumber, "Refresh po rejoin zgubił stan gry");
   check("refresh after rejoin preserves active game state");
 
-  await tv.screenshot({ path: `${artifacts}/02-tv-after-actions.png`, fullPage: true });
-  await creator.screenshot({ path: `${artifacts}/03-player-host-mobile.png`, fullPage: true });
-  await player2.screenshot({ path: `${artifacts}/04-rejoined-player-mobile.png`, fullPage: true });
+  await tv.screenshot({ path: `${artifacts}/03-tv-after-actions.png`, fullPage: true });
+  await creator.screenshot({ path: `${artifacts}/04-player-host-mobile.png`, fullPage: true });
+  await player2.screenshot({ path: `${artifacts}/05-rejoined-player-mobile.png`, fullPage: true });
 
   if (errors.length) throw new Error(`Browser errors detected:\n${errors.join("\n")}`);
 } catch (error) {
