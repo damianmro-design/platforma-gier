@@ -9,6 +9,7 @@ on:
     types: [synchronize, reopened]
     paths:
       - "scripts/pod-przykrywka-e2e.mjs"
+      - "scripts/pod-przykrywka-e2e-trigger.txt"
       - ".github/workflows/pod-przykrywka-production-e2e.yml"
   push:
     branches: [main]
