@@ -6,7 +6,7 @@ on:
     - cron: "7 4 * * *"
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
+    types: [synchronize, reopened]
     paths:
       - "scripts/pod-przykrywka-e2e.mjs"
       - ".github/workflows/pod-przykrywka-production-e2e.yml"
