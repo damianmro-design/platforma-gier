@@ -56,6 +56,33 @@ jobs:
           "$CHROME_BIN" --version
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/pod-przykrywka-e2e.mjs")
+          text = path.read_text()
+          old = '''  assert(hostAllAnswered.game.submissions.length === 6, "Prowadzący nie widzi wszystkich 6 odpowiedzi po zebraniu");
+  assert(hostAllAnswered.game.currentPlayer === null, "Prowadzącemu ujawniono prywatny currentPlayer po odpowiedziach");
+  check("all six answers submit and host sees submissions without role identity");
+
+  let flow = hostAllAnswered;
+'''
+          new = '''  assert(hostAllAnswered.game.submissions.length === 0, "Treść odpowiedzi wyciekła prowadzącemu przed fazą ujawnienia");
+  assert(hostAllAnswered.game.currentPlayer === null, "Prowadzącemu ujawniono prywatny currentPlayer po odpowiedziach");
+  check("all six answers submit while their content stays hidden during mission");
+
+  const revealTransition = await post(host, code, { action: "advance" });
+  assert(revealTransition.status === 200, `Nie udało się ujawnić odpowiedzi: ${JSON.stringify(revealTransition.body)}`);
+  let flow = await waitForState(host, code, game => game.phase !== "mission", "answer reveal phase");
+  assert(flow.game.submissions.length === 6, "Po zakończeniu misji prowadzący nie widzi kompletu 6 odpowiedzi");
+  check("all six submissions become visible only after mission closes");
+'''
+          if old not in text:
+              raise SystemExit("Expected mission submissions block not found")
+          text = text.replace(old, new)
+          path.write_text(text)
+          PY
+
       - name: Give Vercel production time to publish push
         if: github.event_name == 'push'
         run: sleep 75
