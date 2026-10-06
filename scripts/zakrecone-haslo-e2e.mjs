@@ -193,7 +193,7 @@ try {
   await contexts[1].clearCookies({ name: player2CookieName });
   await player2.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded" });
   await player2.getByText("ROZGRYWKA JUŻ TRWA").waitFor({ timeout: 10000 });
-  await player2.locator("#recoverName").selectOption(player2Id);
+  await player2.locator("#recoverName").selectOption({ label: "E2E Koło 2" });
   await player2.getByRole("button", { name: /Poproś.*powrót/i }).click();
   await player2.getByText(/Prośba wysłana/i).waitFor({ timeout: 10000 });
 
