@@ -1,0 +1,83 @@
+name: Pod Przykrywką production E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 4 * * *"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/pod-przykrywka-e2e.mjs"
+      - ".github/workflows/pod-przykrywka-production-e2e.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/gra/pod-przykrywka/**"
+      - "app/api/gra/pod-przykrywka/**"
+      - "app/gry/pod-przykrywka/**"
+      - "app/pokoj/**"
+      - "app/api/pokoj/**"
+      - "lib/pod-przykrywka.ts"
+      - "lib/platform-db.ts"
+      - "components/live-game-guidance.tsx"
+      - "components/active-game-rejoin-panel.tsx"
+      - "app/gra/layout.tsx"
+      - "scripts/pod-przykrywka-e2e.mjs"
+      - ".github/workflows/pod-przykrywka-production-e2e.yml"
+
+jobs:
+  pod-przykrywka-production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PP_BASE_URL: https://zagraj.fun
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright driver and prepare runner Chrome
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo "Chrome/Chromium not found on GitHub runner"
+            exit 1
+          fi
+          "$CHROME_BIN" --version
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+
+      - name: Give Vercel production time to publish push
+        if: github.event_name == 'push'
+        run: sleep 75
+
+      - name: Wait for production landing page
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 20 "$PP_BASE_URL/gry/pod-przykrywka" || true)"
+            if echo "$HTML" | grep -q "POD" && echo "$HTML" | grep -q "PRZYKRYWKĄ"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run Pod Przykrywką production browser E2E
+        run: node scripts/pod-przykrywka-e2e.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pod-przykrywka-production-e2e
+          path: artifacts/pod-przykrywka
+          if-no-files-found: ignore
