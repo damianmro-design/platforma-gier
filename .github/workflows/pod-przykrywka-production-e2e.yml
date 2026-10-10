@@ -1,26 +1,20 @@
 name: Pod Przykrywką production E2E
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
-    paths:
-      - "app/api/gra/pod-przykrywka/[code]/route.ts"
-      - "scripts/pod-przykrywka-e2e.mjs"
-      - ".github/workflows/pod-przykrywka-production-e2e.yml"
   push:
     branches: [main]
     paths:
       - "app/api/gra/pod-przykrywka/[code]/route.ts"
       - "scripts/pod-przykrywka-e2e.mjs"
       - ".github/workflows/pod-przykrywka-production-e2e.yml"
+  workflow_dispatch:
 
 jobs:
   pod-przykrywka-production-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      PP_BASE_URL: ${{ github.event_name == 'pull_request' && 'https://platforma-gier-8fhhtsa1t-damianmro-2326s-projects.vercel.app' || 'https://zagraj.fun' }}
+      PP_BASE_URL: https://zagraj.fun
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
@@ -47,10 +41,9 @@ jobs:
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
       - name: Give production time to publish main push
-        if: github.event_name == 'push'
         run: sleep 75
 
-      - name: Wait for target landing page
+      - name: Wait for production landing page
         run: |
           for i in {1..60}; do
             if curl -LfsS --max-time 20 -o /dev/null "$PP_BASE_URL/gry/pod-przykrywka"; then
