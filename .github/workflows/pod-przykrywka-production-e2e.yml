@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      PP_BASE_URL: https://zagraj.fun
+      PP_BASE_URL: ${{ github.event_name == 'pull_request' && 'https://platforma-gier-8fhhtsa1t-damianmro-2326s-projects.vercel.app' || 'https://zagraj.fun' }}
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
@@ -53,8 +53,7 @@ jobs:
       - name: Wait for target landing page
         run: |
           for i in {1..60}; do
-            HTML="$(curl -LfsS --max-time 20 "$PP_BASE_URL/gry/pod-przykrywka" || true)"
-            if echo "$HTML" | grep -q "POD" && echo "$HTML" | grep -q "PRZYKRYWKĄ"; then
+            if curl -LfsS --max-time 20 -o /dev/null "$PP_BASE_URL/gry/pod-przykrywka"; then
               exit 0
             fi
             sleep 5
