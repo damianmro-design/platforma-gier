@@ -109,7 +109,10 @@ try {
   watch(host, "host");
 
   await host.goto(`${baseURL}/gry/pod-przykrywka`, { waitUntil: "networkidle" });
-  await host.getByRole("heading", { name: /POD\s*PRZYKRYWKĄ/i }).waitFor();
+  const landingHeading = host.locator("h1").first();
+  await landingHeading.waitFor({ state: "visible", timeout: 30000 });
+  const landingTitle = (await landingHeading.textContent())?.replace(/\s+/g, "").toUpperCase() ?? "";
+  assert(landingTitle.includes("PODPRZYKRYWKĄ"), `Nieprawidłowa strona startowa: ${landingTitle}`);
   await host.getByRole("button", { name: "Utwórz pokój →", exact: true }).click();
   await host.waitForURL(/\/pokoj\/[A-Z0-9]{4,6}$/);
   const code = host.url().split("/").pop();
