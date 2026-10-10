@@ -36,7 +36,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const code = cleanRoomCode(rawCode);
   const room = await lookupPlatformRoom(code);
 
-  if (!room || room.game_slug !== "pod-przykrywka") {
+  if (room && room.game_slug !== "pod-przykrywka") {
     return NextResponse.json({ error: "Nie znaleziono gry." }, { status: 404 });
   }
 
@@ -48,12 +48,16 @@ export async function GET(_request: Request, context: RouteContext) {
 
   if (hostToken) {
     const game = await getPpState(code);
-    if (!game) {
-      return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
+    if (!game || (!room && game.phase !== "result")) {
+      return NextResponse.json({ error: "Nie znaleziono gry." }, { status: 404 });
     }
     return NextResponse.json({
       role: "host",
-      room: { code: room.code, status: room.status, phase: room.game_phase },
+      room: {
+        code: room?.code ?? code,
+        status: room?.status ?? "finished",
+        phase: room?.game_phase ?? game.phase,
+      },
       game,
     });
   }
@@ -65,16 +69,24 @@ export async function GET(_request: Request, context: RouteContext) {
     }
 
     const game = await getPpState(code, playerToken);
-    if (!game) {
-      return NextResponse.json({ error: "Gra nie została zainicjalizowana." }, { status: 500 });
+    if (!game || (!room && game.phase !== "result")) {
+      return NextResponse.json({ error: "Nie znaleziono gry." }, { status: 404 });
     }
 
     return NextResponse.json({
       role: "player",
-      room: { code: room.code, status: room.status, phase: room.game_phase },
+      room: {
+        code: room?.code ?? code,
+        status: room?.status ?? "finished",
+        phase: room?.game_phase ?? game.phase,
+      },
       player,
       game,
     });
+  }
+
+  if (!room) {
+    return NextResponse.json({ error: "Nie znaleziono gry." }, { status: 404 });
   }
 
   return NextResponse.json({ error: "Brak dostępu do pokoju." }, { status: 401 });
