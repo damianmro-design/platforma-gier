@@ -220,8 +220,21 @@ try {
       await players[agentIndex].screenshot({ path: `${artifacts}/04-agent-mission.png`, fullPage: true });
     }
 
+    const responseMode = agentMission.mission?.responseMode;
+    const rawOptions = agentMission.mission?.options;
+    const validOptions = Array.isArray(rawOptions)
+      ? rawOptions.map(String)
+      : rawOptions && typeof rawOptions === "object"
+        ? Object.keys(rawOptions)
+        : [];
+    if (responseMode === "choice") {
+      assert(validOptions.length > 0, `Misja ${missionNumber} ma tryb choice bez opcji`);
+    }
+
     for (let index = 0; index < players.length; index += 1) {
-      const answer = `odpowiedź e2e m${missionNumber} g${index + 1}`;
+      const answer = responseMode === "choice"
+        ? validOptions[index % validOptions.length]
+        : `odpowiedź e2e m${missionNumber} g${index + 1}`;
       const result = await post(players[index], code, { action: "answer", answer });
       assert(result.status === 200, `Odpowiedź M${missionNumber} gracza ${index + 1} odrzucona: ${JSON.stringify(result.body)}`);
     }
@@ -412,10 +425,12 @@ try {
   }
   check("all six players retain access to the same final result after room is finished");
 
-  await host.getByText(/Oszustem był/i).waitFor({ timeout: 12000 });
+  await host.getByText("TO BYŁA OSOBA POD PRZYKRYWKĄ", { exact: true }).waitFor({ timeout: 12000 });
+  await host.getByRole("heading", { name: saboteurName, exact: true }).waitFor({ timeout: 12000 });
+  await players[saboteurIndex].getByText(/Oszustem był/i).waitFor({ timeout: 12000 });
   await host.screenshot({ path: `${artifacts}/06-host-result.png`, fullPage: true });
   await players[saboteurIndex].screenshot({ path: `${artifacts}/07-saboteur-result.png`, fullPage: true });
-  check("final result UI renders for host and players");
+  check("final result UI renders role-appropriate result for host and players");
 
   if (errors.length) throw new Error(`Browser errors detected:\n${errors.join("\n")}`);
 } catch (error) {
