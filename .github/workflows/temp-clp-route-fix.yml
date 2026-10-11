@@ -1,0 +1,116 @@
+name: Temp CLP route fix
+
+on:
+  push:
+    branches:
+      - fix-clp-phase-polling-race-2026-10-11
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, '[clp-route-patched]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-clp-phase-polling-race-2026-10-11
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply narrow phase-race fix
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('app/api/gra/co-ludzie-powiedza/[code]/route.ts')
+          s = p.read_text()
+
+          if 'retryGetAfterPhaseChange' not in s:
+              marker = '''type RouteContext = {
+            params: Promise<{ code: string }>;
+          };
+          '''
+              helper = '''
+          async function retryGetAfterPhaseChange(
+            request: Request,
+            context: RouteContext,
+            code: string,
+            expectedPhase: string,
+          ): Promise<NextResponse | null> {
+            const refreshedRoom = await lookupPlatformRoom(code);
+
+            if (
+              refreshedRoom &&
+              refreshedRoom.game_slug === "co-ludzie-powiedza" &&
+              refreshedRoom.game_phase !== expectedPhase
+            ) {
+              return GET(request, context);
+            }
+
+            return null;
+          }
+          '''
+              assert marker in s
+              s = s.replace(marker, marker + helper, 1)
+
+              old_get = 'export async function GET(_request: Request, context: RouteContext) {'
+              new_get = '''export async function GET(
+            _request: Request,
+            context: RouteContext,
+          ): Promise<NextResponse> {'''
+              assert old_get in s
+              s = s.replace(old_get, new_get, 1)
+
+              blocks = [
+                  ('final', 'Nie udało się odczytać finału.'),
+                  ('round7', 'Nie udało się odczytać rundy.'),
+                  ('round6', 'Nie udało się odczytać rundy.'),
+                  ('round5', 'Nie udało się odczytać rundy.'),
+                  ('round4', 'Nie udało się odczytać rundy.'),
+                  ('round3', 'Nie udało się odczytać rundy.'),
+                  ('round2', 'Nie udało się odczytać rundy.'),
+                  ('round1', 'Nie udało się odczytać rundy.'),
+              ]
+
+              for var, message in blocks:
+                  old = f'''    if (!{var}) {{
+                return NextResponse.json({{ error: "{message}" }}, {{ status: 500 }});
+              }}'''
+                  new = f'''    if (!{var}) {{
+                const retry = await retryGetAfterPhaseChange(
+                  _request,
+                  context,
+                  code,
+                  room.game_phase,
+                );
+
+                if (retry) return retry;
+                return NextResponse.json({{ error: "{message}" }}, {{ status: 500 }});
+              }}'''
+                  assert old in s, var
+                  s = s.replace(old, new, 1)
+
+              p.write_text(s)
+          PY
+
+      - name: Verify production build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit patched route
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'app/api/gra/co-ludzie-powiedza/[code]/route.ts'
+          if git diff --cached --quiet; then
+            echo "Route already patched"
+            exit 0
+          fi
+          git commit -m "Napraw wyścig odczytu faz CLP [clp-route-patched]"
+          git push origin HEAD:fix-clp-phase-polling-race-2026-10-11
