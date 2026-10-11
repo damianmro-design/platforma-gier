@@ -301,11 +301,49 @@ try {
   await players[0].screenshot({ path: `${artifacts}/06-player-reveal-culprit.png`, fullPage: true });
   check("ujawnienie sprawcy jest zsynchronizowane na prowadzącym i 5 telefonach, bez otwierania pełnych akt");
 
+  await fullFilesButton.click();
+
+  const hostReveal4 = await waitPhase(host, code, "ujawnienie_4");
+  assert(hostReveal4.role === "host", "Prowadzący stracił rolę przy pełnych aktach");
+  assert(hostReveal4.evidence.length === 9, "Prowadzący stracił dowody przy pełnych aktach");
+  assert(hostReveal4.reveal?.step === 4, `Oczekiwano kroku ujawnienia 4, jest ${hostReveal4.reveal?.step}`);
+  assert(hostReveal4.reveal?.content?.eyebrow === "UJAWNIENIE · PEŁNE AKTA", `Nieprawidłowy nagłówek pełnych akt: ${hostReveal4.reveal?.content?.eyebrow}`);
+  assert(hostReveal4.reveal?.content?.title === "Każdy kłamał. Tylko jedna osoba kłamała o zbrodni.", "Nieprawidłowy tytuł pełnych akt");
+  assert(hostReveal4.reveal?.culprit?.characterName === "Maks Wicher", "W pełnych aktach zniknął lub zmienił się sprawca");
+  assert(Array.isArray(hostReveal4.reveal?.content?.redHerrings) && hostReveal4.reveal.content.redHerrings.length === 5, "Pełne akta nie zawierają kompletu wyjaśnień fałszywych tropów");
+  assert(hostReveal4.accusation?.summary?.total === 5, "W pełnych aktach zniknęło podsumowanie 5 oskarżeń");
+  assert(hostReveal4.accusation?.summary?.results?.length === 5, "W pełnych aktach brakuje indywidualnych wyników oskarżeń");
+  check("pełne akta pokazują rozwiązanie, fałszywe tropy i komplet wyników bez zamykania sprawy");
+
+  await host.getByText("UJAWNIENIE · PEŁNE AKTA", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText("Każdy kłamał. Tylko jedna osoba kłamała o zbrodni.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+
+  for (let index = 0; index < players.length; index += 1) {
+    const state = await waitPhase(players[index], code, "ujawnienie_4");
+    assert(state.role === "player", `Gracz ${index + 1} stracił rolę przy pełnych aktach`);
+    assert(state.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się przy pełnych aktach`);
+    assert(state.evidence.length === 9, `Gracz ${index + 1} stracił dowody przy pełnych aktach`);
+    assert(state.accusation?.submitted === true, `Gracz ${index + 1} stracił oskarżenie przy pełnych aktach`);
+    assert(state.accusationVerdict != null, `Gracz ${index + 1} stracił werdykt przy pełnych aktach`);
+    assert(state.reveal?.step === 4, `Gracz ${index + 1} nie widzi pełnych akt`);
+    assert(state.reveal?.culprit?.characterName === "Maks Wicher", `Gracz ${index + 1} widzi innego sprawcę w pełnych aktach`);
+    assert(state.reveal?.content?.title === "Każdy kłamał. Tylko jedna osoba kłamała o zbrodni.", `Gracz ${index + 1} widzi inną planszę pełnych akt`);
+  }
+
+  await players[0].getByText("UJAWNIENIE · PEŁNE AKTA", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await players[0].getByText("Każdy kłamał. Tylko jedna osoba kłamała o zbrodni.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  const closeButton = host.getByRole("button", { name: "ZAMKNIJ SPRAWĘ →", exact: true });
+  await closeButton.waitFor({ state: "visible", timeout: 10000 });
+  assert(await closeButton.isEnabled(), "Przycisk zamknięcia sprawy jest nieaktywny po pełnych aktach");
+  await host.screenshot({ path: `${artifacts}/07-host-full-files.png`, fullPage: true });
+  await players[0].screenshot({ path: `${artifacts}/08-player-full-files.png`, fullPage: true });
+  check("pełne akta są zsynchronizowane na prowadzącym i 5 telefonach, sprawa nadal pozostaje otwarta");
+
   const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "ujawnienie_3", "Test wyszedł poza ujawnienie sprawcy");
+  assert(finalState.body?.room?.phase === "ujawnienie_4", "Test wyszedł poza pełne akta");
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 REVEAL CULPRIT E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 FULL FILES E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
