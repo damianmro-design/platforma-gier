@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      PP_BASE_URL: https://zagraj.fun
+      PP_BASE_URL: https://platforma-gier.vercel.app
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
