@@ -15,12 +15,14 @@ function watch(page, label, errors) {
     if (message.type() !== "error") return;
     const text = message.text();
     if (text.includes("favicon") || text.includes("qrserver")) return;
+    if (text.startsWith("Failed to load resource:")) return;
     errors.push(`${label} console: ${text}`);
   });
   page.on("response", response => {
-    if (response.url().includes("/api/gra/akta-nocy-ostatni-kurs/") && response.status() >= 500) {
-      errors.push(`${label} Ostatni Kurs API ${response.status()}: ${response.url()}`);
-    }
+    if (response.status() < 500) return;
+    const url = response.url();
+    if (url.includes("qrserver.com") || url.includes("favicon")) return;
+    errors.push(`${label} HTTP ${response.status()}: ${url}`);
   });
 }
 
@@ -82,7 +84,6 @@ try {
 
   const names = ["E2E Maszynista", "E2E Wagon 2", "E2E Wagon 3", "E2E Wagon 4", "E2E Wagon 5"];
   const players = [creator];
-  const contexts = [creatorContext];
 
   await joinGuest(creator, code, names[0]);
   check("twórca pokoju dołączył jako zwykły gracz");
@@ -91,7 +92,6 @@ try {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
     const page = await context.newPage();
     watch(page, `player-${index + 1}`, errors);
-    contexts.push(context);
     players.push(page);
     await joinGuest(page, code, names[index]);
   }
