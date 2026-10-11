@@ -28,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      TYLKO_MY_PRIMARY_URL: https://zagraj.fun
+      TYLKO_MY_FALLBACK_URL: https://platforma-gier.vercel.app
       TYLKO_MY_BASE_URL: https://zagraj.fun
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
@@ -58,7 +60,27 @@ jobs:
         if: github.event_name == 'push'
         run: sleep 75
 
-      - name: Wait for production landing page
+      - name: Select reachable production target
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$TYLKO_MY_PRIMARY_URL/gry/tylko-my" || true)"
+            if echo "$HTML" | grep -q "Odpowiadajcie osobno"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "Custom domain is reachable: $TYLKO_MY_PRIMARY_URL"
+            echo "TYLKO_MY_BASE_URL=$TYLKO_MY_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so the game regression test can still run. Check DNS configuration for zagraj.fun."
+            echo "TYLKO_MY_BASE_URL=$TYLKO_MY_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Wait for selected production landing page
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$TYLKO_MY_BASE_URL/gry/tylko-my" || true)"
