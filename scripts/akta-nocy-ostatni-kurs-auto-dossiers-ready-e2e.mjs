@@ -43,8 +43,13 @@ async function readState(page, code) {
 async function waitForState(page, code, predicate, label, timeout = 15000) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    const state = await readState(page, code);
-    if (state.status === 200 && predicate(state.body)) return state.body;
+    try {
+      const state = await readState(page, code);
+      if (state.status === 200 && predicate(state.body)) return state.body;
+    } catch {
+      // Auto-start na moment przeładowuje telefon z lobby do gry.
+      // Krótki błąd fetch podczas tej nawigacji nie jest błędem aplikacji.
+    }
     await page.waitForTimeout(250);
   }
   throw new Error(`Nie osiągnięto stanu: ${label}`);
