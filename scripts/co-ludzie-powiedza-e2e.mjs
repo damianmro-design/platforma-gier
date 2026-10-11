@@ -55,6 +55,15 @@ async function waitPhase(page, code, phase, timeout = 20000) {
   return waitFor(page, code, body => body.room?.phase === phase, `phase ${phase}`, timeout);
 }
 
+async function waitEnabled(locator, timeout = 15000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (await locator.isEnabled().catch(() => false)) return;
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+  throw new Error("Kontrolka nie stała się aktywna w wymaganym czasie");
+}
+
 async function joinGuest(page, code, name) {
   await page.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded" });
   await page.locator("#playerName").fill(name);
@@ -133,9 +142,10 @@ try {
   await host.getByRole("button", { name: /Podziel na drużyny|Losuj ponownie/ }).click();
   await host.getByText("Drużyna A").waitFor({ timeout: 15000 });
   await host.getByText("Drużyna B").waitFor({ timeout: 15000 });
-  await host.getByRole("button", { name: "START GRY", exact: true }).waitFor({ state: "visible", timeout: 15000 });
-  assert(await host.getByRole("button", { name: "START GRY", exact: true }).isEnabled(), "START GRY pozostał nieaktywny");
-  await host.getByRole("button", { name: "START GRY", exact: true }).click();
+  const startButton = host.getByRole("button", { name: "START GRY", exact: true });
+  await startButton.waitFor({ state: "visible", timeout: 15000 });
+  await waitEnabled(startButton, 15000);
+  await startButton.click();
 
   await Promise.all([
     host.waitForURL(new RegExp(`/gra/co-ludzie-powiedza/${code}$`), { timeout: 15000 }),
@@ -153,11 +163,9 @@ try {
   check("start gry, 2 drużyny po 3 osoby", teamCounts);
 
   const pageById = new Map();
-  const metaById = new Map();
   for (let i = 0; i < initialPlayerStates.length; i += 1) {
     const player = initialPlayerStates[i].body.player;
     pageById.set(player.id, players[i]);
-    metaById.set(player.id, { name: player.display_name, team: player.team, index: i });
   }
 
   const hostWarmup = await readState(host, code);
@@ -261,9 +269,10 @@ try {
   await rejoinPage.locator("#recoverName").selectOption({ label: returningName });
   await rejoinPage.getByRole("button", { name: "Poproś o powrót" }).click();
   await rejoinPage.getByText("Prośba wysłana do twórcy pokoju").waitFor({ timeout: 10000 });
-  await host.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).waitFor({ state: "visible", timeout: 12000 });
-  await host.getByText(returningName, { exact: true }).waitFor({ timeout: 12000 });
-  await host.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();
+  const rejoinPanel = host.getByLabel("Prośby graczy o powrót do gry");
+  await rejoinPanel.waitFor({ state: "visible", timeout: 12000 });
+  await rejoinPanel.getByText(returningName, { exact: true }).waitFor({ timeout: 12000 });
+  await rejoinPanel.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();
   await rejoinPage.waitForURL(new RegExp(`/gra/co-ludzie-powiedza/${code}$`), { timeout: 15000 });
   const returned = await waitFor(rejoinPage, code, body => body.player?.id === returningId, "powrót gracza");
   assert(returned.player.team === returningTeam, "Rejoin zmienił drużynę gracza");
