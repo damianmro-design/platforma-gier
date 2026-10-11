@@ -13,6 +13,8 @@ import {
   getAktaNocyPublicCast,
   getAktaNocyReconstructionHost,
   getAktaNocyReconstructionPlayer,
+  getAktaNocyRoomConfig,
+  getPlatformPlayer,
   lookupPlatformRoom,
   isPlatformRoomHost,
   openAktaNocyDossier,
@@ -60,7 +62,6 @@ function publicEvidenceForPhase(phase: string | null | undefined) {
   const countA = getAktaNocyEvidenceCountFromPhase(phase);
   return AKTA_NOCY_EVIDENCE_A.slice(0, countA);
 }
-
 
 function publicCastForRows(
   rows: Awaited<ReturnType<typeof getAktaNocyPublicCast>>,
@@ -176,7 +177,6 @@ function buildReconstructionSummary(
   };
 }
 
-
 function revealPayloadForPhase(
   phase: string | null | undefined,
   cast: ReturnType<typeof publicCastForRows>,
@@ -260,9 +260,15 @@ function buildAccusationSummary(
 export async function GET(_request: Request, context: RouteContext) {
   const { code: rawCode } = await context.params;
   const code = cleanRoomCode(rawCode);
-  const room = await lookupPlatformRoom(code);
+  const [room, config] = await Promise.all([
+    lookupPlatformRoom(code),
+    getAktaNocyRoomConfig(code),
+  ]);
 
-  if (!room || room.game_slug !== "akta-nocy") {
+  if (
+    (room && room.game_slug !== "akta-nocy") ||
+    config?.case_key !== "apartament-214"
+  ) {
     return NextResponse.json({ error: "Nie znaleziono sprawy." }, { status: 404 });
   }
 
@@ -270,10 +276,28 @@ export async function GET(_request: Request, context: RouteContext) {
   const hostCookie = cookieStore.get(`partyplay_host_${code}`)?.value ?? null;
   const rawHostToken = await isPlatformRoomHost(code, hostCookie) ? hostCookie : null;
   const playerToken = cookieStore.get(`partyplay_player_${code}`)?.value ?? null;
+  const authenticatedPlayer = playerToken
+    ? await getPlatformPlayer(code, playerToken)
+    : null;
   const testView = cookieStore.get(`zagraj_test_view_${code}`)?.value ?? "host";
 
+  if (!room) {
+    if (!rawHostToken && !authenticatedPlayer) {
+      return NextResponse.json({ error: "Nie znaleziono sprawy." }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      role: "closed",
+      room: {
+        code,
+        status: "finished",
+        phase: "zamknieta",
+      },
+    });
+  }
+
   if (room.status === "finished" && room.game_phase === "zamknieta") {
-    if (!rawHostToken && !playerToken) {
+    if (!rawHostToken && !authenticatedPlayer) {
       return NextResponse.json({ error: "Brak sesji gracza." }, { status: 401 });
     }
 
