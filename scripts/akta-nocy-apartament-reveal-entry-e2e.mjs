@@ -256,11 +256,56 @@ try {
   await players[0].screenshot({ path: `${artifacts}/04-player-reveal-part-2.png`, fullPage: true });
   check("część 2 ujawnienia jest zsynchronizowana na prowadzącym i 5 telefonach");
 
+  const culpritButton = host.getByRole("button", { name: "UJAWNIJ SPRAWCĘ →", exact: true });
+  await culpritButton.waitFor({ state: "visible", timeout: 10000 });
+  assert(await culpritButton.isEnabled(), "Przycisk ujawnienia sprawcy jest nieaktywny");
+  await culpritButton.click();
+
+  const hostReveal3 = await waitPhase(host, code, "ujawnienie_3");
+  assert(hostReveal3.role === "host", "Prowadzący stracił rolę przy ujawnieniu sprawcy");
+  assert(hostReveal3.evidence.length === 9, "Prowadzący stracił dowody przy ujawnieniu sprawcy");
+  assert(hostReveal3.reveal?.step === 3, `Oczekiwano kroku ujawnienia 3, jest ${hostReveal3.reveal?.step}`);
+  assert(hostReveal3.reveal?.content?.eyebrow === "UJAWNIENIE · SPRAWCA", `Nieprawidłowy nagłówek ujawnienia sprawcy: ${hostReveal3.reveal?.content?.eyebrow}`);
+  assert(hostReveal3.reveal?.content?.title === "Maks Wicher", `Nieprawidłowy sprawca w tytule: ${hostReveal3.reveal?.content?.title}`);
+  assert(hostReveal3.reveal?.content?.subtitle === "Młody reporter", "Nieprawidłowy opis sprawcy");
+  assert(hostReveal3.reveal?.culprit?.characterName === "Maks Wicher", `Nieprawidłowy sprawca w danych: ${hostReveal3.reveal?.culprit?.characterName}`);
+  assert(hostReveal3.accusation?.players?.every(item => item.submitted === true), "Po ujawnieniu sprawcy zniknął komplet 5 oskarżeń");
+  assert(hostReveal3.accusation?.summary?.total === 5, `Podsumowanie oskarżeń ma złą liczbę graczy: ${hostReveal3.accusation?.summary?.total}`);
+  assert(hostReveal3.accusation?.summary?.results?.length === 5, `Brak 5 wyników oskarżeń: ${hostReveal3.accusation?.summary?.results?.length}`);
+  check("część 3 po raz pierwszy ujawnia sprawcę i zbiorczy wynik oskarżeń");
+
+  await host.getByText("UJAWNIENIE · SPRAWCA", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText("Maks Wicher", { exact: true }).first().waitFor({ state: "visible", timeout: 10000 });
+
+  for (let index = 0; index < players.length; index += 1) {
+    const state = await waitPhase(players[index], code, "ujawnienie_3");
+    assert(state.role === "player", `Gracz ${index + 1} stracił rolę przy ujawnieniu sprawcy`);
+    assert(state.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się przy ujawnieniu sprawcy`);
+    assert(state.evidence.length === 9, `Gracz ${index + 1} stracił dowody przy ujawnieniu sprawcy`);
+    assert(state.accusation?.submitted === true, `Gracz ${index + 1} stracił zapisane oskarżenie przy ujawnieniu sprawcy`);
+    assert(state.accusationVerdict != null, `Gracz ${index + 1} nie dostał werdyktu swojego oskarżenia w części 3`);
+    assert(typeof state.accusationVerdict.suspectCorrect === "boolean", `Gracz ${index + 1} ma nieprawidłowy werdykt podejrzanego`);
+    assert(typeof state.accusationVerdict.motiveCorrect === "boolean", `Gracz ${index + 1} ma nieprawidłowy werdykt motywu`);
+    assert(typeof state.accusationVerdict.evidenceCorrect === "boolean", `Gracz ${index + 1} ma nieprawidłowy werdykt dowodu`);
+    assert(state.reveal?.step === 3, `Gracz ${index + 1} nie widzi ujawnienia sprawcy`);
+    assert(state.reveal?.culprit?.characterName === "Maks Wicher", `Gracz ${index + 1} widzi innego sprawcę`);
+    assert(state.reveal?.content?.title === "Maks Wicher", `Gracz ${index + 1} widzi inną planszę sprawcy`);
+  }
+
+  await players[0].getByText("UJAWNIENIE · SPRAWCA", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await players[0].getByText("Maks Wicher", { exact: true }).first().waitFor({ state: "visible", timeout: 10000 });
+  const fullFilesButton = host.getByRole("button", { name: "OTWÓRZ PEŁNE AKTA →", exact: true });
+  await fullFilesButton.waitFor({ state: "visible", timeout: 10000 });
+  assert(await fullFilesButton.isEnabled(), "Przycisk pełnych akt jest nieaktywny po ujawnieniu sprawcy");
+  await host.screenshot({ path: `${artifacts}/05-host-reveal-culprit.png`, fullPage: true });
+  await players[0].screenshot({ path: `${artifacts}/06-player-reveal-culprit.png`, fullPage: true });
+  check("ujawnienie sprawcy jest zsynchronizowane na prowadzącym i 5 telefonach, bez otwierania pełnych akt");
+
   const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "ujawnienie_2", "Test wyszedł poza drugą część ujawnienia");
+  assert(finalState.body?.room?.phase === "ujawnienie_3", "Test wyszedł poza ujawnienie sprawcy");
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 REVEAL PART 2 E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 REVEAL CULPRIT E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
