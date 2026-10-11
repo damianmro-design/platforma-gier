@@ -235,6 +235,7 @@ try {
   await host.getByText("Gracz chce wrócić").waitFor({ timeout: 10000 });
   await host.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();
   await agent.waitForURL(new RegExp(`/gra/szyfr/${code}$`), { timeout: 10000 });
+  await agent.waitForTimeout(500);
   expectedRecovery401 = false;
 
   const restoredCookies = await agentContext.cookies();
@@ -250,6 +251,7 @@ try {
   await agent.locator("#recoverCode").fill(agentRecovery);
   await agent.getByRole("button", { name: "Odzyskaj kodem" }).click();
   await agent.waitForURL(new RegExp(`/gra/szyfr/${code}$`), { timeout: 10000 });
+  await agent.waitForTimeout(500);
   expectedRecovery401 = false;
 
   state = (await apiState(host, code)).body.game;

@@ -1,0 +1,97 @@
+name: SZYFR production E2E
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 3 * * *"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/szyfr-e2e.mjs"
+      - ".github/workflows/szyfr-production-e2e.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/gra/szyfr/**"
+      - "app/api/gra/szyfr/**"
+      - "app/gry/szyfr/**"
+      - "app/pokoj/**"
+      - "app/api/pokoj/**"
+      - "lib/szyfr*"
+      - "lib/platform-db*"
+      - "components/active-game-rejoin-panel.tsx"
+      - "components/live-game-guidance.tsx"
+      - "scripts/szyfr-e2e.mjs"
+      - ".github/workflows/szyfr-production-e2e.yml"
+
+jobs:
+  szyfr-production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SZYFR_PRIMARY_URL: https://zagraj.fun
+      SZYFR_FALLBACK_URL: https://platforma-gier.vercel.app
+      SZYFR_BASE_URL: https://zagraj.fun
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Give Vercel production time to publish push
+        if: github.event_name == 'push'
+        run: sleep 75
+
+      - name: Select reachable production target
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$SZYFR_PRIMARY_URL/gry/szyfr" || true)"
+            if echo "$HTML" | grep -qi "SZYFR"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "Custom domain is reachable: $SZYFR_PRIMARY_URL"
+            echo "SZYFR_BASE_URL=$SZYFR_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so SZYFR regression testing can still run. Check DNS configuration for zagraj.fun."
+            echo "SZYFR_BASE_URL=$SZYFR_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Wait for selected production landing page
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 20 "$SZYFR_BASE_URL/gry/szyfr" || true)"
+            if echo "$HTML" | grep -qi "SZYFR"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run SZYFR production browser E2E
+        run: node scripts/szyfr-e2e.mjs
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: szyfr-production-e2e
+          path: artifacts/szyfr
+          if-no-files-found: ignore
