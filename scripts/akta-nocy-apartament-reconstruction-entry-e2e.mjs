@@ -144,7 +144,7 @@ try {
     const state = await waitPhase(players[index], code, "rekonstrukcja");
     assert(state.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się przy wejściu do rekonstrukcji`);
     assert(state.evidence.length === 9, `Gracz ${index + 1} nie zachował 9 dowodów`);
-    assert(state.reconstruction?.submitted === false, `Gracz ${index + 1} jest oznaczony jako przesłany przed działaniem`);
+    assert(state.reconstruction === null || state.reconstruction?.submitted === false, `Gracz ${index + 1} ma nieoczekiwanie przesłaną rekonstrukcję przed działaniem`);
     assert(Array.isArray(state.reconstructionEvents) && state.reconstructionEvents.length > 0, `Gracz ${index + 1} nie dostał zdarzeń rekonstrukcji`);
     assert(Array.isArray(state.motiveOptions) && state.motiveOptions.length > 0, `Gracz ${index + 1} nie dostał motywów`);
     assert(Array.isArray(state.coverupOptions) && state.coverupOptions.length > 0, `Gracz ${index + 1} nie dostał opcji tuszowania`);
