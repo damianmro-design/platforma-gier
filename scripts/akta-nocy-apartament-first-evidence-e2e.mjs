@@ -107,37 +107,30 @@ try {
   await packageButton.waitFor({ state: "visible", timeout: 10000 });
   await packageButton.click();
 
-  let packageState = null;
-  const packageDeadline = Date.now() + 10000;
-  while (Date.now() < packageDeadline) {
-    const state = await readState(host, code);
-    if (state.status === 200 && String(state.body?.room?.phase || "").startsWith("dowody_a_")) {
-      packageState = state.body;
-      break;
-    }
-    await host.waitForTimeout(200);
-  }
-  assert(packageState, "Gra nie weszła do Paczki Dowodowej A");
-  assert(packageState.evidence.length === 0, `Po samym otwarciu paczki powinno być 0 dowodów, jest ${packageState.evidence.length}`);
-  check("Paczka Dowodowa A otwarta bez przedwczesnego ujawnienia dokumentu", packageState.room.phase);
-
-  await host.getByRole("button", { name: "UJAWNIJ KOLEJNY DOWÓD →", exact: true }).waitFor({ state: "visible", timeout: 10000 });
-  await host.getByRole("button", { name: "UJAWNIJ KOLEJNY DOWÓD →", exact: true }).click();
-
   let firstEvidenceHost = null;
   const evidenceDeadline = Date.now() + 10000;
   while (Date.now() < evidenceDeadline) {
     const state = await readState(host, code);
-    if (state.status === 200 && Array.isArray(state.body?.evidence) && state.body.evidence.length === 1) {
+    if (
+      state.status === 200 &&
+      String(state.body?.room?.phase || "").startsWith("dowody_a_") &&
+      Array.isArray(state.body?.evidence) &&
+      state.body.evidence.length === 1
+    ) {
       firstEvidenceHost = state.body;
       break;
     }
     await host.waitForTimeout(200);
   }
-  assert(firstEvidenceHost, "Pierwszy dowód nie pojawił się u prowadzącego");
+
+  assert(firstEvidenceHost, "Otwarcie Paczki A nie ujawniło dokładnie pierwszego dowodu");
   const evidence = firstEvidenceHost.evidence[0];
   assert(evidence?.id && evidence?.no && evidence?.title, "Pierwszy dowód ma niepełne dane");
   assert(String(firstEvidenceHost.room.phase).startsWith("dowody_a_"), "Po pierwszym dowodzie gra opuściła Paczkę A");
+
+  const nextEvidenceButton = host.getByRole("button", { name: "UJAWNIJ KOLEJNY DOWÓD →", exact: true });
+  await nextEvidenceButton.waitFor({ state: "visible", timeout: 10000 });
+  check("otwarcie Paczki A automatycznie ujawnia pierwszy dowód, kolejny pozostaje za osobnym przyciskiem", firstEvidenceHost.room.phase);
 
   for (let index = 0; index < players.length; index += 1) {
     const state = await readState(players[index], code);
@@ -150,7 +143,7 @@ try {
   await players[0].getByText(evidence.title, { exact: true }).waitFor({ state: "visible", timeout: 10000 });
   await host.screenshot({ path: `${artifacts}/01-first-evidence-host.png`, fullPage: true });
   await players[0].screenshot({ path: `${artifacts}/02-first-evidence-player.png`, fullPage: true });
-  check("pierwszy dowód ujawniony równocześnie prowadzącemu i wszystkim 5 graczom", { id: evidence.id, no: evidence.no, title: evidence.title });
+  check("pierwszy dowód widoczny równocześnie u prowadzącego i wszystkich 5 graczy", { id: evidence.id, no: evidence.no, title: evidence.title });
 
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
