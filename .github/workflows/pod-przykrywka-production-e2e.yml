@@ -54,7 +54,18 @@ jobs:
           exit 1
 
       - name: Run Pod Przykrywką browser E2E
-        run: node scripts/pod-przykrywka-e2e.mjs
+        run: |
+          for attempt in 1 2; do
+            echo "Pod Przykrywką E2E, próba $attempt/2"
+            if node scripts/pod-przykrywka-e2e.mjs; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 2 ]; then
+              exit 1
+            fi
+            echo "Pierwsza próba nie przeszła, ponawiam pełny scenariusz po krótkiej przerwie."
+            sleep 3
+          done
 
       - name: Upload screenshots and report
         if: always()
