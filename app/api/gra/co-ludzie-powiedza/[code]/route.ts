@@ -41,7 +41,29 @@ type RouteContext = {
   params: Promise<{ code: string }>;
 };
 
-export async function GET(_request: Request, context: RouteContext) {
+async function retryGetAfterPhaseChange(
+  request: Request,
+  context: RouteContext,
+  code: string,
+  expectedPhase: string,
+): Promise<NextResponse | null> {
+  const refreshedRoom = await lookupPlatformRoom(code);
+
+  if (
+    refreshedRoom &&
+    refreshedRoom.game_slug === "co-ludzie-powiedza" &&
+    refreshedRoom.game_phase !== expectedPhase
+  ) {
+    return GET(request, context);
+  }
+
+  return null;
+}
+
+export async function GET(
+  _request: Request,
+  context: RouteContext,
+): Promise<NextResponse> {
   const { code: rawCode } = await context.params;
   const code = cleanRoomCode(rawCode);
   const room = await lookupPlatformRoom(code);
@@ -60,6 +82,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const final = await getClpFinalState(code);
 
     if (!final) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać finału." }, { status: 500 });
     }
 
@@ -91,6 +121,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round7 = await getClpRound7State(code);
 
     if (!round7) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -122,6 +160,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round6 = await getClpRound6State(code);
 
     if (!round6) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -153,6 +199,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round5 = await getClpRound5State(code, playerToken);
 
     if (!round5) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -192,6 +246,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round4 = await getClpRound4State(code);
 
     if (!round4) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -231,6 +293,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round3 = await getClpRound3State(code);
 
     if (!round3) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -270,6 +340,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round2 = await getClpRound2State(code);
 
     if (!round2) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
@@ -309,6 +387,14 @@ export async function GET(_request: Request, context: RouteContext) {
     const round1 = await getClpRound1State(code);
 
     if (!round1) {
+      const retry = await retryGetAfterPhaseChange(
+        _request,
+        context,
+        code,
+        room.game_phase,
+      );
+
+      if (retry) return retry;
       return NextResponse.json({ error: "Nie udało się odczytać rundy." }, { status: 500 });
     }
 
