@@ -64,6 +64,20 @@ jobs:
           done
           exit 1
 
+      - name: Stabilize rejoin selector for diagnostic PR run
+        if: github.event_name == 'pull_request'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/akta-nocy-e2e.mjs')
+          s = p.read_text()
+          old = '''  const requestCard = panel.locator("article").filter({ hasText: name }).first();\n  await requestCard.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();'''
+          new = '''  await panel.getByText(name, { exact: true }).waitFor({ timeout: 12000 });\n  await panel.getByRole("button", { name: "WPUŚĆ Z POWROTEM" }).click();'''
+          if old not in s:
+              raise SystemExit('Expected rejoin selector not found')
+          p.write_text(s.replace(old, new))
+          PY
+
       - name: Run Akta Nocy browser E2E
         run: node scripts/akta-nocy-e2e.mjs
 
