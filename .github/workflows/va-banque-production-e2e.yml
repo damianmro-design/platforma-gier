@@ -3,12 +3,20 @@ name: VA BANQUE production E2E
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/va-banque-e2e.mjs"
+      - ".github/workflows/va-banque-production-e2e.yml"
+  workflow_dispatch:
 
 jobs:
   va-banque-production-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
+      VA_BANQUE_PRIMARY_URL: https://zagraj.fun
+      VA_BANQUE_FALLBACK_URL: https://platforma-gier.vercel.app
       VA_BANQUE_BASE_URL: https://zagraj.fun
       CHECK_HOME: "0"
     steps:
@@ -28,9 +36,29 @@ jobs:
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
 
+      - name: Select reachable production target
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$VA_BANQUE_PRIMARY_URL/gry/va-banque" || true)"
+            if echo "$HTML" | grep -q "Rozstrzygnij remis"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "Custom domain is reachable: $VA_BANQUE_PRIMARY_URL"
+            echo "VA_BANQUE_BASE_URL=$VA_BANQUE_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so VA BANQUE regression testing can still run. Check DNS configuration for zagraj.fun."
+            echo "VA_BANQUE_BASE_URL=$VA_BANQUE_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+
       - name: Wait for audited production version
         run: |
-          for i in {1..90}; do
+          for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$VA_BANQUE_BASE_URL/gry/va-banque" || true)"
             if echo "$HTML" | grep -q "Rozstrzygnij remis"; then
               exit 0
