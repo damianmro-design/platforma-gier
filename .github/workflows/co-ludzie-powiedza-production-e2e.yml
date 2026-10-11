@@ -1,0 +1,84 @@
+name: CO LUDZIE POWIEDZĄ production E2E
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/api/gra/co-ludzie-powiedza/[code]/route.ts"
+      - "app/gra/co-ludzie-powiedza/**"
+      - "app/pokoj/[code]/lobby-client.tsx"
+      - "components/active-game-rejoin-panel.tsx"
+      - "scripts/co-ludzie-powiedza-e2e.mjs"
+      - ".github/workflows/co-ludzie-powiedza-production-e2e.yml"
+  pull_request:
+    paths:
+      - "scripts/co-ludzie-powiedza-e2e.mjs"
+      - ".github/workflows/co-ludzie-powiedza-production-e2e.yml"
+  workflow_dispatch:
+
+jobs:
+  co-ludzie-powiedza-production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLP_BASE_URL: https://platforma-gier.vercel.app
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright driver and prepare runner Chrome
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_BIN" ]; then
+            echo "Chrome/Chromium not found on GitHub runner"
+            exit 1
+          fi
+          "$CHROME_BIN" --version
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+
+      - name: Give production time to publish main push
+        if: github.event_name == 'push'
+        run: sleep 75
+
+      - name: Wait for production landing page
+        run: |
+          for i in {1..60}; do
+            if curl -LfsS --max-time 20 -o /dev/null "$CLP_BASE_URL/gry/co-ludzie-powiedza"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Run CO LUDZIE POWIEDZĄ browser E2E
+        run: |
+          for attempt in 1 2; do
+            echo "CO LUDZIE POWIEDZĄ E2E, próba $attempt/2"
+            if node scripts/co-ludzie-powiedza-e2e.mjs; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 2 ]; then
+              exit 1
+            fi
+            echo "Pierwsza próba nie przeszła, ponawiam pełny scenariusz po krótkiej przerwie."
+            sleep 3
+          done
+
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: co-ludzie-powiedza-production-e2e
+          path: artifacts/co-ludzie-powiedza
+          if-no-files-found: ignore
