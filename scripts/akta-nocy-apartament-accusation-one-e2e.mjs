@@ -200,6 +200,7 @@ try {
   assert(firstAfter.body.accusation.evidence_id === payload.evidenceId, "Zmienił się zapisany dowód");
   assert(firstAfter.body.roleCard.id === roleIds[0], "Rola gracza 1 zmieniła się po oskarżeniu");
 
+  const errorCountBeforeLockedRetry = errors.length;
   const secondAttempt = await postGame(players[0], code, "submitAccusation", {
     suspectPlayerId: firstBefore.cast.at(-1).playerId,
     motiveKey: firstBefore.motiveOptions.at(-1).key,
@@ -207,6 +208,15 @@ try {
   });
   assert(secondAttempt.status === 400, `Ponowna edycja oskarżenia nie została zablokowana: ${secondAttempt.status}`);
   assert(String(secondAttempt.body?.error || "").includes("zablokowany"), `Nieprawidłowy komunikat blokady oskarżenia: ${JSON.stringify(secondAttempt.body)}`);
+  await players[0].waitForTimeout(150);
+  const lockedRetryErrors = errors.slice(errorCountBeforeLockedRetry);
+  assert(
+    lockedRetryErrors.every(error =>
+      error.includes("player-1 console: Failed to load resource") && error.includes("400"),
+    ),
+    `Przy oczekiwanym 400 pojawił się inny błąd przeglądarki: ${lockedRetryErrors.join("\n")}`,
+  );
+  errors.splice(errorCountBeforeLockedRetry, errors.length - errorCountBeforeLockedRetry);
   check("pierwsze oskarżenie jest nieodwracalnie zablokowane po zatwierdzeniu");
 
   for (let index = 1; index < players.length; index += 1) {
