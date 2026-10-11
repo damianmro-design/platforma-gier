@@ -218,11 +218,49 @@ try {
   await players[0].screenshot({ path: `${artifacts}/02-player-reveal-part-1.png`, fullPage: true });
   check("część 1 ujawnienia jest zsynchronizowana na prowadzącym i 5 telefonach");
 
+  const part2Button = host.getByRole("button", { name: "ODTWÓRZ PRAWDZIWE MINUTY →", exact: true });
+  await part2Button.waitFor({ state: "visible", timeout: 10000 });
+  assert(await part2Button.isEnabled(), "Przycisk przejścia do części 2 jest nieaktywny");
+  await part2Button.click();
+
+  const hostReveal2 = await waitPhase(host, code, "ujawnienie_2");
+  assert(hostReveal2.role === "host", "Prowadzący stracił rolę przy drugiej części ujawnienia");
+  assert(hostReveal2.evidence.length === 9, "Prowadzący stracił dowody przy drugiej części ujawnienia");
+  assert(hostReveal2.reveal?.step === 2, `Oczekiwano kroku ujawnienia 2, jest ${hostReveal2.reveal?.step}`);
+  assert(hostReveal2.reveal?.culprit == null, "Sprawca został ujawniony już w części 2");
+  assert(hostReveal2.reveal?.content?.eyebrow === "UJAWNIENIE · CZĘŚĆ 2", `Nieprawidłowy nagłówek drugiego ujawnienia: ${hostReveal2.reveal?.content?.eyebrow}`);
+  assert(hostReveal2.reveal?.content?.title === "Prawdziwy przebieg najważniejszych minut.", "Nieprawidłowy tytuł drugiego ujawnienia");
+  assert(Array.isArray(hostReveal2.reveal?.content?.timeline) && hostReveal2.reveal.content.timeline.length === 8, "Druga część nie zawiera pełnej osi 8 zdarzeń");
+  assert(hostReveal2.accusation?.players?.every(item => item.submitted === true), "Po wejściu do części 2 zniknął komplet 5 oskarżeń");
+  assert(hostReveal2.accusation?.summary == null, "Zbiorcze wyniki oskarżeń są widoczne za wcześnie, już w części 2");
+  check("druga część ujawnienia pokazuje prawdziwą oś czasu bez wskazania sprawcy");
+
+  await host.getByText("UJAWNIENIE · CZĘŚĆ 2", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText("Prawdziwy przebieg najważniejszych minut.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+
+  for (let index = 0; index < players.length; index += 1) {
+    const state = await waitPhase(players[index], code, "ujawnienie_2");
+    assert(state.role === "player", `Gracz ${index + 1} stracił rolę przy części 2`);
+    assert(state.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się przy części 2`);
+    assert(state.evidence.length === 9, `Gracz ${index + 1} stracił dowody przy części 2`);
+    assert(state.accusation?.submitted === true, `Gracz ${index + 1} stracił zapisane oskarżenie przy części 2`);
+    assert(state.accusationVerdict == null, `Gracz ${index + 1} dostał werdykt swojego oskarżenia za wcześnie w części 2`);
+    assert(state.reveal?.step === 2, `Gracz ${index + 1} nie widzi drugiej części ujawnienia`);
+    assert(state.reveal?.culprit == null, `Gracz ${index + 1} dostał sprawcę za wcześnie w części 2`);
+    assert(state.reveal?.content?.title === "Prawdziwy przebieg najważniejszych minut.", `Gracz ${index + 1} widzi inną planszę części 2`);
+  }
+
+  await players[0].getByText("UJAWNIENIE · CZĘŚĆ 2", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await players[0].getByText("Prawdziwy przebieg najważniejszych minut.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.screenshot({ path: `${artifacts}/03-host-reveal-part-2.png`, fullPage: true });
+  await players[0].screenshot({ path: `${artifacts}/04-player-reveal-part-2.png`, fullPage: true });
+  check("część 2 ujawnienia jest zsynchronizowana na prowadzącym i 5 telefonach");
+
   const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "ujawnienie_1", "Test wyszedł poza pierwszą część ujawnienia");
+  assert(finalState.body?.room?.phase === "ujawnienie_2", "Test wyszedł poza drugą część ujawnienia");
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 REVEAL ENTRY E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 REVEAL PART 2 E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
