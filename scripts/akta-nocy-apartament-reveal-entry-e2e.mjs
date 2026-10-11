@@ -339,11 +339,42 @@ try {
   await players[0].screenshot({ path: `${artifacts}/08-player-full-files.png`, fullPage: true });
   check("pełne akta są zsynchronizowane na prowadzącym i 5 telefonach, sprawa nadal pozostaje otwarta");
 
-  const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "ujawnienie_4", "Test wyszedł poza pełne akta");
+  await closeButton.click();
+
+  const closedHost = await waitPhase(host, code, "zamknieta");
+  assert(closedHost.role === "closed", `Prowadzący nie dostał zamkniętego widoku: ${closedHost.role}`);
+  assert(closedHost.room.status === "finished", `Po zamknięciu status pokoju to ${closedHost.room.status} zamiast finished`);
+  assert(closedHost.room.phase === "zamknieta", `Po zamknięciu faza to ${closedHost.room.phase} zamiast zamknieta`);
+  await host.getByText("Akta zostały zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText(`SPRAWA ${code} · ZAMKNIĘTA`, { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByRole("link", { name: "WRÓĆ DO zaGRAJ", exact: true }).waitFor({ state: "visible", timeout: 10000 });
+
+  for (let index = 0; index < players.length; index += 1) {
+    const state = await waitPhase(players[index], code, "zamknieta");
+    assert(state.role === "closed", `Gracz ${index + 1} nie dostał zamkniętego widoku`);
+    assert(state.room.status === "finished", `Gracz ${index + 1} widzi status ${state.room.status} zamiast finished`);
+    await players[index].getByText("Akta zostały zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  }
+  check("prowadzący i 5 graczy przeszli na trwały ekran zamkniętej sprawy");
+
+  await host.screenshot({ path: `${artifacts}/09-host-closed.png`, fullPage: true });
+  await players[0].screenshot({ path: `${artifacts}/10-player-closed.png`, fullPage: true });
+
+  await Promise.all([
+    host.reload({ waitUntil: "domcontentloaded" }),
+    players[0].reload({ waitUntil: "domcontentloaded" }),
+  ]);
+  await host.getByText("Akta zostały zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await players[0].getByText("Akta zostały zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  const afterRefreshHost = await readState(host, code);
+  const afterRefreshPlayer = await readState(players[0], code);
+  assert(afterRefreshHost.body?.role === "closed" && afterRefreshHost.body?.room?.status === "finished", "Prowadzący stracił zamknięty stan po refreshu");
+  assert(afterRefreshPlayer.body?.role === "closed" && afterRefreshPlayer.body?.room?.status === "finished", "Gracz stracił zamknięty stan po refreshu");
+  check("zamknięta sprawa pozostaje zamknięta po refreshu prowadzącego i gracza");
+
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 FULL FILES E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 CLOSE E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
