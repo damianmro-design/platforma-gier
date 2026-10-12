@@ -1,4 +1,5 @@
 name: AKTA NOCY Ostatni Kurs auto start E2E
+# Verification-only rerun against current main after routing fixes.
 
 on:
   workflow_dispatch:
