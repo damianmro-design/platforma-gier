@@ -100,6 +100,7 @@ try {
 
   await Promise.all(players.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
   await creator.getByText("5/5 gotowych").waitFor({ timeout: 15000 });
+  await Promise.all(players.map(page => page.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 25000 })));
 
   const initial = await Promise.all(players.map(page => waitForState(page, code, body => body?.room?.phase === "ok_akta_osobowe" && body?.role === "player", "ok_akta_osobowe")));
   const roleIds = initial.map(state => state.roleCard.id);
