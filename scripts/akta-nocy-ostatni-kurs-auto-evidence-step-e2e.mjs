@@ -80,7 +80,7 @@ async function readyAndWait(players, code, phase) {
 const phasePath = [
   "ok_ostatni_raz", "ok_a_1", "ok_a_2", "ok_a_3", "ok_a_4", "ok_a_5",
   "ok_mapa", "ok_przesluchania", "ok_b_1", "ok_b_2", "ok_b_3", "ok_b_4", "ok_b_5",
-  "ok_nowy_trop",
+  "ok_nowy_trop", "ok_rekonstrukcja",
 ];
 const currentIndex = phasePath.indexOf(currentPhase);
 assert(currentIndex >= 0, `Nieobsługiwana faza wejściowa ${currentPhase}`);
