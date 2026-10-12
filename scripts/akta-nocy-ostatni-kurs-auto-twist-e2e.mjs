@@ -97,6 +97,8 @@ const errors = [];
 const report = { baseURL, roomCode: null, checks: [], errors };
 const check = label => report.checks.push({ label, at: new Date().toISOString() });
 
+function watchPageState() {}
+
 try {
   const pages = [];
   const creatorContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
@@ -188,7 +190,7 @@ try {
   check("5/5 ujawnia T-01 wszystkim graczom");
 
   for (const page of pages) {
-    await page.getByText("06 · NOWY TROP", { exact: true }).waitFor({ timeout: 10000 });
+    await page.getByText("06 · NOWY TROP", { exact: true }).first().waitFor({ timeout: 10000 });
     await page.getByText("Drugi kąt kamery peronowej", { exact: true }).first().waitFor({ timeout: 10000 });
   }
 
