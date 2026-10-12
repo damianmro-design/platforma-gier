@@ -1,5 +1,6 @@
 name: AKTA NOCY Ostatni Kurs auto start E2E
 # Verification-only rerun against current main after routing fixes.
+# PR-open trigger: rerun the unchanged game path on the latest main.
 
 on:
   workflow_dispatch:
