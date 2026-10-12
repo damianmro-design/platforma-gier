@@ -6,6 +6,7 @@ const currentPhase = process.env.OK_CURRENT_PHASE;
 const nextPhase = process.env.OK_NEXT_PHASE;
 const nextEvidenceId = process.env.OK_NEXT_EVIDENCE_ID;
 const nextEvidenceTitle = process.env.OK_NEXT_EVIDENCE_TITLE;
+const nextUiText = process.env.OK_NEXT_UI_TEXT || nextEvidenceTitle;
 const expectedCurrentCount = Number(process.env.OK_CURRENT_EVIDENCE_COUNT || 0);
 const expectedNextCount = Number(process.env.OK_NEXT_EVIDENCE_COUNT || 0);
 const artifactSlug = process.env.OK_ARTIFACT_SLUG || "evidence-step";
@@ -164,19 +165,19 @@ try {
     assert(current.ready?.ready_players === 0, `${nextPhase} nie wyzerowało gotowości u gracza ${index + 1}`);
     assert(current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się`);
   }
-  check(`5/5 ujawnia ${nextEvidenceId} wszystkim graczom`);
+  check(`5/5 przechodzi z ${currentPhase} do ${nextPhase}`);
 
   for (const page of pages) {
-    await page.getByText(nextEvidenceTitle, { exact: true }).first().waitFor({ timeout: 10000 });
+    await page.getByText(nextUiText, { exact: true }).first().waitFor({ timeout: 10000 });
   }
-  await creator.screenshot({ path: `${artifacts}/01-next-evidence.png`, fullPage: true });
-  await pages[1].screenshot({ path: `${artifacts}/02-next-evidence-second-phone.png`, fullPage: true });
+  await creator.screenshot({ path: `${artifacts}/01-next-phase.png`, fullPage: true });
+  await pages[1].screenshot({ path: `${artifacts}/02-next-phase-second-phone.png`, fullPage: true });
 
   const finalState = await state(creator, code);
   assert(finalState.body?.room?.phase === nextPhase, `Test wyszedł poza ${nextPhase}`);
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Ostatni Kurs evidence step PASS ${currentPhase} -> ${nextPhase} room=${code}`);
+  console.log(`AKTA NOCY Ostatni Kurs phase step PASS ${currentPhase} -> ${nextPhase} room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
