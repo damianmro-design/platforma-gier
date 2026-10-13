@@ -58,6 +58,20 @@ async function waitSubmittedCount(host, code, expected, timeout = 12000) {
   throw new Error(`Nie osiągnięto ${expected}/5 przesłanych rekonstrukcji`);
 }
 
+async function waitAccusationCount(host, code, expected, timeout = 12000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const state = await readState(host, code);
+    const rows = state.body?.accusation?.players ?? [];
+    const submitted = rows.filter(item => item.submitted).length;
+    if (state.status === 200 && state.body?.room?.phase === "akt_oskarzenia" && submitted === expected) {
+      return state.body;
+    }
+    await host.waitForTimeout(250);
+  }
+  throw new Error(`Nie osiągnięto ${expected}/5 złożonych oskarżeń`);
+}
+
 function reconstructionPayload(state, index) {
   const payload = {
     eventOrder: state.reconstructionEvents.slice(0, 7).map(item => item.key),
@@ -188,16 +202,56 @@ try {
   const lockButton = players[0].getByRole("button", { name: "ZATWIERDŹ I ZABLOKUJ OSKARŻENIE", exact: true });
   await lockButton.waitFor({ state: "visible", timeout: 10000 });
   assert(!(await lockButton.isEnabled()), "Przycisk zatwierdzenia oskarżenia jest aktywny bez dokonania wyborów");
+  check("stan 0/5 jest poprawny przed pierwszym oskarżeniem");
 
-  await host.screenshot({ path: `${artifacts}/01-host-accusation-entry.png`, fullPage: true });
-  await players[0].screenshot({ path: `${artifacts}/02-player-accusation-entry.png`, fullPage: true });
-  check("akt oskarżenia jest widoczny po obu stronach, ale nikt jeszcze niczego nie zatwierdził");
+  const firstBefore = await readState(players[0], code);
+  const accusationPayload = {
+    suspectPlayerId: firstBefore.body.cast[0].playerId,
+    motiveKey: firstBefore.body.motiveOptions[0].key,
+    evidenceId: firstBefore.body.evidence[0].id,
+  };
+  const firstSubmit = await postGame(players[0], code, "submitAccusation", accusationPayload);
+  assert(firstSubmit.status === 200 && firstSubmit.body?.ok === true, `Nie udało się złożyć pierwszego aktu oskarżenia: ${JSON.stringify(firstSubmit.body)}`);
+
+  const hostOne = await waitAccusationCount(host, code, 1);
+  assert(hostOne.room.phase === "akt_oskarzenia", "Gra opuściła akt oskarżenia po tylko 1/5 decyzji");
+  assert(hostOne.accusation.summary == null, "Podsumowanie oskarżeń ujawniono po tylko 1/5 decyzji");
+  assert(hostOne.accusation.players.filter(item => item.submitted).length === 1, "Prowadzący nie widzi dokładnie 1/5 oskarżeń");
+  check("prowadzący widzi dokładnie 1/5 złożonych aktów oskarżenia");
+
+  const firstAfter = await readState(players[0], code);
+  assert(firstAfter.body?.accusation?.submitted === true, "Gracz 1 nie widzi swojego oskarżenia jako zablokowanego");
+  assert(firstAfter.body.accusation.suspect_player_id === accusationPayload.suspectPlayerId, "Zmienił się zapisany podejrzany gracza 1");
+  assert(firstAfter.body.accusation.motive_key === accusationPayload.motiveKey, "Zmienił się zapisany motyw gracza 1");
+  assert(firstAfter.body.accusation.evidence_id === accusationPayload.evidenceId, "Zmienił się zapisany dowód gracza 1");
+  assert(firstAfter.body.roleCard.id === roleIds[0], "Rola gracza 1 zmieniła się po oskarżeniu");
+
+  for (let index = 1; index < players.length; index += 1) {
+    const state = await readState(players[index], code);
+    assert(state.body?.room?.phase === "akt_oskarzenia", `Gracz ${index + 1} opuścił akt oskarżenia`);
+    assert(state.body?.accusation == null || state.body.accusation.submitted !== true, `Gracz ${index + 1} został oznaczony jako złożony`);
+    assert(state.body?.roleCard?.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się`);
+  }
+  check("pozostałych 4 graczy nadal ma niewysłane oskarżenia");
+
+  await players[0].getByText("OSKARŻENIE ZABLOKOWANE", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await players[0].getByText("Decyzja została zapisana.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.reload({ waitUntil: "domcontentloaded" });
+  await host.getByText("1/5", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  const revealButton = host.getByRole("button", { name: "ROZPOCZNIJ UJAWNIENIE →", exact: true });
+  await revealButton.waitFor({ state: "visible", timeout: 10000 });
+  assert(!(await revealButton.isEnabled()), "Przycisk ujawnienia jest aktywny przy 1/5 oskarżeń");
+
+  await host.screenshot({ path: `${artifacts}/01-host-accusation-one.png`, fullPage: true });
+  await players[0].screenshot({ path: `${artifacts}/02-player-accusation-locked.png`, fullPage: true });
+  check("pierwszy akt oskarżenia jest zablokowany, a ujawnienie nadal niedostępne");
 
   const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "akt_oskarzenia", "Test wyszedł poza początek aktu oskarżenia");
+  assert(finalState.body?.room?.phase === "akt_oskarzenia", "Test wyszedł poza stan 1/5 aktu oskarżenia");
+  assert(finalState.body?.accusation?.players.filter(item => item.submitted).length === 1, "Końcowy stan nie wynosi 1/5");
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 ACCUSATION ENTRY E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 ACCUSATION 1/5 E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
