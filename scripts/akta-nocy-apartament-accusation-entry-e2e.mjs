@@ -83,6 +83,14 @@ function reconstructionPayload(state, index) {
   return payload;
 }
 
+function accusationPayload(state, index) {
+  return {
+    suspectPlayerId: state.cast[index % state.cast.length].playerId,
+    motiveKey: state.motiveOptions[index % state.motiveOptions.length].key,
+    evidenceId: state.evidence[index % state.evidence.length].id,
+  };
+}
+
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 const report = { baseURL, roomCode: null, checks: [], errors };
@@ -204,54 +212,54 @@ try {
   assert(!(await lockButton.isEnabled()), "Przycisk zatwierdzenia oskarżenia jest aktywny bez dokonania wyborów");
   check("stan 0/5 jest poprawny przed pierwszym oskarżeniem");
 
-  const firstBefore = await readState(players[0], code);
-  const accusationPayload = {
-    suspectPlayerId: firstBefore.body.cast[0].playerId,
-    motiveKey: firstBefore.body.motiveOptions[0].key,
-    evidenceId: firstBefore.body.evidence[0].id,
-  };
-  const firstSubmit = await postGame(players[0], code, "submitAccusation", accusationPayload);
-  assert(firstSubmit.status === 200 && firstSubmit.body?.ok === true, `Nie udało się złożyć pierwszego aktu oskarżenia: ${JSON.stringify(firstSubmit.body)}`);
+  for (let index = 0; index < players.length; index += 1) {
+    const before = await readState(players[index], code);
+    const payload = accusationPayload(before.body, index);
+    const submitted = await postGame(players[index], code, "submitAccusation", payload);
+    assert(submitted.status === 200 && submitted.body?.ok === true, `Nie udało się złożyć aktu oskarżenia gracza ${index + 1}: ${JSON.stringify(submitted.body)}`);
 
-  const hostOne = await waitAccusationCount(host, code, 1);
-  assert(hostOne.room.phase === "akt_oskarzenia", "Gra opuściła akt oskarżenia po tylko 1/5 decyzji");
-  assert(hostOne.accusation.summary == null, "Podsumowanie oskarżeń ujawniono po tylko 1/5 decyzji");
-  assert(hostOne.accusation.players.filter(item => item.submitted).length === 1, "Prowadzący nie widzi dokładnie 1/5 oskarżeń");
-  check("prowadzący widzi dokładnie 1/5 złożonych aktów oskarżenia");
+    const expected = index + 1;
+    const hostState = await waitAccusationCount(host, code, expected);
+    assert(hostState.room.phase === "akt_oskarzenia", `Gra opuściła akt oskarżenia przy ${expected}/5`);
+    assert(hostState.accusation.summary == null, `Podsumowanie oskarżeń ujawniono przy ${expected}/5`);
+    assert(hostState.accusation.players.filter(item => item.submitted).length === expected, `Prowadzący nie widzi ${expected}/5 oskarżeń`);
+    check(`prowadzący widzi ${expected}/5 złożonych aktów oskarżenia`);
 
-  const firstAfter = await readState(players[0], code);
-  assert(firstAfter.body?.accusation?.submitted === true, "Gracz 1 nie widzi swojego oskarżenia jako zablokowanego");
-  assert(firstAfter.body.accusation.suspect_player_id === accusationPayload.suspectPlayerId, "Zmienił się zapisany podejrzany gracza 1");
-  assert(firstAfter.body.accusation.motive_key === accusationPayload.motiveKey, "Zmienił się zapisany motyw gracza 1");
-  assert(firstAfter.body.accusation.evidence_id === accusationPayload.evidenceId, "Zmienił się zapisany dowód gracza 1");
-  assert(firstAfter.body.roleCard.id === roleIds[0], "Rola gracza 1 zmieniła się po oskarżeniu");
-
-  for (let index = 1; index < players.length; index += 1) {
-    const state = await readState(players[index], code);
-    assert(state.body?.room?.phase === "akt_oskarzenia", `Gracz ${index + 1} opuścił akt oskarżenia`);
-    assert(state.body?.accusation == null || state.body.accusation.submitted !== true, `Gracz ${index + 1} został oznaczony jako złożony`);
-    assert(state.body?.roleCard?.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się`);
+    const after = await readState(players[index], code);
+    assert(after.body?.accusation?.submitted === true, `Gracz ${index + 1} nie widzi oskarżenia jako zablokowanego`);
+    assert(after.body.accusation.suspect_player_id === payload.suspectPlayerId, `Zmienił się podejrzany gracza ${index + 1}`);
+    assert(after.body.accusation.motive_key === payload.motiveKey, `Zmienił się motyw gracza ${index + 1}`);
+    assert(after.body.accusation.evidence_id === payload.evidenceId, `Zmienił się dowód gracza ${index + 1}`);
+    assert(after.body.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po oskarżeniu`);
   }
-  check("pozostałych 4 graczy nadal ma niewysłane oskarżenia");
 
-  await players[0].getByText("OSKARŻENIE ZABLOKOWANE", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
-  await players[0].getByText("Decyzja została zapisana.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  const hostFive = await waitAccusationCount(host, code, 5);
+  assert(hostFive.accusation.players.every(item => item.submitted === true), "Przy 5/5 ktoś nadal jest oznaczony jako niezdecydowany");
+  assert(hostFive.accusation.summary == null, "Wynik oskarżeń pojawił się przed ujawnieniem");
+  check("wszystkie 5 oskarżeń zapisane, wynik nadal ukryty");
+
   await host.reload({ waitUntil: "domcontentloaded" });
-  await host.getByText("1/5", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText("5/5", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  await host.getByText("WSZYSCY ZDECYDOWALI", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
   const revealButton = host.getByRole("button", { name: "ROZPOCZNIJ UJAWNIENIE →", exact: true });
   await revealButton.waitFor({ state: "visible", timeout: 10000 });
-  assert(!(await revealButton.isEnabled()), "Przycisk ujawnienia jest aktywny przy 1/5 oskarżeń");
+  assert(await revealButton.isEnabled(), "Przycisk ujawnienia jest nieaktywny przy 5/5 oskarżeń");
 
-  await host.screenshot({ path: `${artifacts}/01-host-accusation-one.png`, fullPage: true });
+  for (let index = 0; index < players.length; index += 1) {
+    await players[index].getByText("OSKARŻENIE ZABLOKOWANE", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  }
+
+  await host.screenshot({ path: `${artifacts}/01-host-accusation-five.png`, fullPage: true });
   await players[0].screenshot({ path: `${artifacts}/02-player-accusation-locked.png`, fullPage: true });
-  check("pierwszy akt oskarżenia jest zablokowany, a ujawnienie nadal niedostępne");
+  check("5/5 oskarżeń jest zablokowane, przycisk ujawnienia gotowy, ale niekliknięty");
 
   const finalState = await readState(host, code);
-  assert(finalState.body?.room?.phase === "akt_oskarzenia", "Test wyszedł poza stan 1/5 aktu oskarżenia");
-  assert(finalState.body?.accusation?.players.filter(item => item.submitted).length === 1, "Końcowy stan nie wynosi 1/5");
+  assert(finalState.body?.room?.phase === "akt_oskarzenia", "Test wyszedł poza stan 5/5 aktu oskarżenia");
+  assert(finalState.body?.accusation?.players.filter(item => item.submitted).length === 5, "Końcowy stan nie wynosi 5/5");
+  assert(finalState.body?.accusation?.summary == null, "Końcowy stan ujawnił podsumowanie za wcześnie");
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 ACCUSATION 1/5 E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 ACCUSATION 5/5 E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
