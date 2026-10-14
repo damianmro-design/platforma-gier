@@ -210,9 +210,35 @@ try {
   const firstSubmit = pages[0].getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
   await firstSubmit.waitFor({ state: "visible", timeout: 10000 });
   assert(await firstSubmit.isEnabled(), "Kompletny Akt Oskarżenia gracza 1 jest nadal nieaktywny");
+
+  const submitResponsePromise = pages[0].waitForResponse(response => {
+    const request = response.request();
+    return response.url().includes(`/api/gra/akta-nocy-ostatni-kurs/${code}`)
+      && request.method() === "POST"
+      && (request.postData() ?? "").includes('"action":"submitAccusation"');
+  }, { timeout: 15000 });
   await firstSubmit.click();
+  const submitResponse = await submitResponsePromise;
+  const submitBody = await submitResponse.json().catch(() => null);
+  assert(submitResponse.status() === 200 && submitBody?.ok === true, `UI nie zapisał pierwszego oskarżenia: HTTP ${submitResponse.status()} ${JSON.stringify(submitBody)}`);
+  check("UI wysłał submitAccusation i API odpowiedziało 200/ok");
+
+  const submittedState = await waitState(
+    pages[0],
+    code,
+    body => body?.room?.phase === "ok_oskarzenie" && Boolean(body?.ownAccusation?.submitted_at),
+    "ok_oskarzenie z zapisanym 1/5 po kliknięciu UI",
+  );
+  assert(submittedState.ownAccusation.suspect_player_id === payload.suspectPlayerId, "Zmienił się zapisany podejrzany gracza 1");
+  assert(submittedState.ownAccusation.motive_key === payload.motiveKey, "Zmienił się zapisany motyw gracza 1");
+  assert(submittedState.ownAccusation.evidence_id === payload.evidenceId, "Zmienił się zapisany dowód gracza 1");
+  assert(submittedState.ownAccusation.disappearance_key === payload.disappearanceKey, "Zmienił się zapisany sposób zniknięcia gracza 1");
+  check("API po kliknięciu UI zachowuje dokładny payload pierwszego oskarżenia");
+
+  await pages[0].screenshot({ path: `${artifacts}/00-after-submit-response.png`, fullPage: true });
   await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 15000 });
   await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 15000 });
+  check("Gracz 1 widzi blokadę złożonego Aktu Oskarżenia");
 
   const afterSubmit = await Promise.all(pages.map((page, index) => waitState(
     page,
