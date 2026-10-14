@@ -11,6 +11,7 @@ const expectedCurrentCount = Number(process.env.OK_CURRENT_EVIDENCE_COUNT || 0);
 const expectedNextCount = Number(process.env.OK_NEXT_EVIDENCE_COUNT || 0);
 const submitFirstReconstruction = process.env.OK_SUBMIT_FIRST_RECONSTRUCTION === "1";
 const submitAllReconstructions = process.env.OK_SUBMIT_ALL_RECONSTRUCTIONS === "1";
+const advanceAfterReconstructionResult = process.env.OK_ADVANCE_AFTER_RECONSTRUCTION_RESULT === "1";
 const artifactSlug = process.env.OK_ARTIFACT_SLUG || "evidence-step";
 const artifacts = `artifacts/${artifactSlug}`;
 await fs.mkdir(artifacts, { recursive: true });
@@ -20,6 +21,7 @@ for (const [key, value] of Object.entries({ currentPhase, nextPhase, nextEvidenc
   assert(value, `Brak konfiguracji ${key}`);
 }
 assert(!(submitFirstReconstruction && submitAllReconstructions), "Wybierz tylko jeden tryb testu rekonstrukcji");
+assert(!advanceAfterReconstructionResult || submitAllReconstructions, "Wejście do Aktu Oskarżenia wymaga trybu 5/5 rekonstrukcji");
 
 function watch(page, label, errors) {
   page.on("pageerror", error => errors.push(`${label} pageerror: ${error.message}`));
@@ -262,15 +264,78 @@ try {
       await pages[0].screenshot({ path: `${artifacts}/03-reconstruction-result.png`, fullPage: true });
       await pages[4].screenshot({ path: `${artifacts}/04-reconstruction-result-fifth-phone.png`, fullPage: true });
       check("5/5 przechodzi dokładnie do ok_rekonstrukcja_wynik bez ujawniania rozwiązania");
+
+      if (advanceAfterReconstructionResult) {
+        for (let index = 0; index < 4; index += 1) {
+          const ready = await action(pages[index], code, "ready");
+          assert(ready.status === 200 && ready.body?.ok === true, `Gotowość wyniku rekonstrukcji ${index + 1}/5 nie została zapisana`);
+          const current = await waitState(
+            pages[index],
+            code,
+            body => body?.room?.phase === "ok_rekonstrukcja_wynik" && body?.ready?.ready_players === index + 1,
+            `ok_rekonstrukcja_wynik ${index + 1}/5`,
+          );
+          assert(current.reconstruction?.total === 5, `Wynik rekonstrukcji zniknął przy gotowości ${index + 1}/5`);
+          assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Poprawność rekonstrukcji ujawniono przy ${index + 1}/5 gotowych`);
+          const observer = await state(pages[4], code);
+          assert(observer.body?.room?.phase === "ok_rekonstrukcja_wynik", `Akt Oskarżenia pojawił się za wcześnie przy ${index + 1}/5 gotowych`);
+        }
+        check("1/5–4/5 gotowych pozostaje w ok_rekonstrukcja_wynik");
+
+        const fifthReady = await action(pages[4], code, "ready");
+        assert(fifthReady.status === 200 && fifthReady.body?.ok === true, "5. gotowość wyniku rekonstrukcji nie została zapisana");
+
+        const accusationStates = await Promise.all(pages.map((page, index) => waitState(
+          page,
+          code,
+          body => body?.room?.phase === "ok_oskarzenie" && body?.roleCard?.id === roleIds[index],
+          `ok_oskarzenie gracza ${index + 1}`,
+        )));
+
+        for (let index = 0; index < accusationStates.length; index += 1) {
+          const current = accusationStates[index];
+          assert(current.role === "player", `Gracz ${index + 1} stracił rolę przy wejściu do Aktu Oskarżenia`);
+          assert(current.evidence?.length === expectedNextCount, `Gracz ${index + 1} stracił materiały przy wejściu do Aktu Oskarżenia`);
+          assert(current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się przy wejściu do Aktu Oskarżenia`);
+          assert(current.reconstruction?.total === 5, `Gracz ${index + 1} stracił wynik rekonstrukcji przy wejściu do Aktu Oskarżenia`);
+          assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Poprawność rekonstrukcji została ujawniona w Akcie Oskarżenia graczowi ${index + 1}`);
+          assert(current.accusations == null, `Wynik oskarżeń pojawił się przed złożeniem oskarżeń u gracza ${index + 1}`);
+          assert(current.ownAccusation == null, `Gracz ${index + 1} ma oskarżenie przed wysłaniem`);
+          assert(Array.isArray(current.cast) && current.cast.length === 5, `Gracz ${index + 1} nie widzi 5 podejrzanych`);
+          assert(Array.isArray(current.motiveOptions) && current.motiveOptions.length > 0, `Gracz ${index + 1} nie ma listy motywów`);
+          assert(Array.isArray(current.disappearanceOptions) && current.disappearanceOptions.length > 0, `Gracz ${index + 1} nie ma listy sposobów zniknięcia`);
+          assert(Array.isArray(current.evidenceOptions) && current.evidenceOptions.length === expectedNextCount, `Gracz ${index + 1} nie ma pełnej listy dowodów`);
+        }
+
+        for (const page of pages) {
+          await page.getByText("08 · AKT OSKARŻENIA", { exact: true }).first().waitFor({ timeout: 10000 });
+          const submitButton = page.getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
+          await submitButton.waitFor({ state: "visible", timeout: 10000 });
+          assert(!(await submitButton.isEnabled()), "Akt Oskarżenia można wysłać bez kompletu wyborów");
+        }
+        await pages[0].screenshot({ path: `${artifacts}/05-accusation-entry.png`, fullPage: true });
+        await pages[4].screenshot({ path: `${artifacts}/06-accusation-entry-fifth-phone.png`, fullPage: true });
+        check("5/5 gotowych przechodzi dokładnie do ok_oskarzenie z pustym prywatnym formularzem");
+      }
     }
   }
 
-  const expectedFinalPhase = submitAllReconstructions ? "ok_rekonstrukcja_wynik" : nextPhase;
+  const expectedFinalPhase = advanceAfterReconstructionResult
+    ? "ok_oskarzenie"
+    : submitAllReconstructions
+      ? "ok_rekonstrukcja_wynik"
+      : nextPhase;
   const finalState = await state(creator, code);
   assert(finalState.body?.room?.phase === expectedFinalPhase, `Test wyszedł poza ${expectedFinalPhase}`);
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  const suffix = submitAllReconstructions ? " reconstruction=5/5-result" : submitFirstReconstruction ? " reconstruction=1/5" : "";
+  const suffix = advanceAfterReconstructionResult
+    ? " reconstruction=5/5-result accusation-entry"
+    : submitAllReconstructions
+      ? " reconstruction=5/5-result"
+      : submitFirstReconstruction
+        ? " reconstruction=1/5"
+        : "";
   console.log(`AKTA NOCY Ostatni Kurs phase step PASS ${currentPhase} -> ${nextPhase} room=${code}${suffix}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
