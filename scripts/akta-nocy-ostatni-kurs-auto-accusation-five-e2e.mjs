@@ -264,7 +264,7 @@ try {
     assert(current.room.phase === "ok_oskarzenie_wynik", `Gracz ${index + 1} nie jest w wyniku oskarżeń`);
     assert(current.role === "player", `Gracz ${index + 1} stracił rolę gracza`);
     assert(current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po 5/5`);
-    assert(current.evidence?.length === 11, `Gracz ${index + 1} nie ma 11 materiałów po 5/5`);
+    assert((current.evidence?.length ?? 0) === 0, `Wynik oskarżeń gracza ${index + 1} nie powinien ponownie zwracać paczki evidence`);
     assert(current.reconstruction?.total === 5, `Gracz ${index + 1} stracił wynik rekonstrukcji po 5/5`);
     assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Poprawność rekonstrukcji ujawniono graczowi ${index + 1}`);
     assert(current.accusations?.total === 5, `Gracz ${index + 1} nie widzi 5/5 wyników oskarżeń`);
