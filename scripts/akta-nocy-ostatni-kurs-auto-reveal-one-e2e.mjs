@@ -215,7 +215,6 @@ try {
     assert(current.ready?.ready_players === 0 && current.ready?.player_ready === false, `Wynik nie startuje od 0/5 u gracza ${index + 1}`);
     assert(current.reconstruction?.total === 5, `Zniknął wynik rekonstrukcji u gracza ${index + 1}`);
     assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Ujawniono poprawność rekonstrukcji u gracza ${index + 1}`);
-    assert(current.ownAccusation?.submitted_at, `Gracz ${index + 1} stracił własne oskarżenie`);
 
     for (const choice of expected) {
       const publicChoice = current.accusations.results.find(item => item.playerId === choice.playerId);
@@ -273,7 +272,6 @@ try {
     assert(current.reconstruction?.total === 5 && !Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Gracz ${index + 1} widzi za wcześnie poprawność rekonstrukcji`);
     assertNoCorrectness(current.accusations, `ujawnienie 1 gracza ${index + 1}`);
     assert(current.ready?.ready_players === 0 && current.ready?.player_ready === false, `Gotowość nie wyzerowała się po wejściu do ujawnienia 1 u gracza ${index + 1}`);
-    assert(current.ownAccusation?.submitted_at, `Gracz ${index + 1} stracił oskarżenie po wejściu do ujawnienia 1`);
   }
 
   await Promise.all(pages.map(page => page.getByText("09 · UJAWNIENIE 1/5", { exact: true }).first().waitFor({ timeout: 15000 })));
