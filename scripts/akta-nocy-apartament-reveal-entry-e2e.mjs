@@ -32,6 +32,13 @@ async function joinGuest(page, code, name) {
   await page.locator("#playerName").fill(name);
   await page.getByRole("button", { name: "Dołącz jako gość" }).click();
   await page.getByText("GRASZ JAKO").waitFor({ timeout: 15000 });
+  const lobby = await page.evaluate(async (roomCode) => {
+    const response = await fetch(`/api/pokoj/${roomCode}`, { cache: "no-store" });
+    return { status: response.status, body: await response.json().catch(() => null) };
+  }, code);
+  const recoveryCode = lobby.body?.recoveryCode;
+  assert(lobby.status === 200 && /^[A-Z0-9]{6}$/.test(recoveryCode ?? ""), `Brak poprawnego kodu powrotu dla ${name}`);
+  return recoveryCode;
 }
 
 async function waitPhase(page, code, phase, timeout = 12000) {
@@ -109,12 +116,16 @@ try {
 
   const players = [];
   const roleIds = [];
+  const names = [];
+  const recoveryCodes = [];
   for (let index = 0; index < 5; index += 1) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
     const page = await context.newPage();
+    const name = `E2E Ujawnienie ${index + 1}`;
     watch(page, `player-${index + 1}`);
     players.push(page);
-    await joinGuest(page, code, `E2E Ujawnienie ${index + 1}`);
+    names.push(name);
+    recoveryCodes.push(await joinGuest(page, code, name));
   }
 
   await Promise.all(players.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
@@ -372,9 +383,33 @@ try {
   assert(afterRefreshPlayer.body?.role === "closed" && afterRefreshPlayer.body?.room?.status === "finished", "Gracz stracił zamknięty stan po refreshu");
   check("zamknięta sprawa pozostaje zamknięta po refreshu prowadzącego i gracza");
 
+  const rejoinContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+  const rejoin = await rejoinContext.newPage();
+  watch(rejoin, "closed-rejoin");
+  await rejoin.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  const recovered = await rejoin.evaluate(async ({ roomCode, name, recoveryCode }) => {
+    const response = await fetch(`/api/pokoj/${roomCode}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "recover", name, recoveryCode }),
+    });
+    return { status: response.status, body: await response.json().catch(() => null) };
+  }, { roomCode: code, name: names[0], recoveryCode: recoveryCodes[0] });
+  assert(recovered.status === 200 && recovered.body?.ok === true, `Nie udało się odzyskać gracza po zamknięciu sprawy: ${JSON.stringify(recovered.body)}`);
+
+  await rejoin.goto(`${baseURL}/gra/akta-nocy/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await rejoin.getByText("Akta zostały zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 10000 });
+  const rejoinedState = await readState(rejoin, code);
+  assert(rejoinedState.status === 200, `Powrót do zamkniętej sprawy zwrócił HTTP ${rejoinedState.status}`);
+  assert(rejoinedState.body?.role === "closed", `Po ponownym wejściu gracz dostał rolę ${rejoinedState.body?.role} zamiast closed`);
+  assert(rejoinedState.body?.room?.status === "finished", `Po ponownym wejściu status to ${rejoinedState.body?.room?.status} zamiast finished`);
+  assert(rejoinedState.body?.room?.phase === "zamknieta", `Po ponownym wejściu faza to ${rejoinedState.body?.room?.phase} zamiast zamknieta`);
+  await rejoin.screenshot({ path: `${artifacts}/11-player-closed-rejoin.png`, fullPage: true });
+  check("gracz z poprawnym kodem powrotu w nowej sesji wraca wyłącznie do zamkniętego stanu, nie do aktywnej rozgrywki");
+
   assert(errors.length === 0, `Błędy przeglądarki:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Apartament 214 CLOSE E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Apartament 214 CLOSED REJOIN E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
