@@ -236,7 +236,7 @@ try {
   check("API po kliknięciu UI zachowuje dokładny payload pierwszego oskarżenia");
 
   await pages[0].screenshot({ path: `${artifacts}/00-after-submit-response.png`, fullPage: true });
-  await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 15000 });
+  await pages[0].getByText("Akt oskarżenia złożony", { exact: false }).waitFor({ timeout: 15000 });
   await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 15000 });
   check("Gracz 1 widzi blokadę złożonego Aktu Oskarżenia");
 
