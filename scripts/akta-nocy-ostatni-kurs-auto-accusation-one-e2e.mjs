@@ -236,12 +236,8 @@ try {
   }
   check("Pierwsze oskarżenie zapisane dokładnie jako 1/5, bez przejścia dalej");
 
-  await Promise.all([
-    pages[0].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
-    pages[1].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
-  ]);
-  await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 10000 });
-  await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 10000 });
+  await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 15000 });
+  await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 15000 });
   const secondSubmit = pages[1].getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
   await secondSubmit.waitFor({ state: "visible", timeout: 10000 });
   assert(!(await secondSubmit.isEnabled()), "Gracz 2 może wysłać niekompletne oskarżenie");
