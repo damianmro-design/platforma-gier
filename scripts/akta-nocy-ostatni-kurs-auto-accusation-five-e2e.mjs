@@ -63,12 +63,12 @@ async function waitState(page, code, predicate, label, timeout = 20000) {
   throw new Error(`Nie osiągnięto stanu: ${label}`);
 }
 
-async function readyAndWait(players, code, phase) {
-  for (const page of players) {
+async function readyAndWait(pages, code, phase) {
+  for (const page of pages) {
     const result = await action(page, code, "ready");
     assert(result.status === 200 && result.body?.ok === true, `Gotowość do ${phase} nie powiodła się`);
   }
-  return Promise.all(players.map((page, index) => waitState(
+  return Promise.all(pages.map((page, index) => waitState(
     page,
     code,
     body => body?.room?.phase === phase,
@@ -78,20 +78,10 @@ async function readyAndWait(players, code, phase) {
 
 const phasePath = [
   "ok_ostatni_raz",
-  "ok_a_1",
-  "ok_a_2",
-  "ok_a_3",
-  "ok_a_4",
-  "ok_a_5",
-  "ok_mapa",
-  "ok_przesluchania",
-  "ok_b_1",
-  "ok_b_2",
-  "ok_b_3",
-  "ok_b_4",
-  "ok_b_5",
-  "ok_nowy_trop",
-  "ok_rekonstrukcja",
+  "ok_a_1", "ok_a_2", "ok_a_3", "ok_a_4", "ok_a_5",
+  "ok_mapa", "ok_przesluchania",
+  "ok_b_1", "ok_b_2", "ok_b_3", "ok_b_4", "ok_b_5",
+  "ok_nowy_trop", "ok_rekonstrukcja",
 ];
 
 const browser = await chromium.launch({ headless: true });
@@ -101,11 +91,10 @@ const check = label => report.checks.push({ label, at: new Date().toISOString() 
 
 try {
   const pages = [];
-
   const creatorContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const creator = await creatorContext.newPage();
   pages.push(creator);
-  watch(creator, "creator", errors);
+  watch(creator, "player-1", errors);
 
   await creator.goto(`${baseURL}/gry/akta-nocy`, { waitUntil: "networkidle", timeout: 60000 });
   await creator.getByRole("button", { name: "BEZ PROWADZĄCEGO", exact: true }).click();
@@ -113,7 +102,6 @@ try {
   const code = creator.url().split("/").pop();
   assert(code, "Brak kodu pokoju");
   report.roomCode = code;
-
   await join(creator, code, "E2E Accusation 1");
 
   for (let i = 2; i <= 5; i += 1) {
@@ -129,8 +117,7 @@ try {
   await Promise.all(pages.map(page => page.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 25000 })));
 
   const startStates = await Promise.all(pages.map((page, index) => waitState(
-    page,
-    code,
+    page, code,
     body => body?.room?.phase === "ok_akta_osobowe" && body?.role === "player",
     `ok_akta_osobowe gracza ${index + 1}`,
   )));
@@ -140,21 +127,16 @@ try {
     const opened = await action(page, code, "openDossier");
     assert(opened.status === 200 && opened.body?.ok === true, "Nie udało się otworzyć akt");
   }
-
-  for (const phase of phasePath) {
-    await readyAndWait(pages, code, phase);
-  }
+  for (const phase of phasePath) await readyAndWait(pages, code, phase);
 
   const reconstructionStates = await Promise.all(pages.map((page, index) => waitState(
-    page,
-    code,
+    page, code,
     body => body?.room?.phase === "ok_rekonstrukcja" && body?.roleCard?.id === roleIds[index],
     `ok_rekonstrukcja gracza ${index + 1}`,
   )));
-
-  const reconstructionOptions = reconstructionStates[0].reconstructionOptions ?? [];
-  assert(reconstructionOptions.length >= 9, `Za mało opcji rekonstrukcji: ${reconstructionOptions.length}`);
-  const eventOrder = reconstructionOptions.slice(0, 9).map(item => item.key);
+  const options = reconstructionStates[0].reconstructionOptions ?? [];
+  assert(options.length >= 9, `Za mało opcji rekonstrukcji: ${options.length}`);
+  const eventOrder = options.slice(0, 9).map(item => item.key);
   const route = ["w1", "w2", "w3", "w4"];
 
   for (let index = 0; index < pages.length; index += 1) {
@@ -163,20 +145,19 @@ try {
   }
 
   const reconstructionResult = await Promise.all(pages.map((page, index) => waitState(
-    page,
-    code,
-    body => body?.room?.phase === "ok_rekonstrukcja_wynik" && body?.roleCard?.id === roleIds[index],
+    page, code,
+    body => body?.room?.phase === "ok_rekonstrukcja_wynik" && body?.roleCard?.id === roleIds[index] && body?.reconstruction?.total === 5,
     `ok_rekonstrukcja_wynik gracza ${index + 1}`,
   )));
-  assert(reconstructionResult.every(item => item.reconstruction?.total === 5), "Nie wszyscy widzą wynik 5/5 rekonstrukcji");
+  assert(reconstructionResult.every(item => !Object.prototype.hasOwnProperty.call(item.reconstruction, "fullyCorrect")), "Ujawniono poprawność rekonstrukcji przed finałem");
 
   const accusationStates = await readyAndWait(pages, code, "ok_oskarzenie");
   assert(accusationStates.every(item => item.ownAccusation == null), "Akt Oskarżenia nie startuje od 0/5");
   assert(accusationStates.every(item => item.accusations == null), "Zbiorczy wynik oskarżeń jest widoczny przed 5/5");
+  assert(accusationStates.every(item => item.evidence?.length === 11), "Przy wejściu do Aktu Oskarżenia brakuje kompletu 11 materiałów");
   check("Akt Oskarżenia startuje od 0/5");
 
   const expected = [];
-
   for (let index = 0; index < pages.length; index += 1) {
     const page = pages[index];
     const current = accusationStates[index];
@@ -185,22 +166,10 @@ try {
     const motive = current.motiveOptions[index % current.motiveOptions.length];
     const evidence = current.evidenceOptions[index % current.evidenceOptions.length];
     const disappearance = current.disappearanceOptions[index % current.disappearanceOptions.length];
-
-    assert(suspect?.playerId, `Brak podejrzanego gracza ${index + 1}`);
-    assert(motive?.key, `Brak motywu gracza ${index + 1}`);
-    assert(evidence?.id, `Brak dowodu gracza ${index + 1}`);
-    assert(disappearance?.key, `Brak sposobu zniknięcia gracza ${index + 1}`);
-
-    const payload = {
-      suspectPlayerId: suspect.playerId,
-      motiveKey: motive.key,
-      evidenceId: evidence.id,
-      disappearanceKey: disappearance.key,
-    };
+    assert(suspect?.playerId && motive?.key && evidence?.id && disappearance?.key, `Niekompletne opcje oskarżenia gracza ${index + 1}`);
 
     expected.push({
       playerId: current.player.playerId,
-      payload,
       suspectPlayerId: suspect.playerId,
       motiveLabel: motive.label,
       evidenceNo: evidence.no,
@@ -217,14 +186,12 @@ try {
     const submit = page.getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
     await submit.waitFor({ state: "visible", timeout: 10000 });
     assert(await submit.isEnabled(), `Kompletny Akt Oskarżenia gracza ${index + 1} jest nieaktywny`);
-
     const responsePromise = page.waitForResponse(response => {
       const request = response.request();
       return response.url().includes(`/api/gra/akta-nocy-ostatni-kurs/${code}`)
         && request.method() === "POST"
         && (request.postData() ?? "").includes('"action":"submitAccusation"');
     }, { timeout: 15000 });
-
     await submit.click();
     const response = await responsePromise;
     const body = await response.json().catch(() => null);
@@ -232,24 +199,21 @@ try {
 
     if (index < 4) {
       const states = await Promise.all(pages.map((playerPage, playerIndex) => waitState(
-        playerPage,
-        code,
+        playerPage, code,
         candidate => candidate?.room?.phase === "ok_oskarzenie" && candidate?.roleCard?.id === roleIds[playerIndex],
         `ok_oskarzenie po ${index + 1}/5 u gracza ${playerIndex + 1}`,
       )));
-
       const submittedCount = states.filter(item => Boolean(item.ownAccusation?.submitted_at)).length;
       assert(submittedCount === index + 1, `Po ${index + 1}/5 zapisanych jest ${submittedCount}/5 oskarżeń`);
       assert(states.every(item => item.accusations == null), `Zbiorczy wynik pojawił się za wcześnie przy ${index + 1}/5`);
+      assert(states.every(item => item.evidence?.length === 11), `Materiały zniknęły przed wynikiem przy ${index + 1}/5`);
       assert(states.every(item => item.reconstruction?.total === 5), `Wynik rekonstrukcji zniknął przy ${index + 1}/5`);
-      assert(states.every(item => !Object.prototype.hasOwnProperty.call(item.reconstruction, "fullyCorrect")), `Ujawniono poprawność rekonstrukcji przy ${index + 1}/5`);
       check(`${index + 1}/5 oskarżeń zapisane, faza nadal ok_oskarzenie`);
     }
   }
 
   const resultStates = await Promise.all(pages.map((page, index) => waitState(
-    page,
-    code,
+    page, code,
     body => body?.room?.phase === "ok_oskarzenie_wynik" && body?.roleCard?.id === roleIds[index] && body?.accusations?.total === 5,
     `ok_oskarzenie_wynik gracza ${index + 1}`,
     30000,
@@ -262,15 +226,14 @@ try {
   for (let index = 0; index < resultStates.length; index += 1) {
     const current = resultStates[index];
     assert(current.room.phase === "ok_oskarzenie_wynik", `Gracz ${index + 1} nie jest w wyniku oskarżeń`);
-    assert(current.role === "player", `Gracz ${index + 1} stracił rolę gracza`);
-    assert(current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po 5/5`);
+    assert(current.role === "player" && current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po 5/5`);
     assert((current.evidence?.length ?? 0) === 0, `Wynik oskarżeń gracza ${index + 1} nie powinien ponownie zwracać paczki evidence`);
     assert(current.reconstruction?.total === 5, `Gracz ${index + 1} stracił wynik rekonstrukcji po 5/5`);
     assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Poprawność rekonstrukcji ujawniono graczowi ${index + 1}`);
-    assert(current.accusations?.total === 5, `Gracz ${index + 1} nie widzi 5/5 wyników oskarżeń`);
     assert(current.accusations?.results?.length === 5, `Gracz ${index + 1} nie widzi 5 publicznych wyborów`);
     assert(current.reveal == null, `Ujawnienie wystartowało za wcześnie u gracza ${index + 1}`);
-    assert(current.ready === false, `Gotowość nie została wyzerowana u gracza ${index + 1}`);
+    assert(current.ready?.player_ready === false, `Gracz ${index + 1} pozostał oznaczony jako gotowy po 5/5: ${JSON.stringify(current.ready)}`);
+    assert(current.ready?.ready_players === 0, `Licznik gotowości nie został wyzerowany po 5/5 u gracza ${index + 1}: ${JSON.stringify(current.ready)}`);
 
     for (const key of forbiddenSummaryKeys) {
       assert(!Object.prototype.hasOwnProperty.call(current.accusations, key), `Wynik publiczny ujawnia ${key} graczowi ${index + 1}`);
@@ -280,18 +243,16 @@ try {
         assert(!Object.prototype.hasOwnProperty.call(row, key), `Publiczny głos ujawnia ${key} graczowi ${index + 1}`);
       }
     }
-
     for (const choice of expected) {
       const publicChoice = current.accusations.results.find(item => item.playerId === choice.playerId);
       assert(publicChoice, `Brak publicznego głosu gracza ${choice.playerId}`);
       assert(publicChoice.suspect?.playerId === choice.suspectPlayerId, `Zmienił się publiczny podejrzany gracza ${choice.playerId}`);
       assert(publicChoice.motiveLabel === choice.motiveLabel, `Zmienił się publiczny motyw gracza ${choice.playerId}`);
-      assert(publicChoice.evidenceNo === choice.evidenceNo, `Zmienił się numer publicznego dowodu gracza ${choice.playerId}`);
-      assert(publicChoice.evidenceTitle === choice.evidenceTitle, `Zmienił się publiczny dowód gracza ${choice.playerId}`);
+      assert(publicChoice.evidenceNo === choice.evidenceNo && publicChoice.evidenceTitle === choice.evidenceTitle, `Zmienił się publiczny dowód gracza ${choice.playerId}`);
       assert(publicChoice.disappearanceLabel === choice.disappearanceLabel, `Zmienił się publiczny sposób zniknięcia gracza ${choice.playerId}`);
     }
   }
-  check("Wynik 5/5 pokazuje wybory grupy bez trafności i rozwiązania");
+  check("Wynik 5/5 pokazuje wybory grupy bez trafności i ma wyzerowaną gotowość");
 
   await Promise.all(pages.map(page => page.getByText("08 · GŁOSY GRUPY", { exact: true }).first().waitFor({ timeout: 15000 })));
   await Promise.all(pages.map(page => page.getByText("Teorie są zamknięte.", { exact: true }).waitFor({ timeout: 15000 })));
@@ -300,12 +261,11 @@ try {
 
   await pages[0].waitForTimeout(1000);
   const stableStates = await Promise.all(pages.map((page, index) => waitState(
-    page,
-    code,
-    body => body?.room?.phase === "ok_oskarzenie_wynik" && body?.roleCard?.id === roleIds[index],
+    page, code,
+    body => body?.room?.phase === "ok_oskarzenie_wynik" && body?.roleCard?.id === roleIds[index] && body?.reveal == null,
     `stabilny ok_oskarzenie_wynik gracza ${index + 1}`,
   )));
-  assert(stableStates.every(item => item.reveal == null), "Ujawnienie rozpoczęło się bez gotowości graczy");
+  assert(stableStates.every(item => item.ready?.player_ready === false && item.ready?.ready_players === 0), "Gotowość zmieniła się bez akcji graczy");
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
 
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
