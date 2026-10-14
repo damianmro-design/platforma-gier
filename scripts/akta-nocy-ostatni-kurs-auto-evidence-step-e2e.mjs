@@ -10,6 +10,7 @@ const nextUiText = process.env.OK_NEXT_UI_TEXT || nextEvidenceTitle;
 const expectedCurrentCount = Number(process.env.OK_CURRENT_EVIDENCE_COUNT || 0);
 const expectedNextCount = Number(process.env.OK_NEXT_EVIDENCE_COUNT || 0);
 const submitFirstReconstruction = process.env.OK_SUBMIT_FIRST_RECONSTRUCTION === "1";
+const submitAllReconstructions = process.env.OK_SUBMIT_ALL_RECONSTRUCTIONS === "1";
 const artifactSlug = process.env.OK_ARTIFACT_SLUG || "evidence-step";
 const artifacts = `artifacts/${artifactSlug}`;
 await fs.mkdir(artifacts, { recursive: true });
@@ -18,6 +19,7 @@ function assert(value, message) { if (!value) throw new Error(message); }
 for (const [key, value] of Object.entries({ currentPhase, nextPhase, nextEvidenceId, nextEvidenceTitle })) {
   assert(value, `Brak konfiguracji ${key}`);
 }
+assert(!(submitFirstReconstruction && submitAllReconstructions), "Wybierz tylko jeden tryb testu rekonstrukcji");
 
 function watch(page, label, errors) {
   page.on("pageerror", error => errors.push(`${label} pageerror: ${error.message}`));
@@ -174,8 +176,8 @@ try {
   await creator.screenshot({ path: `${artifacts}/01-next-phase.png`, fullPage: true });
   await pages[1].screenshot({ path: `${artifacts}/02-next-phase-second-phone.png`, fullPage: true });
 
-  if (submitFirstReconstruction) {
-    assert(nextPhase === "ok_rekonstrukcja", "Pierwszą rekonstrukcję można testować tylko w ok_rekonstrukcja");
+  if (submitFirstReconstruction || submitAllReconstructions) {
+    assert(nextPhase === "ok_rekonstrukcja", "Rekonstrukcje można testować tylko w ok_rekonstrukcja");
     const options = nextStates[0].reconstructionOptions ?? [];
     assert(options.length >= 9, `Za mało opcji rekonstrukcji: ${options.length}`);
     const eventOrder = options.slice(0, 9).map(item => item.key);
@@ -185,44 +187,91 @@ try {
       assert(nextStates[index].ownReconstruction == null, `Gracz ${index + 1} ma rekonstrukcję przed wysłaniem`);
     }
 
-    const submitted = await action(pages[0], code, "submitReconstruction", { eventOrder, route });
-    assert(submitted.status === 200 && submitted.body?.ok === true, "Pierwsza rekonstrukcja nie została zapisana");
+    const countToSubmit = submitAllReconstructions ? pages.length : 1;
+    let resultStates = null;
 
-    const afterSubmit = await Promise.all(pages.map((page, index) => waitState(
-      page,
-      code,
-      body => body?.room?.phase === "ok_rekonstrukcja" && body?.roleCard?.id === roleIds[index],
-      `ok_rekonstrukcja po 1/5 gracza ${index + 1}`,
-    )));
+    for (let index = 0; index < countToSubmit; index += 1) {
+      const submitted = await action(pages[index], code, "submitReconstruction", { eventOrder, route });
+      assert(submitted.status === 200 && submitted.body?.ok === true, `Rekonstrukcja ${index + 1}/5 nie została zapisana`);
 
-    assert(Boolean(afterSubmit[0].ownReconstruction?.submitted_at), "Gracz 1 nie ma zapisanej rekonstrukcji");
-    assert(afterSubmit[0].ownReconstruction.event_order?.join("|") === eventOrder.join("|"), "Kolejność wydarzeń gracza 1 zmieniła się po zapisie");
-    assert(afterSubmit[0].ownReconstruction.route?.join("|") === route.join("|"), "Trasa gracza 1 zmieniła się po zapisie");
-    for (let index = 1; index < afterSubmit.length; index += 1) {
-      assert(afterSubmit[index].ownReconstruction == null, `Gracz ${index + 1} został oznaczony jako wysłany przy 1/5`);
+      if (submitAllReconstructions && index === pages.length - 1) {
+        resultStates = await Promise.all(pages.map((page, playerIndex) => waitState(
+          page,
+          code,
+          body => body?.room?.phase === "ok_rekonstrukcja_wynik" && body?.roleCard?.id === roleIds[playerIndex],
+          `ok_rekonstrukcja_wynik gracza ${playerIndex + 1}`,
+        )));
+        break;
+      }
+
+      const afterSubmit = await Promise.all(pages.map((page, playerIndex) => waitState(
+        page,
+        code,
+        body => body?.room?.phase === "ok_rekonstrukcja" && body?.roleCard?.id === roleIds[playerIndex],
+        `ok_rekonstrukcja po ${index + 1}/5 gracza ${playerIndex + 1}`,
+      )));
+
+      for (let playerIndex = 0; playerIndex < afterSubmit.length; playerIndex += 1) {
+        const own = afterSubmit[playerIndex].ownReconstruction;
+        if (playerIndex <= index) {
+          assert(Boolean(own?.submitted_at), `Gracz ${playerIndex + 1} nie ma zapisanej rekonstrukcji przy ${index + 1}/5`);
+          assert(own.event_order?.join("|") === eventOrder.join("|"), `Kolejność wydarzeń gracza ${playerIndex + 1} zmieniła się po zapisie`);
+          assert(own.route?.join("|") === route.join("|"), `Trasa gracza ${playerIndex + 1} zmieniła się po zapisie`);
+        } else {
+          assert(own == null, `Gracz ${playerIndex + 1} został oznaczony jako wysłany przy ${index + 1}/5`);
+        }
+        assert(afterSubmit[playerIndex].evidence?.length === expectedNextCount, `Materiały zmieniły się przy ${index + 1}/5 u gracza ${playerIndex + 1}`);
+        assert(afterSubmit[playerIndex].roleCard.id === roleIds[playerIndex], `Rola gracza ${playerIndex + 1} zmieniła się przy ${index + 1}/5`);
+      }
+      check(`Rekonstrukcja ${index + 1}/5 zapisana, faza pozostaje ok_rekonstrukcja`);
     }
-    for (let index = 0; index < afterSubmit.length; index += 1) {
-      assert(afterSubmit[index].room.phase === "ok_rekonstrukcja", `Gra wyszła z rekonstrukcji przy 1/5 u gracza ${index + 1}`);
-      assert(afterSubmit[index].evidence?.length === expectedNextCount, `Materiały zmieniły się po pierwszej rekonstrukcji u gracza ${index + 1}`);
-      assert(afterSubmit[index].roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po pierwszej rekonstrukcji`);
+
+    if (submitFirstReconstruction) {
+      await Promise.all([
+        pages[0].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
+        pages[1].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
+      ]);
+      await pages[0].getByText("Rekonstrukcja wysłana").waitFor({ timeout: 10000 });
+      await pages[1].getByRole("button", { name: "WYŚLIJ REKONSTRUKCJĘ", exact: true }).waitFor({ state: "visible", timeout: 10000 });
+      await pages[0].screenshot({ path: `${artifacts}/03-first-reconstruction-submitted.png`, fullPage: true });
+      await pages[1].screenshot({ path: `${artifacts}/04-second-player-still-open.png`, fullPage: true });
     }
 
-    await Promise.all([
-      pages[0].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
-      pages[1].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
-    ]);
-    await pages[0].getByText("Rekonstrukcja wysłana").waitFor({ timeout: 10000 });
-    await pages[1].getByRole("button", { name: "WYŚLIJ REKONSTRUKCJĘ", exact: true }).waitFor({ state: "visible", timeout: 10000 });
-    await pages[0].screenshot({ path: `${artifacts}/03-first-reconstruction-submitted.png`, fullPage: true });
-    await pages[1].screenshot({ path: `${artifacts}/04-second-player-still-open.png`, fullPage: true });
-    check("Pierwsza rekonstrukcja 1/5 zapisana, faza pozostaje ok_rekonstrukcja");
+    if (submitAllReconstructions) {
+      assert(Array.isArray(resultStates) && resultStates.length === 5, "Brak stanu wyniku rekonstrukcji dla 5 graczy");
+      for (let index = 0; index < resultStates.length; index += 1) {
+        const current = resultStates[index];
+        assert(current.room.phase === "ok_rekonstrukcja_wynik", `Gracz ${index + 1} nie trafił do wyniku rekonstrukcji`);
+        assert(current.role === "player", `Gracz ${index + 1} stracił rolę gracza po 5/5`);
+        assert(current.evidence?.length === expectedNextCount, `Gracz ${index + 1} stracił materiały po 5/5`);
+        assert(current.roleCard.id === roleIds[index], `Rola gracza ${index + 1} zmieniła się po 5/5`);
+        assert(current.reconstruction?.total === 5, `Gracz ${index + 1} widzi ${current.reconstruction?.total} rekonstrukcji zamiast 5`);
+        assert(Array.isArray(current.reconstruction?.consensusTimeline) && current.reconstruction.consensusTimeline.length === 9, `Gracz ${index + 1} nie widzi 9 punktów wspólnej osi`);
+        assert(current.reconstruction.consensusTimeline.every(item => item.count === 5), `Wspólna oś gracza ${index + 1} nie zawiera 5/5 głosów dla każdego punktu`);
+        assert(Array.isArray(current.reconstruction?.routes) && current.reconstruction.routes.length >= 1, `Gracz ${index + 1} nie widzi wspólnej trasy`);
+        assert(current.reconstruction.routes[0].route === route.join(" → "), `Gracz ${index + 1} widzi inną najczęstszą trasę`);
+        assert(current.reconstruction.routes[0].count === 5, `Najczęstsza trasa gracza ${index + 1} nie ma 5 głosów`);
+        assert(!Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Poprawność rekonstrukcji została ujawniona za wcześnie graczowi ${index + 1}`);
+        assert(current.ready?.ready_players === 0, `Wynik rekonstrukcji nie zaczyna od 0/5 gotowych u gracza ${index + 1}`);
+      }
+
+      for (const page of pages) {
+        await page.getByText("07 · WYNIK REKONSTRUKCJI", { exact: true }).waitFor({ timeout: 10000 });
+        await page.getByText("Tak grupa odtworzyła wydarzenia.", { exact: true }).waitFor({ timeout: 10000 });
+      }
+      await pages[0].screenshot({ path: `${artifacts}/03-reconstruction-result.png`, fullPage: true });
+      await pages[4].screenshot({ path: `${artifacts}/04-reconstruction-result-fifth-phone.png`, fullPage: true });
+      check("5/5 przechodzi dokładnie do ok_rekonstrukcja_wynik bez ujawniania rozwiązania");
+    }
   }
 
+  const expectedFinalPhase = submitAllReconstructions ? "ok_rekonstrukcja_wynik" : nextPhase;
   const finalState = await state(creator, code);
-  assert(finalState.body?.room?.phase === nextPhase, `Test wyszedł poza ${nextPhase}`);
+  assert(finalState.body?.room?.phase === expectedFinalPhase, `Test wyszedł poza ${expectedFinalPhase}`);
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Ostatni Kurs phase step PASS ${currentPhase} -> ${nextPhase} room=${code}${submitFirstReconstruction ? " reconstruction=1/5" : ""}`);
+  const suffix = submitAllReconstructions ? " reconstruction=5/5-result" : submitFirstReconstruction ? " reconstruction=1/5" : "";
+  console.log(`AKTA NOCY Ostatni Kurs phase step PASS ${currentPhase} -> ${nextPhase} room=${code}${suffix}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
