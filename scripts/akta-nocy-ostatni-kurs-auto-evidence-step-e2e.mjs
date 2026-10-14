@@ -256,7 +256,7 @@ try {
       }
 
       for (const page of pages) {
-        await page.getByText("07 · WYNIK REKONSTRUKCJI", { exact: true }).waitFor({ timeout: 10000 });
+        await page.getByText("07 · WYNIK REKONSTRUKCJI", { exact: true }).first().waitFor({ timeout: 10000 });
         await page.getByText("Tak grupa odtworzyła wydarzenia.", { exact: true }).waitFor({ timeout: 10000 });
       }
       await pages[0].screenshot({ path: `${artifacts}/03-reconstruction-result.png`, fullPage: true });
