@@ -101,10 +101,8 @@ const check = label => report.checks.push({ label, at: new Date().toISOString() 
 
 try {
   const pages = [];
-  const contexts = [];
 
   const creatorContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-  contexts.push(creatorContext);
   const creator = await creatorContext.newPage();
   pages.push(creator);
   watch(creator, "creator", errors);
@@ -120,7 +118,6 @@ try {
 
   for (let i = 2; i <= 5; i += 1) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-    contexts.push(context);
     const page = await context.newPage();
     pages.push(page);
     watch(page, `player-${i}`, errors);
@@ -204,13 +201,23 @@ try {
     disappearanceKey: disappearance.key,
   };
 
-  const submitted = await action(pages[0], code, "submitAccusation", payload);
-  assert(submitted.status === 200 && submitted.body?.ok === true, "Pierwszy Akt Oskarżenia nie został zapisany");
+  await pages[0].getByText("08 · AKT OSKARŻENIA", { exact: true }).first().waitFor({ timeout: 15000 });
+  await pages[0].getByRole("button").filter({ hasText: suspect.characterName }).first().click();
+  await pages[0].getByRole("button").filter({ hasText: motive.label }).first().click();
+  await pages[0].getByRole("button").filter({ hasText: disappearance.label }).first().click();
+  await pages[0].getByRole("button").filter({ hasText: evidence.title }).first().click();
+
+  const firstSubmit = pages[0].getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
+  await firstSubmit.waitFor({ state: "visible", timeout: 10000 });
+  assert(await firstSubmit.isEnabled(), "Kompletny Akt Oskarżenia gracza 1 jest nadal nieaktywny");
+  await firstSubmit.click();
+  await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 15000 });
+  await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 15000 });
 
   const afterSubmit = await Promise.all(pages.map((page, index) => waitState(
     page,
     code,
-    body => body?.room?.phase === "ok_oskarzenie" && body?.roleCard?.id === roleIds[index],
+    body => body?.room?.phase === "ok_oskarzenie" && body?.roleCard?.id === roleIds[index] && (index !== 0 || Boolean(body?.ownAccusation?.submitted_at)),
     `ok_oskarzenie po 1/5 gracza ${index + 1}`,
   )));
 
@@ -236,8 +243,6 @@ try {
   }
   check("Pierwsze oskarżenie zapisane dokładnie jako 1/5, bez przejścia dalej");
 
-  await pages[0].getByText("Akt oskarżenia złożony", { exact: true }).waitFor({ timeout: 15000 });
-  await pages[0].getByText("Twoja teoria jest zamknięta. Poczekaj, aż pozostali oddadzą swoje odpowiedzi.", { exact: true }).waitFor({ timeout: 15000 });
   const secondSubmit = pages[1].getByRole("button", { name: "ZŁÓŻ AKT OSKARŻENIA", exact: true });
   await secondSubmit.waitFor({ state: "visible", timeout: 10000 });
   assert(!(await secondSubmit.isEnabled()), "Gracz 2 może wysłać niekompletne oskarżenie");
