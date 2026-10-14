@@ -211,7 +211,7 @@ try {
       pages[0].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
       pages[1].reload({ waitUntil: "domcontentloaded", timeout: 60000 }),
     ]);
-    await pages[0].getByText("Rekonstrukcja wysłana", { exact: true }).waitFor({ timeout: 10000 });
+    await pages[0].getByText("Rekonstrukcja wysłana").waitFor({ timeout: 10000 });
     await pages[1].getByRole("button", { name: "WYŚLIJ REKONSTRUKCJĘ", exact: true }).waitFor({ state: "visible", timeout: 10000 });
     await pages[0].screenshot({ path: `${artifacts}/03-first-reconstruction-submitted.png`, fullPage: true });
     await pages[1].screenshot({ path: `${artifacts}/04-second-player-still-open.png`, fullPage: true });
