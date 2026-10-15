@@ -457,6 +457,23 @@ export default function LobbyClient({ code }: { code: string }) {
               </div>
             )}
           </section>
+        ) : data.isHost && isAktaNocy && !isAktaAuto ? (
+          <section className="player-join-panel">
+            <span className="lobby-label">PROWADZISZ TĘ SPRAWĘ</span>
+            <h2>Nie dołączasz jako gracz</h2>
+            <p>
+              Zostań na tym urządzeniu jako prowadzący. Zaproś 5–12 graczy, każdy dołącza
+              na własnym telefonie i przed startem klika „Gotowy”.
+            </p>
+            <div className="mt-5 rounded-2xl border border-orange-300/15 bg-orange-300/[.05] p-4">
+              <strong className="block text-sm font-black text-orange-100">
+                Prowadzący nie zajmuje miejsca gracza
+              </strong>
+              <p className="mt-1 text-xs leading-5 text-orange-100/60">
+                Nie dostaniesz tajnej roli ani sekretu. Po starcie ten ekran stanie się panelem prowadzącego i będzie sterował etapami śledztwa.
+              </p>
+            </div>
+          </section>
         ) : (
         <form className="player-join-panel" onSubmit={join}>
           <span className="lobby-label">DOŁĄCZ JAKO GRACZ</span>
@@ -669,8 +686,8 @@ export default function LobbyClient({ code }: { code: string }) {
                   ? "Do startu: 6–14 osób i wszyscy oznaczeni jako gotowi."
                   : isAktaNocy
                     ? isAktaAuto
-                      ? `Do startu Ostatniego Kursu: 5–12 osób. Każdy, także twórca pokoju, dołącza jako gracz i klika „Gotowy”.`
-                      : "Do startu: 5–12 osób i wszyscy oznaczeni jako gotowi."
+                      ? `Do startu Ostatniego Kursu: 5–12 graczy. Każdy, także twórca pokoju, dołącza jako gracz i klika „Gotowy”.`
+                      : "Do startu: 5–12 graczy. Ty jesteś prowadzącym i nie zajmujesz miejsca gracza. Każdy gracz musi kliknąć „Gotowy”."
                     : isTylkoMy
                       ? data.players.length < 2
                         ? "Dołączcie we 2 na telefonach. Gdy druga osoba wejdzie i oboje klikniecie „Gotowy”, gra wystartuje sama."
