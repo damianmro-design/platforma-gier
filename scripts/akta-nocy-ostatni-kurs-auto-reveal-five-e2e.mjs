@@ -282,6 +282,8 @@ try {
     assert(current.reconstruction?.fullyCorrect === expectedFullyCorrectReconstructions, `Gracz ${index + 1} ma zły wynik poprawności rekonstrukcji`);
     assert(JSON.stringify(current.accusations.results.map(row => ({
       playerId: row.playerId,
+      displayName: row.displayName,
+      avatar: row.avatar,
       suspect: row.suspect,
       motiveLabel: row.motiveLabel,
       evidenceNo: row.evidenceNo,
