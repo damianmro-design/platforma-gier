@@ -12,6 +12,7 @@ on:
       - "app/api/pokoj/**"
       - "app/gra/akta-nocy/**"
       - "app/api/gra/akta-nocy-ostatni-kurs/**"
+      - "lib/game-play-setup.ts"
       - "lib/akta-nocy-ostatni-kurs*"
       - "lib/platform-db*"
   push:
@@ -24,6 +25,7 @@ on:
       - "app/api/pokoj/**"
       - "app/gra/akta-nocy/**"
       - "app/api/gra/akta-nocy-ostatni-kurs/**"
+      - "lib/game-play-setup.ts"
       - "lib/akta-nocy-ostatni-kurs*"
       - "lib/platform-db*"
 
@@ -88,6 +90,14 @@ jobs:
             sleep 4
           done
           exit 1
+
+      - name: Verify final AKTA NOCY setup copy
+        if: github.event_name == 'push'
+        run: |
+          HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy")"
+          echo "$HTML" | grep -Fq "75–115 min, zależnie od sprawy"
+          echo "$HTML" | grep -Fq "5–12 graczy, w trybie z prowadzącym dodatkowo 1 prowadzący"
+          echo "$HTML" | grep -Fq "Telefon gracza pokazuje jego prywatne akta oraz wspólne materiały śledztwa."
 
       - name: Run Ostatni Kurs host E2E
         run: node scripts/akta-nocy-ostatni-kurs-host-e2e.mjs
