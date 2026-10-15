@@ -55,11 +55,12 @@ try {
   await page.getByText("Apartament 214: wymagany. Ostatni Kurs: prowadzący albo tryb automatyczny", { exact: true }).waitFor({ timeout: 10000 });
   await page.getByText("Z prowadzącym: zalecany wspólny ekran. Ostatni Kurs bez prowadzącego: niepotrzebny", { exact: true }).waitFor({ timeout: 10000 });
 
-  await page.getByRole("heading", { name: "Apartament 214", exact: true }).waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "UTWÓRZ POKÓJ", exact: true }).waitFor({ timeout: 10000 });
-  await page.getByRole("heading", { name: "Ostatni Kurs", exact: true }).waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "Z PROWADZĄCYM", exact: true }).waitFor({ timeout: 10000 });
-  await page.getByRole("button", { name: "BEZ PROWADZĄCEGO", exact: true }).waitFor({ timeout: 10000 });
+  const cases = page.locator("#sprawy");
+  await cases.getByRole("heading", { name: "Apartament 214", exact: true }).waitFor({ timeout: 10000 });
+  await cases.getByRole("button", { name: "UTWÓRZ POKÓJ", exact: true }).waitFor({ timeout: 10000 });
+  await cases.getByRole("heading", { name: "Ostatni Kurs", exact: true }).waitFor({ timeout: 10000 });
+  await cases.getByRole("button", { name: "Z PROWADZĄCYM", exact: true }).waitFor({ timeout: 10000 });
+  await cases.getByRole("button", { name: "BEZ PROWADZĄCEGO", exact: true }).waitFor({ timeout: 10000 });
 
   // Te 2 teksty przechodzą przez warstwę CMS. Jeśli produkcja nadal ma stary override,
   // test ma celowo wykryć niespójność zamiast ją maskować.
