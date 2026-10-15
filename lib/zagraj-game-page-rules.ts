@@ -6,9 +6,9 @@ export const PAGE_RULE_COPY_SCHEMA = 1 as const;
 export const GAME_PAGE_RULES = {
   "akta-nocy": [
     ["1","Każdy ma telefon","Prywatne akta, sekrety i odpowiedzi nigdy nie muszą być drukowane."],
-    ["2","Wybieracie tryb","W Ostatnim Kursie może prowadzić jedna osoba albo system może prowadzić wszystkich automatycznie."],
+    ["2","Wybieracie tryb","Apartament 214 zawsze wymaga prowadzącego. W Ostatnim Kursie może prowadzić jedna osoba albo system może prowadzić wszystkich automatycznie."],
     ["3","Rozmawiacie naprawdę","Aplikacja daje fakty i pytania, ale śledztwo odbywa się między Wami przy jednym stole."],
-    ["4","Oskarżacie prywatnie","Na końcu każdy wskazuje osobę, motyw, sposób i kluczowy dowód, zanim prawda zostanie ujawniona."],
+    ["4","Oskarżacie prywatnie","Na końcu każdy wskazuje podejrzanego, motyw i kluczowy dowód. W Ostatnim Kursie dodatkowo wskazujecie sposób zniknięcia, zanim prawda zostanie ujawniona."],
   ],
   "co-ludzie-powiedza": [
     ["00","Poznajmy tłum","Każdy odpowiada prywatnie na 6 krótkich pytań. Te odpowiedzi wrócą później w rundach o Waszej własnej ekipie."],
