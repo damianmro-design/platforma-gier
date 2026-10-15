@@ -1,4 +1,4 @@
-name: AKTA NOCY Ostatni Kurs auto close E2E
+name: AKTA NOCY Ostatni Kurs closed rejoin E2E
 
 on:
   workflow_dispatch:
@@ -26,7 +26,7 @@ on:
       - "lib/platform-db*"
 
 jobs:
-  ostatni-kurs-auto-close:
+  ostatni-kurs-closed-rejoin:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -77,12 +77,12 @@ jobs:
             sleep 4
           done
           exit 1
-      - name: Run Ostatni Kurs close E2E
+      - name: Run Ostatni Kurs closed rejoin E2E
         run: node scripts/akta-nocy-ostatni-kurs-auto-close-e2e.mjs
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: akta-nocy-ostatni-kurs-auto-close-e2e
+          name: akta-nocy-ostatni-kurs-closed-rejoin-e2e
           path: artifacts/akta-nocy-ostatni-kurs-auto-close
           if-no-files-found: ignore
