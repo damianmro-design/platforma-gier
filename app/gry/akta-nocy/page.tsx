@@ -306,7 +306,7 @@ export default async function AktaNocyPage() {
               Śledztwo odsłania się warstwa po warstwie
             </h2>
             <p className="mt-4 text-sm leading-7 text-orange-50/50">
-              Telefon pokazuje wyłącznie prywatne informacje danej postaci.
+              Telefon gracza pokazuje jego prywatne akta oraz wspólne materiały śledztwa. Prywatnych ról, rekonstrukcji i oskarżeń nie pokazujcie innym.
               W trybie z prowadzącym prowadzący korzysta z własnego urządzenia, nie dostaje roli gracza i steruje etapami.
               W trybie automatycznym gracze klikają „Gotowy”, a system sam odsłania kolejne części śledztwa.
             </p>
