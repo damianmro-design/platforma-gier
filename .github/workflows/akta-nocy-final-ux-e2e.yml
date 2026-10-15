@@ -1,0 +1,87 @@
+name: AKTA NOCY final UX regression
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "lib/game-play-setup.ts"
+      - "lib/zagraj-game-page-rules.ts"
+      - "app/gry/akta-nocy/**"
+      - "scripts/akta-nocy-final-ux-contract.mjs"
+      - ".github/workflows/akta-nocy-final-ux-e2e.yml"
+  push:
+    branches: [main]
+    paths:
+      - "lib/game-play-setup.ts"
+      - "lib/zagraj-game-page-rules.ts"
+      - "app/gry/akta-nocy/**"
+      - "scripts/akta-nocy-final-ux-contract.mjs"
+      - ".github/workflows/akta-nocy-final-ux-e2e.yml"
+
+jobs:
+  final-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AKTA_PRIMARY_URL: https://zagraj.fun
+      AKTA_FALLBACK_URL: https://platforma-gier.vercel.app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install app dependencies
+        run: npm ci
+      - name: Check versioned AKTA NOCY UX contract
+        run: node scripts/akta-nocy-final-ux-contract.mjs
+      - name: Install Playwright and Chromium
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+      - name: Give Vercel production time to publish push
+        if: github.event_name == 'push'
+        run: sleep 75
+      - name: Select reachable production target
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$AKTA_PRIMARY_URL/gry/akta-nocy" || true)"
+            if echo "$HTML" | grep -qi "Ostatni Kurs"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "AKTA_BASE_URL=$AKTA_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable. Running final AKTA NOCY UX regression against the production Vercel alias."
+            echo "AKTA_BASE_URL=$AKTA_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+      - name: Wait for selected production landing page
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          for i in {1..30}; do
+            HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy" || true)"
+            if echo "$HTML" | grep -qi "Ostatni Kurs"; then
+              exit 0
+            fi
+            sleep 4
+          done
+          exit 1
+      - name: Run production AKTA NOCY UX regression
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: node scripts/akta-nocy-final-ux-contract.mjs
+      - name: Upload production screenshot
+        if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v4
+        with:
+          name: akta-nocy-final-ux
+          path: artifacts/akta-nocy-final-ux
+          if-no-files-found: ignore
