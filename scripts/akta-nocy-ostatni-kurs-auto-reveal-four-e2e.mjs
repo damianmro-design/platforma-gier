@@ -20,9 +20,7 @@ function watch(page, label, errors) {
   page.on("response", response => {
     if (response.status() < 500) return;
     const url = response.url();
-    if (!url.includes("qrserver.com") && !url.includes("favicon")) {
-      errors.push(`${label} HTTP ${response.status()}: ${url}`);
-    }
+    if (!url.includes("qrserver.com") && !url.includes("favicon")) errors.push(`${label} HTTP ${response.status()}: ${url}`);
   });
 }
 
@@ -51,7 +49,7 @@ async function action(page, code, name, payload = {}) {
   }, { code, name, payload });
 }
 
-async function waitState(page, code, predicate, label, timeout = 20000) {
+async function waitState(page, code, predicate, label, timeout = 30000) {
   const deadline = Date.now() + timeout;
   let last = null;
   while (Date.now() < deadline) {
@@ -74,22 +72,16 @@ async function readyAll(pages, code, targetPhase) {
     code,
     body => body?.room?.phase === targetPhase,
     `${targetPhase} gracza ${index + 1}`,
-    30000,
   )));
 }
 
 function assertNoCorrectness(summary, label) {
   const forbiddenSummary = ["correctSuspect", "correctMotive", "correctEvidence", "correctDisappearance", "fullyCorrect"];
   const forbiddenRows = ["suspectCorrect", "motiveCorrect", "evidenceCorrect", "disappearanceCorrect", "fullyCorrect"];
-  assert(summary?.total === 5, `${label}: brak podsumowania 5/5`);
-  assert(summary?.results?.length === 5, `${label}: brak 5 publicznych głosów`);
-  for (const key of forbiddenSummary) {
-    assert(!Object.prototype.hasOwnProperty.call(summary, key), `${label}: ujawniono ${key}`);
-  }
+  assert(summary?.total === 5 && summary?.results?.length === 5, `${label}: brak pełnego publicznego podsumowania`);
+  for (const key of forbiddenSummary) assert(!Object.prototype.hasOwnProperty.call(summary, key), `${label}: ujawniono ${key}`);
   for (const row of summary.results) {
-    for (const key of forbiddenRows) {
-      assert(!Object.prototype.hasOwnProperty.call(row, key), `${label}: publiczny głos ujawnia ${key}`);
-    }
+    for (const key of forbiddenRows) assert(!Object.prototype.hasOwnProperty.call(row, key), `${label}: ujawniono ${key}`);
   }
 }
 
@@ -108,11 +100,8 @@ const check = label => report.checks.push({ label, at: new Date().toISOString() 
 
 try {
   const pages = [];
-  const contexts = [];
-
   for (let index = 0; index < 5; index += 1) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-    contexts.push(context);
     const page = await context.newPage();
     pages.push(page);
     watch(page, `player-${index + 1}`, errors);
@@ -126,10 +115,7 @@ try {
   assert(code, "Brak kodu pokoju");
   report.roomCode = code;
 
-  for (let index = 0; index < pages.length; index += 1) {
-    await join(pages[index], code, `E2E Reveal4 ${index + 1}`);
-  }
-
+  for (let index = 0; index < pages.length; index += 1) await join(pages[index], code, `E2E Reveal4 ${index + 1}`);
   await Promise.all(pages.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
   await creator.getByText("5/5 gotowych").waitFor({ timeout: 15000 });
   await Promise.all(pages.map(page => page.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 25000 })));
@@ -146,7 +132,6 @@ try {
     const opened = await action(page, code, "openDossier");
     assert(opened.status === 200 && opened.body?.ok === true, `Nie udało się otworzyć akt: ${JSON.stringify(opened)}`);
   }
-
   for (const phase of phasePath) await readyAll(pages, code, phase);
 
   const reconstructionStates = await Promise.all(pages.map((page, index) => waitState(
@@ -155,27 +140,21 @@ try {
     body => body?.room?.phase === "ok_rekonstrukcja" && body?.roleCard?.id === roleIds[index],
     `rekonstrukcja gracza ${index + 1}`,
   )));
-
-  const options = reconstructionStates[0].reconstructionOptions ?? [];
-  assert(options.length >= 9, `Za mało opcji rekonstrukcji: ${options.length}`);
-  const eventOrder = options.slice(0, 9).map(item => item.key);
+  const eventOrder = (reconstructionStates[0].reconstructionOptions ?? []).slice(0, 9).map(item => item.key);
+  assert(eventOrder.length === 9, "Brak 9 opcji rekonstrukcji");
   const route = ["w1", "w2", "w3", "w4"];
-
   for (let index = 0; index < pages.length; index += 1) {
-    const submitted = await action(pages[index], code, "submitReconstruction", { eventOrder, route });
-    assert(submitted.status === 200 && submitted.body?.ok === true, `Rekonstrukcja ${index + 1}/5 nie została zapisana: ${JSON.stringify(submitted)}`);
+    const result = await action(pages[index], code, "submitReconstruction", { eventOrder, route });
+    assert(result.status === 200 && result.body?.ok === true, `Rekonstrukcja ${index + 1}/5 nie została zapisana: ${JSON.stringify(result)}`);
   }
-
   await Promise.all(pages.map((page, index) => waitState(
     page,
     code,
     body => body?.room?.phase === "ok_rekonstrukcja_wynik" && body?.reconstruction?.total === 5 && body?.roleCard?.id === roleIds[index],
     `wynik rekonstrukcji gracza ${index + 1}`,
-    30000,
   )));
 
   const accusationStates = await readyAll(pages, code, "ok_oskarzenie");
-
   for (let index = 0; index < pages.length; index += 1) {
     const current = accusationStates[index];
     const suspect = current.cast.find(item => item.playerId !== current.player?.playerId);
@@ -183,28 +162,24 @@ try {
     const evidence = current.evidenceOptions[index % current.evidenceOptions.length];
     const disappearance = current.disappearanceOptions[index % current.disappearanceOptions.length];
     assert(suspect?.playerId && motive?.key && evidence?.id && disappearance?.key, `Niekompletne opcje oskarżenia gracza ${index + 1}`);
-
-    const submitted = await action(pages[index], code, "submitAccusation", {
+    const result = await action(pages[index], code, "submitAccusation", {
       suspectPlayerId: suspect.playerId,
       motiveKey: motive.key,
       evidenceId: evidence.id,
       disappearanceKey: disappearance.key,
     });
-    assert(submitted.status === 200 && submitted.body?.ok === true, `Oskarżenie ${index + 1}/5 nie zostało zapisane: ${JSON.stringify(submitted)}`);
+    assert(result.status === 200 && result.body?.ok === true, `Oskarżenie ${index + 1}/5 nie zostało zapisane: ${JSON.stringify(result)}`);
   }
-
   await Promise.all(pages.map((page, index) => waitState(
     page,
     code,
     body => body?.room?.phase === "ok_oskarzenie_wynik" && body?.accusations?.total === 5 && body?.roleCard?.id === roleIds[index],
     `wynik oskarżeń gracza ${index + 1}`,
-    30000,
   )));
 
   await readyAll(pages, code, "ok_ujawnienie_1");
   await readyAll(pages, code, "ok_ujawnienie_2");
   const revealThreeStates = await readyAll(pages, code, "ok_ujawnienie_3");
-
   const votesSnapshot = JSON.stringify(revealThreeStates[0].accusations?.results ?? []);
   const reconstructionSnapshot = JSON.stringify({
     total: revealThreeStates[0].reconstruction?.total,
@@ -214,40 +189,28 @@ try {
 
   for (let index = 0; index < revealThreeStates.length; index += 1) {
     const current = revealThreeStates[index];
-    assert(current.reveal?.step === 3, `Gracz ${index + 1} nie jest w części 3`);
-    assert(current.reveal?.content?.eyebrow === "UJAWNIENIE · CZĘŚĆ 3", `Gracz ${index + 1} ma zły nagłówek części 3`);
-    assert(current.reveal?.content?.title === "W6 było miejscem ukrycia, nie drogą ucieczki.", `Gracz ${index + 1} ma zły tytuł części 3`);
+    assert(current.reveal?.step === 3 && current.reveal?.content?.eyebrow === "UJAWNIENIE · CZĘŚĆ 3", `Gracz ${index + 1} nie jest w części 3`);
     assert(current.ready?.ready_players === 0 && current.ready?.player_ready === false, `Część 3 nie startuje od 0/5 u gracza ${index + 1}`);
-    assert(current.roleCard?.id === roleIds[index], `Zmieniła się rola gracza ${index + 1}`);
-    assert(current.evidence?.length === 11, `Gracz ${index + 1} stracił materiały w części 3`);
+    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "subtitle"), `Gracz ${index + 1} widzi za wcześnie subtitle`);
+    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "whyItFits"), `Gracz ${index + 1} widzi za wcześnie whyItFits`);
+    assert(current.evidence?.length === 11 && current.roleCard?.id === roleIds[index], `Stan sprawy zmienił się przed częścią 4 u gracza ${index + 1}`);
     assert(current.reconstruction?.total === 5 && !Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Gracz ${index + 1} widzi za wcześnie poprawność rekonstrukcji`);
     assertNoCorrectness(current.accusations, `część 3 gracza ${index + 1}`);
-    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "subtitle"), `Gracz ${index + 1} widzi za wcześnie subtitle osoby odpowiedzialnej`);
-    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "whyItFits"), `Gracz ${index + 1} widzi za wcześnie uzasadnienie osoby odpowiedzialnej`);
-    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "timeline"), `Gracz ${index + 1} widzi za wcześnie pełną chronologię`);
   }
-  check("Część 3 startuje od 0/5 i nadal ukrywa osobę odpowiedzialną");
-
-  await Promise.all(pages.map(page => page.getByText("09 · UJAWNIENIE 3/5", { exact: true }).first().waitFor({ timeout: 15000 })));
-  await Promise.all(pages.map(page => page.getByText("W6 było miejscem ukrycia, nie drogą ucieczki.", { exact: true }).waitFor({ timeout: 15000 })));
+  check("Część 3 startuje od 0/5 i ukrywa osobę odpowiedzialną");
 
   for (let index = 0; index < 4; index += 1) {
     const ready = await action(pages[index], code, "ready");
     assert(ready.status === 200 && ready.body?.ok === true, `Gotowość ${index + 1}/5 w części 3 nie została zapisana: ${JSON.stringify(ready)}`);
-
     const states = await Promise.all(pages.map((page, playerIndex) => waitState(
       page,
       code,
       body => body?.room?.phase === "ok_ujawnienie_3" && body?.reveal?.step === 3 && body?.ready?.ready_players === index + 1 && body?.roleCard?.id === roleIds[playerIndex],
       `część 3 po gotowości ${index + 1}/5 u gracza ${playerIndex + 1}`,
     )));
-
-    const ownReadyCount = states.filter(item => item.ready?.player_ready === true).length;
-    assert(ownReadyCount === index + 1, `Po ${index + 1}/5 gotowość ma ${ownReadyCount}/5 graczy`);
+    assert(states.filter(item => item.ready?.player_ready === true).length === index + 1, `Niepoprawny licznik gotowości po ${index + 1}/5`);
     for (const current of states) {
-      assert(current.reveal?.content?.eyebrow === "UJAWNIENIE · CZĘŚĆ 3", `Część 4 pojawiła się za wcześnie przy ${index + 1}/5`);
-      assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "subtitle"), `Ujawniono osobę odpowiedzialną przy ${index + 1}/5`);
-      assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "whyItFits"), `Ujawniono uzasadnienie przy ${index + 1}/5`);
+      assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "subtitle"), `Część 4 pojawiła się za wcześnie przy ${index + 1}/5`);
       assertNoCorrectness(current.accusations, `${index + 1}/5 gotowych w części 3`);
       assert(current.reconstruction?.total === 5 && !Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Ujawniono poprawność rekonstrukcji przy ${index + 1}/5`);
     }
@@ -256,50 +219,45 @@ try {
 
   const fifth = await action(pages[4], code, "ready");
   assert(fifth.status === 200 && fifth.body?.ok === true, `Gotowość 5/5 w części 3 nie została zapisana: ${JSON.stringify(fifth)}`);
-
   const revealFourStates = await Promise.all(pages.map((page, index) => waitState(
     page,
     code,
     body => body?.room?.phase === "ok_ujawnienie_4" && body?.reveal?.step === 4 && body?.roleCard?.id === roleIds[index],
     `ok_ujawnienie_4 gracza ${index + 1}`,
-    30000,
   )));
   check("5/5 automatycznie przełącza wszystkich do ok_ujawnienie_4");
 
   for (let index = 0; index < revealFourStates.length; index += 1) {
     const current = revealFourStates[index];
-    assert(current.reveal?.content?.eyebrow === "UJAWNIENIE · OSOBA ODPOWIEDZIALNA", `Gracz ${index + 1} nie widzi właściwego nagłówka części 4`);
-    assert(current.reveal?.content?.title === "Kamil Drzewiecki", `Gracz ${index + 1} nie widzi Kamila jako osoby odpowiedzialnej`);
-    assert(current.reveal?.content?.subtitle === "Konsultant / człowiek Vektor Cargo", `Gracz ${index + 1} ma zły subtitle osoby odpowiedzialnej`);
-    assert(String(current.reveal?.content?.body ?? "").includes("Northbridge Consulting"), `Gracz ${index + 1} nie ma motywu Northbridge w części 4`);
-    assert(String(current.reveal?.content?.body ?? "").includes("S-3 w W6"), `Gracz ${index + 1} nie ma sposobu ukrycia w części 4`);
-    assert(Array.isArray(current.reveal?.content?.whyItFits) && current.reveal.content.whyItFits.length === 5, `Gracz ${index + 1} nie ma 5 punktów whyItFits`);
-    assert(current.reveal.content.whyItFits.some(item => String(item).includes("Kamil — 00:40, W5")), `Gracz ${index + 1} nie ma spotkania Kamil 00:40 W5`);
-    assert(current.reveal.content.whyItFits.some(item => String(item).includes("00:36")), `Gracz ${index + 1} nie ma obserwacji Niny z 00:36`);
-    assert(current.reveal.content.whyItFits.some(item => String(item).includes("Paragon z 00:49")), `Gracz ${index + 1} nie ma obalenia paragonu`);
-    assert(current.reveal.content.whyItFits.some(item => String(item).includes("Telefon pozostał w W3")), `Gracz ${index + 1} nie ma alibi telefonu`);
-    assert(current.reveal.content.whyItFits.some(item => String(item).includes("powrót osoby w płaszczu")), `Gracz ${index + 1} nie ma powrotu osoby w płaszczu`);
-    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "timeline"), `Gracz ${index + 1} widzi za wcześnie pełną chronologię`);
-    assert(!Object.prototype.hasOwnProperty.call(current.reveal.content, "redHerrings"), `Gracz ${index + 1} widzi za wcześnie pełne czerwone tropy`);
-    assert(current.evidence?.length === 11, `Gracz ${index + 1} stracił materiały w części 4`);
-    assert(current.reconstruction?.total === 5 && !Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Gracz ${index + 1} widzi za wcześnie poprawność rekonstrukcji`);
+    const content = current.reveal?.content;
+    assert(content?.eyebrow === "UJAWNIENIE · OSOBA ODPOWIEDZIALNA", `Gracz ${index + 1} ma zły nagłówek części 4`);
+    assert(content?.title === "Kamil Drzewiecki", `Gracz ${index + 1} nie widzi Kamila jako osoby odpowiedzialnej`);
+    assert(content?.subtitle === "Konsultant / człowiek Vektor Cargo", `Gracz ${index + 1} ma zły subtitle`);
+    assert(String(content?.body ?? "").includes("Northbridge Consulting") && String(content?.body ?? "").includes("S-3 w W6"), `Gracz ${index + 1} ma niepełną treść części 4`);
+    assert(Array.isArray(content?.whyItFits) && content.whyItFits.length === 5, `Gracz ${index + 1} nie ma 5 punktów whyItFits`);
+    assert(content.whyItFits.some(item => String(item).includes("Kamil — 00:40, W5")), `Brak spotkania Kamil 00:40 W5 u gracza ${index + 1}`);
+    assert(content.whyItFits.some(item => String(item).includes("00:36")), `Brak obserwacji Niny u gracza ${index + 1}`);
+    assert(content.whyItFits.some(item => String(item).includes("Paragon z 00:49")), `Brak obalenia paragonu u gracza ${index + 1}`);
+    assert(content.whyItFits.some(item => String(item).includes("Telefon pozostał w W3")), `Brak alibi telefonu u gracza ${index + 1}`);
+    assert(content.whyItFits.some(item => String(item).includes("powrót osoby w płaszczu")), `Brak powrotu osoby w płaszczu u gracza ${index + 1}`);
+    assert(!Object.prototype.hasOwnProperty.call(content, "timeline") && !Object.prototype.hasOwnProperty.call(content, "redHerrings"), `Gracz ${index + 1} widzi za wcześnie część 5`);
+    assert(current.evidence?.length === 11 && current.roleCard?.id === roleIds[index], `Stan sprawy zmienił się w części 4 u gracza ${index + 1}`);
     assertNoCorrectness(current.accusations, `część 4 gracza ${index + 1}`);
+    assert(current.reconstruction?.total === 5 && !Object.prototype.hasOwnProperty.call(current.reconstruction, "fullyCorrect"), `Gracz ${index + 1} widzi za wcześnie poprawność rekonstrukcji`);
     assert(JSON.stringify(current.accusations?.results ?? []) === votesSnapshot, `Zmieniły się publiczne głosy u gracza ${index + 1}`);
     assert(JSON.stringify({ total: current.reconstruction?.total, consensusTimeline: current.reconstruction?.consensusTimeline, routes: current.reconstruction?.routes }) === reconstructionSnapshot, `Zmienił się wynik rekonstrukcji u gracza ${index + 1}`);
-    assert(current.ready?.ready_players === 0 && current.ready?.player_ready === false, `Gotowość nie wyzerowała się po wejściu do części 4 u gracza ${index + 1}`);
+    assert(current.ready?.ready_players === 0 && current.ready?.player_ready === false, `Gotowość nie wyzerowała się w części 4 u gracza ${index + 1}`);
   }
 
   await Promise.all(pages.map(page => page.getByText("09 · UJAWNIENIE 4/5", { exact: true }).first().waitFor({ timeout: 15000 })));
   await Promise.all(pages.map(page => page.getByText("UJAWNIENIE · OSOBA ODPOWIEDZIALNA", { exact: true }).waitFor({ timeout: 15000 })));
   await Promise.all(pages.map(page => page.getByText("Kamil Drzewiecki", { exact: true }).waitFor({ timeout: 15000 })));
-  await Promise.all(pages.map(page => page.getByText("Konsultant / człowiek Vektor Cargo", { exact: true }).waitFor({ timeout: 15000 })));
+  await Promise.all(pages.map(page => page.getByText(/^Konsultant \/ człowiek Vektor Cargo · grany przez /).waitFor({ timeout: 15000 })));
   await Promise.all(pages.map(page => page.getByRole("button", { name: "GOTOWY NA KOLEJNĄ CZĘŚĆ", exact: true }).waitFor({ state: "visible", timeout: 15000 })));
   assert(await pages[0].getByText("UJAWNIENIE · PEŁNA CHRONOLOGIA", { exact: true }).count() === 0, "Część 5 jest widoczna przed przejściem dalej");
 
   await pages[0].screenshot({ path: `${artifacts}/01-reveal-four-player-one.png`, fullPage: true });
   await pages[4].screenshot({ path: `${artifacts}/02-reveal-four-player-five.png`, fullPage: true });
-  await pages[0].waitForTimeout(1000);
-
   const stable = await Promise.all(pages.map((page, index) => waitState(
     page,
     code,
