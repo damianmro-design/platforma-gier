@@ -96,7 +96,7 @@ jobs:
         run: |
           HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy")"
           echo "$HTML" | grep -Fq "75–115 min, zależnie od sprawy"
-          echo "$HTML" | grep -Fq "5–12 graczy, w trybie z prowadzącym dodatkowo 1 prowadzący"
+          echo "$HTML" | grep -Fq "Apartament 214: wymagany. Ostatni Kurs: prowadzący albo tryb automatyczny"
           echo "$HTML" | grep -Fq "Telefon gracza pokazuje jego prywatne akta oraz wspólne materiały śledztwa."
 
       - name: Run Ostatni Kurs host E2E
