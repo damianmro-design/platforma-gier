@@ -232,22 +232,23 @@ try {
   await pages[0].screenshot({ path: `${artifacts}/03-closed-after-refresh.png`, fullPage: true });
   check("Po pełnym refreshu wszystkie 5 istniejących sesji pozostaje w closed / finished / ok_zamknieta");
 
+  await pages[0].goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await pages[0].waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 20000 });
+  await pages[0].getByText("N417 dotarł do końca trasy.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  check("Istniejąca sesja otwierająca adres pokoju po finished wraca automatycznie na finalny ekran sprawy");
+
   const rejoinContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const rejoin = await rejoinContext.newPage();
   watch(rejoin, "closed-rejoin", errors);
   await rejoin.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  const recovered = await rejoin.evaluate(async ({ roomCode, name, recoveryCode }) => {
-    const response = await fetch(`/api/pokoj/${roomCode}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "recover", name, recoveryCode }),
-    });
-    return { status: response.status, body: await response.json().catch(() => null) };
-  }, { roomCode: code, name: names[0], recoveryCode: recoveryCodes[0] });
-  assert(recovered.status === 200 && recovered.body?.ok === true, `Nie udało się odzyskać gracza po zamknięciu Ostatniego Kursu: ${JSON.stringify(recovered.body)}`);
-
-  await rejoin.goto(`${baseURL}/gra/akta-nocy/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await rejoin.getByText("SPRAWA ZAKOŃCZONA", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  await rejoin.getByText("Akta są już zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  await rejoin.locator("#finishedRecoverName").fill(names[0]);
+  await rejoin.locator("#finishedRecoverCode").fill(recoveryCodes[0]);
+  await rejoin.getByRole("button", { name: "WRÓĆ DO ZAMKNIĘTYCH AKT", exact: true }).click();
+  await rejoin.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 20000 });
   await rejoin.getByText("N417 dotarł do końca trasy.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+
   const rejoinedState = await state(rejoin, code);
   assert(rejoinedState.status === 200, `Powrót do zamkniętego Ostatniego Kursu zwrócił HTTP ${rejoinedState.status}`);
   assert(rejoinedState.body?.role === "closed", `Po ponownym wejściu gracz dostał rolę ${rejoinedState.body?.role} zamiast closed`);
@@ -255,11 +256,11 @@ try {
   assert(rejoinedState.body?.room?.status === "finished", `Po ponownym wejściu status to ${rejoinedState.body?.room?.status} zamiast finished`);
   assert(rejoinedState.body?.room?.phase === "ok_zamknieta", `Po ponownym wejściu faza to ${rejoinedState.body?.room?.phase} zamiast ok_zamknieta`);
   await rejoin.screenshot({ path: `${artifacts}/04-closed-fresh-session-rejoin.png`, fullPage: true });
-  check("Nowa sesja bez cookies z poprawnym kodem powrotu odzyskuje gracza wyłącznie do zamkniętego stanu");
+  check("Nowa sesja bez cookies odzyskuje zamkniętą sprawę przez rzeczywisty formularz UI i trafia wyłącznie do closed / finished / ok_zamknieta");
 
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Ostatni Kurs CLOSED REJOIN E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Ostatni Kurs CLOSED REJOIN UI E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));

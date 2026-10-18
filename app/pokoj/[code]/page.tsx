@@ -3,6 +3,7 @@ import GameLobbyPreparation from "@/components/game-lobby-preparation";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAktaNocyRoomConfig, lookupPlatformRoom } from "@/lib/platform-db";
+import AktaFinishedRecovery from "./akta-finished-recovery";
 import LobbyClient from "./lobby-client";
 
 const GAME_LABELS: Record<string, string> = {
@@ -85,9 +86,18 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   const aktaConfig =
     room.game_slug === "akta-nocy" ? await getAktaNocyRoomConfig(code) : null;
+  const isFinishedAkta = room.game_slug === "akta-nocy" && room.status === "finished";
 
-  const lobby =
-    room.game_slug === "akta-nocy" && aktaConfig?.case_key === "ostatni-kurs"
+  const lobby = isFinishedAkta
+    ? {
+        theme:
+          aktaConfig?.case_key === "ostatni-kurs"
+            ? "room-theme-akta room-theme-ostatni-kurs"
+            : "room-theme-akta",
+        title: "Akta są już zamknięte.",
+        copy: "Jeśli brałeś udział w tej sprawie, możesz wrócić do finalnego ekranu. Ta sama sesja otworzy go automatycznie, a po utracie sesji użyj imienia i 6-znakowego kodu powrotu.",
+      }
+    : room.game_slug === "akta-nocy" && aktaConfig?.case_key === "ostatni-kurs"
       ? {
           theme: "room-theme-akta room-theme-ostatni-kurs",
           title:
@@ -100,17 +110,17 @@ export default async function RoomPage({ params }: RoomPageProps) {
               : "Po starcie każdy otrzyma tajną rolę i własne informacje. Prowadzący steruje dowodami i tempem śledztwa.",
         }
       : GAME_LOBBY[room.game_slug] ?? {
-    theme: "",
-    title: "Zbierz ekipę i zaczynamy.",
-    copy: "Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy pojawiają się tutaj automatycznie.",
-  };
+          theme: "",
+          title: "Zbierz ekipę i zaczynamy.",
+          copy: "Każdy wpisuje ten sam kod na stronie głównej platformy. Uczestnicy pojawiają się tutaj automatycznie.",
+        };
 
   return (
     <main className={`room-shell room-shell-live ${lobby.theme}`}>
       <div className="room-live-container">
         <header className="room-live-header">
           <div>
-            <span className="room-kicker">POCZEKALNIA</span>
+            <span className="room-kicker">{isFinishedAkta ? "SPRAWA ZAKOŃCZONA" : "POCZEKALNIA"}</span>
             <p>{GAME_LABELS[room.game_slug] ?? room.game_slug}</p>
           </div>
 
@@ -132,13 +142,19 @@ export default async function RoomPage({ params }: RoomPageProps) {
           <p>{lobby.copy}</p>
         </section>
 
-        <GameLobbyPreparation
-          slug={room.game_slug}
-          aktaMode={aktaConfig?.play_mode ?? null}
-          aktaCase={aktaConfig?.case_key ?? null}
-        />
+        {!isFinishedAkta && (
+          <GameLobbyPreparation
+            slug={room.game_slug}
+            aktaMode={aktaConfig?.play_mode ?? null}
+            aktaCase={aktaConfig?.case_key ?? null}
+          />
+        )}
 
-        <LobbyClient code={room.code} />
+        {isFinishedAkta ? (
+          <AktaFinishedRecovery code={room.code} />
+        ) : (
+          <LobbyClient code={room.code} />
+        )}
 
         <footer className="room-live-footer">
           <Link href="/">← Wróć do katalogu</Link>
