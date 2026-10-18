@@ -170,7 +170,7 @@ export default async function AktaNocyPage() {
                     Klasyczne śledztwo prowadzone przez jedną osobę.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-black">
-                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 osób</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 graczy + prowadzący</span>
                     <span className="rounded-full border border-white/10 px-3 py-2">75–105 min</span>
                     <span className="rounded-full border border-white/10 px-3 py-2">z prowadzącym</span>
                   </div>
@@ -198,7 +198,7 @@ export default async function AktaNocyPage() {
                     a głównym narzędziem dedukcji staje się interaktywna mapa składu.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-black text-slate-300">
-                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 osób</span>
+                    <span className="rounded-full border border-white/10 px-3 py-2">5–12 graczy</span>
                     <span className="rounded-full border border-white/10 px-3 py-2">85–115 min</span>
                     <span className="rounded-full border border-white/10 px-3 py-2">z prowadzącym lub bez</span>
                   </div>
@@ -220,6 +220,9 @@ export default async function AktaNocyPage() {
                       </button>
                     </form>
                   </div>
+                  <p className="mt-4 text-xs leading-5 text-slate-500">
+                    Z prowadzącym: 1 prowadzący + 5–12 graczy. Bez prowadzącego: twórca pokoju jest jednym z 5–12 graczy.
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-3">
                     <TestGameButton gameSlug="akta-nocy" aktaCase="ostatni-kurs" aktaMode="host" label="Test z prowadzącym" />
                     <TestGameButton gameSlug="akta-nocy" aktaCase="ostatni-kurs" aktaMode="auto" label="Test bez prowadzącego" />
@@ -241,8 +244,9 @@ export default async function AktaNocyPage() {
             ))}
           </div>
           <div className="mt-6 rounded-2xl border border-emerald-300/10 bg-emerald-300/[.035] p-5 text-sm leading-7 text-orange-50/55">
-            <strong className="text-orange-50">Czego potrzebujecie:</strong> 5–12 osób i po jednym telefonie na gracza.
-            Wspólny ekran jest opcjonalny. Nie trzeba nic drukować ani instalować.
+            <strong className="text-orange-50">Czego potrzebujecie:</strong> 5–12 graczy i po jednym telefonie na gracza.
+            W trybie z prowadzącym potrzebna jest dodatkowo 1 osoba prowadząca na własnym urządzeniu.
+            Wspólny ekran TV lub komputer jest opcjonalny. Nie trzeba nic drukować ani instalować.
           </div>
         </section>
 
@@ -302,9 +306,9 @@ export default async function AktaNocyPage() {
               Śledztwo odsłania się warstwa po warstwie
             </h2>
             <p className="mt-4 text-sm leading-7 text-orange-50/50">
-              Telefon pokazuje wyłącznie prywatne informacje danej postaci.
-              W trybie z prowadzącym jedna osoba steruje etapami. W trybie automatycznym
-              gracze klikają „Gotowy”, a system sam odsłania kolejne części śledztwa.
+              Telefon gracza pokazuje jego prywatne akta oraz wspólne materiały śledztwa. Prywatnych ról, rekonstrukcji i oskarżeń nie pokazujcie innym.
+              W trybie z prowadzącym prowadzący korzysta z własnego urządzenia, nie dostaje roli gracza i steruje etapami.
+              W trybie automatycznym gracze klikają „Gotowy”, a system sam odsłania kolejne części śledztwa.
             </p>
           </div>
 
@@ -340,7 +344,7 @@ export default async function AktaNocyPage() {
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
             <div className="rounded-[1.75rem] border border-orange-100/10 bg-white/[.025] p-6 sm:p-8">
               <p className="text-[10px] font-black uppercase tracking-[.26em] text-orange-300/65">
-                Skalowanie 5–12 osób
+                Skalowanie 5–12 graczy
               </p>
               <h2 className="mt-3 text-2xl font-black">Sprawa ma działać niezależnie od wielkości ekipy.</h2>
               <p className="mt-4 text-sm leading-7 text-orange-50/50">
