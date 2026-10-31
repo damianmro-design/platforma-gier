@@ -6,8 +6,15 @@ export const ZAGRAJ_GAME_MEDIA_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
 const SAFE_PATH = /^[a-z0-9]+(?:-[a-z0-9]+)*\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:png|jpg|jpeg|webp)$/;
 
+const BUILTIN_MEDIA: Record<string, string> = {
+  "builtin:floor-party": "/game-art/floor-party-logo.svg",
+  "builtin:polowanie-na-milionera": "/game-art/polowanie-na-milionera.svg",
+};
+
 export function gameMediaUrl(path: string | null | undefined): string | null {
-  if (!path || !SAFE_PATH.test(path)) return null;
+  if (!path) return null;
+  if (BUILTIN_MEDIA[path]) return BUILTIN_MEDIA[path];
+  if (!SAFE_PATH.test(path)) return null;
   return `${PARTYPLAY_AUTH_URL}/storage/v1/object/public/${ZAGRAJ_GAME_MEDIA_BUCKET}/${path}`;
 }
 
