@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Polowanie na Milionera</title>
+  <desc id="desc">Złote logo gry Polowanie na Milionera na ciemnym tle</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%"><stop offset="0" stop-color="#3b2608"/><stop offset=".48" stop-color="#161006"/><stop offset="1" stop-color="#05060b"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff7d6"/><stop offset=".3" stop-color="#ffd56a"/><stop offset=".65" stop-color="#d89a19"/><stop offset="1" stop-color="#7d4c08"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity=".7"/></filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="315" r="230" fill="none" stroke="#d7a42a" stroke-opacity=".23" stroke-width="3"/>
+  <circle cx="600" cy="315" r="195" fill="none" stroke="#f0c85a" stroke-opacity=".16" stroke-width="2"/>
+  <path d="M340 228h520M305 395h590" stroke="url(#gold)" stroke-width="4" opacity=".75" filter="url(#glow)"/>
+  <g text-anchor="middle" filter="url(#shadow)" font-family="Arial Black, Impact, sans-serif" font-weight="900">
+    <text x="600" y="255" font-size="66" letter-spacing="12" fill="#f3c95d">POLOWANIE NA</text>
+    <text x="600" y="370" font-size="118" letter-spacing="-3" fill="url(#gold)" stroke="#5f3d09" stroke-width="3">MILIONERA</text>
+  </g>
+  <text x="600" y="445" text-anchor="middle" font-family="Arial, sans-serif" font-size="25" letter-spacing="10" fill="#f5df9a" opacity=".72">TAJNE ROLE • BLEF • MILION</text>
+</svg>
