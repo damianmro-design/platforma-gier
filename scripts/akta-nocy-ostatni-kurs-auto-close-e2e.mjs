@@ -1,8 +1,11 @@
 import { chromium } from "playwright";
 import fs from "node:fs/promises";
+import { createClient } from "@supabase/supabase-js";
 
 const baseURL = process.env.AKTA_BASE_URL || "http://127.0.0.1:3000";
 const artifacts = "artifacts/akta-nocy-ostatni-kurs-auto-close";
+const supabaseURL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://glcjetxskjnlbeegirln.supabase.co";
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_Zv_I8mghmQSYPzdit-lzvA_TrUcdkZ8";
 await fs.mkdir(artifacts, { recursive: true });
 
 function assert(value, message) {
@@ -22,6 +25,32 @@ function watch(page, label, errors) {
     const url = response.url();
     if (!url.includes("qrserver.com") && !url.includes("favicon")) errors.push(`${label} HTTP ${response.status()}: ${url}`);
   });
+}
+
+async function createAutoRoom() {
+  const supabase = createClient(supabaseURL, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+  const { data, error } = await supabase.rpc("create_platform_room", {
+    p_game_slug: "akta-nocy",
+  });
+  if (error) throw new Error(`Nie udało się utworzyć pokoju E2E: ${error.message}`);
+  const room = Array.isArray(data) ? data[0] : data;
+  assert(room?.code && room?.host_token, "RPC create_platform_room nie zwrócił pokoju E2E");
+
+  const { data: configured, error: configureError } = await supabase.rpc("configure_akta_nocy_room", {
+    p_code: room.code,
+    p_host_token: room.host_token,
+    p_case_key: "ostatni-kurs",
+    p_play_mode: "auto",
+  });
+  if (configureError) throw new Error(`Nie udało się skonfigurować pokoju E2E: ${configureError.message}`);
+  assert(configured === true, "RPC configure_akta_nocy_room nie skonfigurował Ostatniego Kursu");
+  return String(room.code);
 }
 
 async function join(page, code, name) {
@@ -104,14 +133,11 @@ try {
     watch(page, `player-${index + 1}`, errors);
   }
 
-  const creator = pages[0];
-  await creator.goto(`${baseURL}/gry/akta-nocy`, { waitUntil: "networkidle", timeout: 60000 });
-  await creator.getByRole("button", { name: "BEZ PROWADZĄCEGO", exact: true }).click();
-  await creator.waitForURL(/\/pokoj\/[A-Z0-9]{4,6}$/, { timeout: 45000 });
-  const code = creator.url().split("/").pop();
-  assert(code, "Brak kodu pokoju");
+  const code = await createAutoRoom();
   report.roomCode = code;
+  check("Pokój Ostatniego Kursu w trybie auto przygotowany niezależnie od warstwy deploymentu");
 
+  const creator = pages[0];
   const names = [];
   const recoveryCodes = [];
   for (let index = 0; index < pages.length; index += 1) {
