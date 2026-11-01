@@ -50,7 +50,7 @@ async function createAutoRoom() {
   });
   if (configureError) throw new Error(`Nie udało się skonfigurować pokoju E2E: ${configureError.message}`);
   assert(configured === true, "RPC configure_akta_nocy_room nie skonfigurował Ostatniego Kursu");
-  return String(room.code);
+  return { code: String(room.code), hostToken: String(room.host_token) };
 }
 
 async function join(page, code, name) {
@@ -133,11 +133,21 @@ try {
     watch(page, `player-${index + 1}`, errors);
   }
 
-  const code = await createAutoRoom();
+  const { code, hostToken } = await createAutoRoom();
   report.roomCode = code;
   check("Pokój Ostatniego Kursu w trybie auto przygotowany niezależnie od warstwy deploymentu");
 
   const creator = pages[0];
+  await creator.context().addCookies([{
+    name: `partyplay_host_${code}`,
+    value: hostToken,
+    url: baseURL,
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: baseURL.startsWith("https://"),
+  }]);
+  check("Pierwszy telefon otrzymał sesję twórcy pokoju potrzebną do auto-startu");
+
   const names = [];
   const recoveryCodes = [];
   for (let index = 0; index < pages.length; index += 1) {
