@@ -4,8 +4,16 @@ import { createClient } from "@supabase/supabase-js";
 
 const baseURL = process.env.AKTA_BASE_URL || "http://127.0.0.1:3000";
 const artifacts = "artifacts/akta-nocy-ostatni-kurs-auto-close";
-const supabaseURL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://glcjetxskjnlbeegirln.supabase.co";
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_Zv_I8mghmQSYPzdit-lzvA_TrUcdkZ8";
+const platformDbSource = await fs.readFile(new URL("../lib/platform-db.ts", import.meta.url), "utf8");
+
+function sourceDefault(name) {
+  const match = platformDbSource.match(new RegExp(`${name}\\s*=\\s*\\n?\\s*"([^"]+)"`));
+  if (!match?.[1]) throw new Error(`Brak ${name} w lib/platform-db.ts`);
+  return match[1];
+}
+
+const supabaseURL = process.env.NEXT_PUBLIC_SUPABASE_URL || sourceDefault("DEFAULT_SUPABASE_URL");
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || sourceDefault("DEFAULT_SUPABASE_PUBLISHABLE_KEY");
 await fs.mkdir(artifacts, { recursive: true });
 
 function assert(value, message) {
@@ -53,11 +61,36 @@ async function createAutoRoom() {
   return { code: String(room.code), hostToken: String(room.host_token) };
 }
 
-async function join(page, code, name) {
-  await page.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.locator("#playerName").fill(name);
-  await page.getByRole("button", { name: "Dołącz jako gość" }).click();
-  await page.getByText("GRASZ JAKO").waitFor({ timeout: 15000 });
+async function lobbyAction(page, code, payload) {
+  return page.evaluate(async ({ code, payload }) => {
+    const response = await fetch(`/api/pokoj/${code}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return { status: response.status, body: await response.json().catch(() => null) };
+  }, { code, payload });
+}
+
+async function joinViaApi(page, code, name) {
+  await page.goto(`${baseURL}/gry/akta-nocy`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  const joined = await lobbyAction(page, code, {
+    action: "join",
+    name,
+    avatar: "avatar-01",
+  });
+  const playerToken = joined.body?.player?.player_token;
+  assert(joined.status === 200 && playerToken, `Dołączenie ${name} nie powiodło się: ${JSON.stringify(joined)}`);
+
+  await page.context().addCookies([{
+    name: `partyplay_player_${code}`,
+    value: String(playerToken),
+    url: baseURL,
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: baseURL.startsWith("https://"),
+  }]);
+
   const lobby = await page.evaluate(async roomCode => {
     const response = await fetch(`/api/pokoj/${roomCode}`, { cache: "no-store" });
     return { status: response.status, body: await response.json().catch(() => null) };
@@ -146,18 +179,29 @@ try {
     sameSite: "Lax",
     secure: baseURL.startsWith("https://"),
   }]);
-  check("Pierwszy telefon otrzymał sesję twórcy pokoju potrzebną do auto-startu");
 
   const names = [];
   const recoveryCodes = [];
   for (let index = 0; index < pages.length; index += 1) {
     const name = `E2E Close ${index + 1}`;
     names.push(name);
-    recoveryCodes.push(await join(pages[index], code, name));
+    recoveryCodes.push(await joinViaApi(pages[index], code, name));
   }
-  await Promise.all(pages.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
-  await creator.getByText("5/5 gotowych").waitFor({ timeout: 15000 });
-  await Promise.all(pages.map(page => page.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 25000 })));
+  check("5 graczy dołączonych przez istniejące API, kody powrotu zapisane");
+
+  for (const page of pages) {
+    const ready = await lobbyAction(page, code, { action: "ready", ready: true });
+    assert(ready.status === 200 && ready.body?.ok === true, `Gotowość lobby nie powiodła się: ${JSON.stringify(ready)}`);
+  }
+
+  const started = await lobbyAction(creator, code, { action: "start" });
+  assert(started.status === 200 && started.body?.ok === true, `Start Ostatniego Kursu nie powiódł się: ${JSON.stringify(started)}`);
+  check("Ostatni Kurs uruchomiony przez istniejące API po 5/5 gotowych");
+
+  await Promise.all(pages.map(page => page.goto(`${baseURL}/gra/akta-nocy/${code}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
+  })));
 
   const startStates = await Promise.all(pages.map((page, index) => waitState(
     page,
