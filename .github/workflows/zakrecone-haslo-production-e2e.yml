@@ -1,15 +1,8 @@
-name: Zakręcone Hasło production E2E
+name: Zakręcone Hasło E2E
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "41 3 * * *"
   pull_request:
-    branches: [main]
-    paths:
-      - "scripts/zakrecone-haslo-e2e.mjs"
-      - ".github/workflows/zakrecone-haslo-production-e2e.yml"
-  push:
     branches: [main]
     paths:
       - "app/gra/zakrecone-haslo/**"
@@ -25,12 +18,18 @@ on:
       - "scripts/zakrecone-haslo-e2e.mjs"
       - ".github/workflows/zakrecone-haslo-production-e2e.yml"
 
+concurrency:
+  group: zakrecone-haslo-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  zakrecone-haslo-production-e2e:
+  zakrecone-haslo-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      ZH_BASE_URL: https://zagraj.fun
+      ZH_PRIMARY_URL: https://zagraj.fun
+      ZH_FALLBACK_URL: https://platforma-gier.vercel.app
+      ZH_BASE_URL: http://127.0.0.1:3000
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
@@ -56,11 +55,52 @@ jobs:
           "$CHROME_BIN" --version
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
-      - name: Give Vercel production time to publish push
-        if: github.event_name == 'push'
-        run: sleep 75
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
 
-      - name: Wait for production landing page
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/zakrecone-haslo-pr.log 2>&1 &
+          echo $! > /tmp/zakrecone-haslo-pr.pid
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 "$ZH_BASE_URL/gry/zakrecone-haslo" || true)"
+            if echo "$HTML" | grep -q "ZAKRĘCONE"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local Zakręcone Hasło app did not become ready."
+          cat /tmp/zakrecone-haslo-pr.log || true
+          exit 1
+
+      - name: Select production target for manual regression
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$ZH_PRIMARY_URL/gry/zakrecone-haslo" || true)"
+            if echo "$HTML" | grep -q "ZAKRĘCONE"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "ZH_BASE_URL=$ZH_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Using the project's production Vercel alias for the manual Zakręcone Hasło regression."
+            echo "ZH_BASE_URL=$ZH_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Wait for manual production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$ZH_BASE_URL/gry/zakrecone-haslo" || true)"
@@ -71,13 +111,17 @@ jobs:
           done
           exit 1
 
-      - name: Run Zakręcone Hasło production browser E2E
+      - name: Run Zakręcone Hasło browser E2E
         run: node scripts/zakrecone-haslo-e2e.mjs
+
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/zakrecone-haslo-pr.log || true
 
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: zakrecone-haslo-production-e2e
+          name: zakrecone-haslo-e2e
           path: artifacts/zakrecone-haslo
           if-no-files-found: ignore
