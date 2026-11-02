@@ -1,15 +1,8 @@
-name: TYLKO MY production E2E
+name: TYLKO MY E2E
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "23 3 * * *"
   pull_request:
-    branches: [main]
-    paths:
-      - "scripts/tylko-my-e2e.mjs"
-      - ".github/workflows/tylko-my-production-e2e.yml"
-  push:
     branches: [main]
     paths:
       - "app/gra/tylko-my/**"
@@ -23,14 +16,18 @@ on:
       - "scripts/tylko-my-e2e.mjs"
       - ".github/workflows/tylko-my-production-e2e.yml"
 
+concurrency:
+  group: tylko-my-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  tylko-my-production-e2e:
+  tylko-my-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       TYLKO_MY_PRIMARY_URL: https://zagraj.fun
       TYLKO_MY_FALLBACK_URL: https://platforma-gier.vercel.app
-      TYLKO_MY_BASE_URL: https://zagraj.fun
+      TYLKO_MY_BASE_URL: http://127.0.0.1:3000
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
     steps:
@@ -56,11 +53,32 @@ jobs:
           "$CHROME_BIN" --version
           echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
-      - name: Give Vercel production time to publish push
-        if: github.event_name == 'push'
-        run: sleep 75
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
 
-      - name: Select reachable production target
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/tylko-my-pr.log 2>&1 &
+          echo $! > /tmp/tylko-my-pr.pid
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 "$TYLKO_MY_BASE_URL/gry/tylko-my" || true)"
+            if echo "$HTML" | grep -q "Odpowiadajcie osobno"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local TYLKO MY app did not become ready."
+          cat /tmp/tylko-my-pr.log || true
+          exit 1
+
+      - name: Select production target for manual regression
+        if: github.event_name == 'workflow_dispatch'
         run: |
           PRIMARY_OK=0
           for i in {1..6}; do
@@ -73,14 +91,14 @@ jobs:
           done
 
           if [ "$PRIMARY_OK" -eq 1 ]; then
-            echo "Custom domain is reachable: $TYLKO_MY_PRIMARY_URL"
             echo "TYLKO_MY_BASE_URL=$TYLKO_MY_PRIMARY_URL" >> "$GITHUB_ENV"
           else
-            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so the game regression test can still run. Check DNS configuration for zagraj.fun."
+            echo "::warning title=zagraj.fun unavailable::Using the project's production Vercel alias for the manual TYLKO MY regression."
             echo "TYLKO_MY_BASE_URL=$TYLKO_MY_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
 
-      - name: Wait for selected production landing page
+      - name: Wait for manual production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$TYLKO_MY_BASE_URL/gry/tylko-my" || true)"
@@ -91,13 +109,17 @@ jobs:
           done
           exit 1
 
-      - name: Run TYLKO MY production browser E2E
+      - name: Run TYLKO MY browser E2E
         run: node scripts/tylko-my-e2e.mjs
+
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/tylko-my-pr.log || true
 
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tylko-my-production-e2e
+          name: tylko-my-e2e
           path: artifacts/tylko-my
           if-no-files-found: ignore
