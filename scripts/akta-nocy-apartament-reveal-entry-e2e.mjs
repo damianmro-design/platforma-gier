@@ -97,8 +97,20 @@ function watch(page, label) {
   page.on("console", message => {
     if (message.type() !== "error") return;
     const text = message.text();
-    if (text.includes("favicon") || text.includes("qrserver")) return;
+    if (
+      text.includes("favicon") ||
+      text.includes("qrserver") ||
+      text.startsWith("Failed to load resource:")
+    ) return;
     errors.push(`${label} console: ${text}`);
+  });
+  page.on("response", response => {
+    if (response.status() < 400) return;
+    const url = response.url();
+    if (url.includes("favicon") || url.includes("qrserver.com")) return;
+    if (url.startsWith(baseURL) || response.status() >= 500) {
+      errors.push(`${label} HTTP ${response.status()}: ${url}`);
+    }
   });
 }
 
