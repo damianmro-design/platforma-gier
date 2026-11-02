@@ -13,17 +13,10 @@ on:
       - "app/api/pokoj/**"
       - "lib/akta-nocy-ostatni-kurs*"
       - "lib/platform-db*"
-  push:
-    branches: [main]
-    paths:
-      - "scripts/akta-nocy-ostatni-kurs-auto-close-e2e.mjs"
-      - ".github/workflows/akta-nocy-ostatni-kurs-auto-close-e2e.yml"
-      - "app/gra/akta-nocy/**"
-      - "app/api/gra/akta-nocy-ostatni-kurs/**"
-      - "app/pokoj/**"
-      - "app/api/pokoj/**"
-      - "lib/akta-nocy-ostatni-kurs*"
-      - "lib/platform-db*"
+
+concurrency:
+  group: akta-nocy-heavy-e2e
+  cancel-in-progress: false
 
 jobs:
   ostatni-kurs-closed-rejoin:
@@ -52,18 +45,18 @@ jobs:
           npx playwright install chromium
 
       - name: Build PR app locally
-        if: github.event_name != 'push'
+        if: github.event_name == 'pull_request'
         run: npm run build
 
       - name: Start PR app locally
-        if: github.event_name != 'push'
+        if: github.event_name == 'pull_request'
         run: |
           nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/akta-pr.log 2>&1 &
           echo $! > /tmp/akta-pr.pid
           echo "AKTA_BASE_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
 
       - name: Wait for local PR app
-        if: github.event_name != 'push'
+        if: github.event_name == 'pull_request'
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 10 http://127.0.0.1:3000/gry/akta-nocy || true)"
@@ -76,12 +69,8 @@ jobs:
           cat /tmp/akta-pr.log || true
           exit 1
 
-      - name: Give Vercel production time to publish push
-        if: github.event_name == 'push'
-        run: sleep 75
-
       - name: Select reachable production target
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           PRIMARY_OK=0
           for i in {1..6}; do
@@ -95,12 +84,12 @@ jobs:
           if [ "$PRIMARY_OK" -eq 1 ]; then
             echo "AKTA_BASE_URL=$AKTA_PRIMARY_URL" >> "$GITHUB_ENV"
           else
-            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable. Running Ostatni Kurs regression against the production Vercel alias. Check DNS configuration for zagraj.fun."
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable. Running Ostatni Kurs regression against the production Vercel alias."
             echo "AKTA_BASE_URL=$AKTA_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
 
       - name: Wait for selected production landing page
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..30}; do
             HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy" || true)"
@@ -115,7 +104,7 @@ jobs:
         run: node scripts/akta-nocy-ostatni-kurs-auto-close-e2e.mjs
 
       - name: Show local app log on failure
-        if: failure() && github.event_name != 'push'
+        if: failure() && github.event_name == 'pull_request'
         run: cat /tmp/akta-pr.log || true
 
       - name: Upload screenshots and report

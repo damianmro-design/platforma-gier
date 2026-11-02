@@ -1,0 +1,135 @@
+name: AKTA NOCY manual regression lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "Exact AKTA NOCY E2E script path, e.g. scripts/akta-nocy-apartament-start-e2e.mjs"
+        required: true
+        default: "scripts/akta-nocy-apartament-start-e2e.mjs"
+        type: string
+      target:
+        description: "Run against a local production build or the deployed production site"
+        required: true
+        default: local
+        type: choice
+        options:
+          - local
+          - production
+
+concurrency:
+  group: akta-nocy-heavy-e2e
+  cancel-in-progress: false
+
+jobs:
+  regression-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AKTA_SCRIPT: ${{ inputs.script }}
+      AKTA_TARGET: ${{ inputs.target }}
+      AKTA_PRIMARY_URL: https://zagraj.fun
+      AKTA_FALLBACK_URL: https://platforma-gier.vercel.app
+      AKTA_BASE_URL: https://zagraj.fun
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate requested AKTA NOCY script
+        run: |
+          case "$AKTA_SCRIPT" in
+            scripts/akta-nocy-*.mjs) ;;
+            *)
+              echo "Only versioned AKTA NOCY scripts under scripts/akta-nocy-*.mjs are allowed."
+              exit 1
+              ;;
+          esac
+          if [ ! -f "$AKTA_SCRIPT" ]; then
+            echo "Script does not exist: $AKTA_SCRIPT"
+            exit 1
+          fi
+
+      - name: Install app dependencies
+        run: npm ci
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
+
+      - name: Build app locally
+        if: inputs.target == 'local'
+        run: npm run build
+
+      - name: Start local app
+        if: inputs.target == 'local'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/akta-regression-lab.log 2>&1 &
+          echo $! > /tmp/akta-regression-lab.pid
+          echo "AKTA_BASE_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
+
+      - name: Wait for local app
+        if: inputs.target == 'local'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 http://127.0.0.1:3000/gry/akta-nocy || true)"
+            if echo "$HTML" | grep -Eqi "AKTA|Ostatni Kurs|Apartament 214"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local app did not become ready."
+          cat /tmp/akta-regression-lab.log || true
+          exit 1
+
+      - name: Select reachable production target
+        if: inputs.target == 'production'
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$AKTA_PRIMARY_URL/gry/akta-nocy" || true)"
+            if echo "$HTML" | grep -Eqi "AKTA|Ostatni Kurs|Apartament 214"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "AKTA_BASE_URL=$AKTA_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Using the production Vercel alias for this manual AKTA NOCY regression."
+            echo "AKTA_BASE_URL=$AKTA_FALLBACK_URL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Wait for selected production landing page
+        if: inputs.target == 'production'
+        run: |
+          for i in {1..30}; do
+            HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy" || true)"
+            if echo "$HTML" | grep -Eqi "AKTA|Ostatni Kurs|Apartament 214"; then
+              exit 0
+            fi
+            sleep 4
+          done
+          exit 1
+
+      - name: Run requested AKTA NOCY regression
+        run: node "$AKTA_SCRIPT"
+
+      - name: Show local app log on failure
+        if: failure() && inputs.target == 'local'
+        run: cat /tmp/akta-regression-lab.log || true
+
+      - name: Upload regression artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: akta-nocy-manual-regression
+          path: artifacts
+          if-no-files-found: ignore

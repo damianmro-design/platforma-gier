@@ -13,22 +13,15 @@ on:
       - "app/api/pokoj/**"
       - "lib/akta-nocy*"
       - "lib/platform-db*"
-  push:
-    branches: [main]
-    paths:
-      - "app/gra/akta-nocy/**"
-      - "app/api/gra/akta-nocy/**"
-      - "app/pokoj/**"
-      - "app/api/pokoj/**"
-      - "lib/akta-nocy*"
-      - "lib/platform-db*"
-      - "scripts/akta-nocy-apartament-reveal-entry-e2e.mjs"
-      - ".github/workflows/akta-nocy-apartament-reveal-entry-e2e.yml"
+
+concurrency:
+  group: akta-nocy-heavy-e2e
+  cancel-in-progress: false
 
 jobs:
   apartament-reveal-entry:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       AKTA_PRIMARY_URL: https://zagraj.fun
       AKTA_FALLBACK_URL: https://platforma-gier.vercel.app
@@ -51,16 +44,38 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.55.0
           npx playwright install chromium
 
-      - name: Give Vercel production time to publish push
-        if: github.event_name == 'push'
-        run: sleep 75
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
+
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/akta-apartament-pr.log 2>&1 &
+          echo $! > /tmp/akta-apartament-pr.pid
+          echo "AKTA_BASE_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 http://127.0.0.1:3000/gry/akta-nocy || true)"
+            if echo "$HTML" | grep -qi "Apartament 214"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local app did not become ready."
+          cat /tmp/akta-apartament-pr.log || true
+          exit 1
 
       - name: Select reachable production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           PRIMARY_OK=0
           for i in {1..6}; do
             HTML="$(curl -LfsS --max-time 10 "$AKTA_PRIMARY_URL/gry/akta-nocy" || true)"
-            if echo "$HTML" | grep -qi "AKTA"; then
+            if echo "$HTML" | grep -qi "Apartament 214"; then
               PRIMARY_OK=1
               break
             fi
@@ -69,11 +84,12 @@ jobs:
           if [ "$PRIMARY_OK" -eq 1 ]; then
             echo "AKTA_BASE_URL=$AKTA_PRIMARY_URL" >> "$GITHUB_ENV"
           else
-            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable. Running the Apartament 214 regression against the production Vercel alias. Check DNS configuration for zagraj.fun."
+            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable. Running Apartament 214 regression against the production Vercel alias."
             echo "AKTA_BASE_URL=$AKTA_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
 
       - name: Wait for selected production landing page
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..30}; do
             HTML="$(curl -LfsS --max-time 20 "$AKTA_BASE_URL/gry/akta-nocy" || true)"
@@ -86,6 +102,10 @@ jobs:
 
       - name: Run reveal entry E2E
         run: node scripts/akta-nocy-apartament-reveal-entry-e2e.mjs
+
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/akta-apartament-pr.log || true
 
       - name: Upload screenshots and report
         if: always()
