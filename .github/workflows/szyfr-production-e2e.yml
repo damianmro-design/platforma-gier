@@ -1,15 +1,8 @@
-name: SZYFR production E2E
+name: SZYFR E2E
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "41 3 * * *"
   pull_request:
-    branches: [main]
-    paths:
-      - "scripts/szyfr-e2e.mjs"
-      - ".github/workflows/szyfr-production-e2e.yml"
-  push:
     branches: [main]
     paths:
       - "app/gra/szyfr/**"
@@ -24,14 +17,18 @@ on:
       - "scripts/szyfr-e2e.mjs"
       - ".github/workflows/szyfr-production-e2e.yml"
 
+concurrency:
+  group: szyfr-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  szyfr-production-e2e:
+  szyfr-e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       SZYFR_PRIMARY_URL: https://zagraj.fun
       SZYFR_FALLBACK_URL: https://platforma-gier.vercel.app
-      SZYFR_BASE_URL: https://zagraj.fun
+      SZYFR_BASE_URL: http://127.0.0.1:3000
 
     steps:
       - name: Checkout
@@ -50,11 +47,32 @@ jobs:
           npm install --no-save --package-lock=false playwright@1.55.0
           npx playwright install chromium
 
-      - name: Give Vercel production time to publish push
-        if: github.event_name == 'push'
-        run: sleep 75
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
 
-      - name: Select reachable production target
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/szyfr-pr.log 2>&1 &
+          echo $! > /tmp/szyfr-pr.pid
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 "$SZYFR_BASE_URL/gry/szyfr" || true)"
+            if echo "$HTML" | grep -qi "SZYFR"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local SZYFR app did not become ready."
+          cat /tmp/szyfr-pr.log || true
+          exit 1
+
+      - name: Select production target for manual regression
+        if: github.event_name == 'workflow_dispatch'
         run: |
           PRIMARY_OK=0
           for i in {1..6}; do
@@ -67,14 +85,14 @@ jobs:
           done
 
           if [ "$PRIMARY_OK" -eq 1 ]; then
-            echo "Custom domain is reachable: $SZYFR_PRIMARY_URL"
             echo "SZYFR_BASE_URL=$SZYFR_PRIMARY_URL" >> "$GITHUB_ENV"
           else
-            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so SZYFR regression testing can still run. Check DNS configuration for zagraj.fun."
+            echo "::warning title=zagraj.fun unavailable::Using the project's production Vercel alias for the manual SZYFR regression."
             echo "SZYFR_BASE_URL=$SZYFR_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
 
-      - name: Wait for selected production landing page
+      - name: Wait for manual production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$SZYFR_BASE_URL/gry/szyfr" || true)"
@@ -85,13 +103,17 @@ jobs:
           done
           exit 1
 
-      - name: Run SZYFR production browser E2E
+      - name: Run SZYFR browser E2E
         run: node scripts/szyfr-e2e.mjs
+
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/szyfr-pr.log || true
 
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: szyfr-production-e2e
+          name: szyfr-e2e
           path: artifacts/szyfr
           if-no-files-found: ignore
