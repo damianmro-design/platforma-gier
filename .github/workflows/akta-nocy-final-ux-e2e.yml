@@ -11,10 +11,6 @@ on:
       - "scripts/akta-nocy-final-ux-contract.mjs"
       - ".github/workflows/akta-nocy-final-ux-e2e.yml"
 
-concurrency:
-  group: akta-nocy-heavy-e2e
-  cancel-in-progress: false
-
 jobs:
   final-ux:
     runs-on: ubuntu-latest
