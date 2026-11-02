@@ -1,8 +1,19 @@
 import { chromium } from "playwright";
 import fs from "node:fs/promises";
+import { createClient } from "@supabase/supabase-js";
 
 const baseURL = process.env.AKTA_BASE_URL || "http://127.0.0.1:3000";
 const artifacts = "artifacts/akta-nocy-ostatni-kurs-auto-close";
+const platformDbSource = await fs.readFile(new URL("../lib/platform-db.ts", import.meta.url), "utf8");
+
+function sourceDefault(name) {
+  const match = platformDbSource.match(new RegExp(`${name}\\s*=\\s*\\n?\\s*"([^"]+)"`));
+  if (!match?.[1]) throw new Error(`Brak ${name} w lib/platform-db.ts`);
+  return match[1];
+}
+
+const supabaseURL = process.env.NEXT_PUBLIC_SUPABASE_URL || sourceDefault("DEFAULT_SUPABASE_URL");
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || sourceDefault("DEFAULT_SUPABASE_PUBLISHABLE_KEY");
 await fs.mkdir(artifacts, { recursive: true });
 
 function assert(value, message) {
@@ -24,11 +35,62 @@ function watch(page, label, errors) {
   });
 }
 
-async function join(page, code, name) {
-  await page.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.locator("#playerName").fill(name);
-  await page.getByRole("button", { name: "Dołącz jako gość" }).click();
-  await page.getByText("GRASZ JAKO").waitFor({ timeout: 15000 });
+async function createAutoRoom() {
+  const supabase = createClient(supabaseURL, supabaseKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+  const { data, error } = await supabase.rpc("create_platform_room", {
+    p_game_slug: "akta-nocy",
+  });
+  if (error) throw new Error(`Nie udało się utworzyć pokoju E2E: ${error.message}`);
+  const room = Array.isArray(data) ? data[0] : data;
+  assert(room?.code && room?.host_token, "RPC create_platform_room nie zwrócił pokoju E2E");
+
+  const { data: configured, error: configureError } = await supabase.rpc("configure_akta_nocy_room", {
+    p_code: room.code,
+    p_host_token: room.host_token,
+    p_case_key: "ostatni-kurs",
+    p_play_mode: "auto",
+  });
+  if (configureError) throw new Error(`Nie udało się skonfigurować pokoju E2E: ${configureError.message}`);
+  assert(configured === true, "RPC configure_akta_nocy_room nie skonfigurował Ostatniego Kursu");
+  return { code: String(room.code), hostToken: String(room.host_token) };
+}
+
+async function lobbyAction(page, code, payload) {
+  return page.evaluate(async ({ code, payload }) => {
+    const response = await fetch(`/api/pokoj/${code}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return { status: response.status, body: await response.json().catch(() => null) };
+  }, { code, payload });
+}
+
+async function joinViaApi(page, code, name) {
+  await page.goto(`${baseURL}/gry/akta-nocy`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  const joined = await lobbyAction(page, code, {
+    action: "join",
+    name,
+    avatar: "avatar-01",
+  });
+  const playerToken = joined.body?.player?.player_token;
+  assert(joined.status === 200 && playerToken, `Dołączenie ${name} nie powiodło się: ${JSON.stringify(joined)}`);
+
+  await page.context().addCookies([{
+    name: `partyplay_player_${code}`,
+    value: String(playerToken),
+    url: baseURL,
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: baseURL.startsWith("https://"),
+  }]);
+
   const lobby = await page.evaluate(async roomCode => {
     const response = await fetch(`/api/pokoj/${roomCode}`, { cache: "no-store" });
     return { status: response.status, body: await response.json().catch(() => null) };
@@ -104,24 +166,42 @@ try {
     watch(page, `player-${index + 1}`, errors);
   }
 
-  const creator = pages[0];
-  await creator.goto(`${baseURL}/gry/akta-nocy`, { waitUntil: "networkidle", timeout: 60000 });
-  await creator.getByRole("button", { name: "BEZ PROWADZĄCEGO", exact: true }).click();
-  await creator.waitForURL(/\/pokoj\/[A-Z0-9]{4,6}$/, { timeout: 45000 });
-  const code = creator.url().split("/").pop();
-  assert(code, "Brak kodu pokoju");
+  const { code, hostToken } = await createAutoRoom();
   report.roomCode = code;
+  check("Pokój Ostatniego Kursu w trybie auto przygotowany niezależnie od warstwy deploymentu");
+
+  const creator = pages[0];
+  await creator.context().addCookies([{
+    name: `partyplay_host_${code}`,
+    value: hostToken,
+    url: baseURL,
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: baseURL.startsWith("https://"),
+  }]);
 
   const names = [];
   const recoveryCodes = [];
   for (let index = 0; index < pages.length; index += 1) {
     const name = `E2E Close ${index + 1}`;
     names.push(name);
-    recoveryCodes.push(await join(pages[index], code, name));
+    recoveryCodes.push(await joinViaApi(pages[index], code, name));
   }
-  await Promise.all(pages.map(page => page.getByRole("button", { name: "Jestem gotowy" }).click()));
-  await creator.getByText("5/5 gotowych").waitFor({ timeout: 15000 });
-  await Promise.all(pages.map(page => page.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 25000 })));
+  check("5 graczy dołączonych przez istniejące API, kody powrotu zapisane");
+
+  for (const page of pages) {
+    const ready = await lobbyAction(page, code, { action: "ready", ready: true });
+    assert(ready.status === 200 && ready.body?.ok === true, `Gotowość lobby nie powiodła się: ${JSON.stringify(ready)}`);
+  }
+
+  const started = await lobbyAction(creator, code, { action: "start" });
+  assert(started.status === 200 && started.body?.ok === true, `Start Ostatniego Kursu nie powiódł się: ${JSON.stringify(started)}`);
+  check("Ostatni Kurs uruchomiony przez istniejące API po 5/5 gotowych");
+
+  await Promise.all(pages.map(page => page.goto(`${baseURL}/gra/akta-nocy/${code}`, {
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
+  })));
 
   const startStates = await Promise.all(pages.map((page, index) => waitState(
     page,
@@ -232,22 +312,23 @@ try {
   await pages[0].screenshot({ path: `${artifacts}/03-closed-after-refresh.png`, fullPage: true });
   check("Po pełnym refreshu wszystkie 5 istniejących sesji pozostaje w closed / finished / ok_zamknieta");
 
+  await pages[0].goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await pages[0].waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 20000 });
+  await pages[0].getByText("N417 dotarł do końca trasy.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  check("Istniejąca sesja otwierająca adres pokoju po finished wraca automatycznie na finalny ekran sprawy");
+
   const rejoinContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const rejoin = await rejoinContext.newPage();
   watch(rejoin, "closed-rejoin", errors);
   await rejoin.goto(`${baseURL}/pokoj/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  const recovered = await rejoin.evaluate(async ({ roomCode, name, recoveryCode }) => {
-    const response = await fetch(`/api/pokoj/${roomCode}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "recover", name, recoveryCode }),
-    });
-    return { status: response.status, body: await response.json().catch(() => null) };
-  }, { roomCode: code, name: names[0], recoveryCode: recoveryCodes[0] });
-  assert(recovered.status === 200 && recovered.body?.ok === true, `Nie udało się odzyskać gracza po zamknięciu Ostatniego Kursu: ${JSON.stringify(recovered.body)}`);
-
-  await rejoin.goto(`${baseURL}/gra/akta-nocy/${code}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await rejoin.getByText("SPRAWA ZAKOŃCZONA", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  await rejoin.getByText("Akta są już zamknięte.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+  await rejoin.locator("#finishedRecoverName").fill(names[0]);
+  await rejoin.locator("#finishedRecoverCode").fill(recoveryCodes[0]);
+  await rejoin.getByRole("button", { name: "WRÓĆ DO ZAMKNIĘTYCH AKT", exact: true }).click();
+  await rejoin.waitForURL(new RegExp(`/gra/akta-nocy/${code}$`), { timeout: 20000 });
   await rejoin.getByText("N417 dotarł do końca trasy.", { exact: true }).waitFor({ state: "visible", timeout: 15000 });
+
   const rejoinedState = await state(rejoin, code);
   assert(rejoinedState.status === 200, `Powrót do zamkniętego Ostatniego Kursu zwrócił HTTP ${rejoinedState.status}`);
   assert(rejoinedState.body?.role === "closed", `Po ponownym wejściu gracz dostał rolę ${rejoinedState.body?.role} zamiast closed`);
@@ -255,11 +336,11 @@ try {
   assert(rejoinedState.body?.room?.status === "finished", `Po ponownym wejściu status to ${rejoinedState.body?.room?.status} zamiast finished`);
   assert(rejoinedState.body?.room?.phase === "ok_zamknieta", `Po ponownym wejściu faza to ${rejoinedState.body?.room?.phase} zamiast ok_zamknieta`);
   await rejoin.screenshot({ path: `${artifacts}/04-closed-fresh-session-rejoin.png`, fullPage: true });
-  check("Nowa sesja bez cookies z poprawnym kodem powrotu odzyskuje gracza wyłącznie do zamkniętego stanu");
+  check("Nowa sesja bez cookies odzyskuje zamkniętą sprawę przez rzeczywisty formularz UI i trafia wyłącznie do closed / finished / ok_zamknieta");
 
   assert(errors.length === 0, `Błędy przeglądarki/API:\n${errors.join("\n")}`);
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
-  console.log(`AKTA NOCY Ostatni Kurs CLOSED REJOIN E2E PASS room=${code}`);
+  console.log(`AKTA NOCY Ostatni Kurs CLOSED REJOIN UI E2E PASS room=${code}`);
 } catch (error) {
   errors.push(error instanceof Error ? error.message : String(error));
   await fs.writeFile(`${artifacts}/report.json`, JSON.stringify(report, null, 2));
