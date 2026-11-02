@@ -1,24 +1,35 @@
-name: VA BANQUE production E2E
+name: VA BANQUE E2E
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
   pull_request:
     branches: [main]
     paths:
+      - "app/gra/va-banque/**"
+      - "app/api/gra/va-banque/**"
+      - "app/gry/va-banque/**"
+      - "app/pokoj/**"
+      - "app/api/pokoj/**"
+      - "lib/platform-db*"
+      - "components/active-game-rejoin-panel.tsx"
+      - "components/live-game-guidance.tsx"
       - "scripts/va-banque-e2e.mjs"
       - ".github/workflows/va-banque-production-e2e.yml"
-  workflow_dispatch:
+
+concurrency:
+  group: va-banque-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  va-banque-production-e2e:
+  va-banque-e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       VA_BANQUE_PRIMARY_URL: https://zagraj.fun
       VA_BANQUE_FALLBACK_URL: https://platforma-gier.vercel.app
-      VA_BANQUE_BASE_URL: https://zagraj.fun
+      VA_BANQUE_BASE_URL: http://127.0.0.1:3000
       CHECK_HOME: "0"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,10 +44,35 @@ jobs:
 
       - name: Install Playwright
         run: |
-          npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install chromium
 
-      - name: Select reachable production target
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
+
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/va-banque-pr.log 2>&1 &
+          echo $! > /tmp/va-banque-pr.pid
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 "$VA_BANQUE_BASE_URL/gry/va-banque" || true)"
+            if echo "$HTML" | grep -q "Rozstrzygnij remis"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local VA BANQUE app did not become ready."
+          cat /tmp/va-banque-pr.log || true
+          exit 1
+
+      - name: Select production target for manual regression
+        if: github.event_name == 'workflow_dispatch'
         run: |
           PRIMARY_OK=0
           for i in {1..6}; do
@@ -49,14 +85,14 @@ jobs:
           done
 
           if [ "$PRIMARY_OK" -eq 1 ]; then
-            echo "Custom domain is reachable: $VA_BANQUE_PRIMARY_URL"
             echo "VA_BANQUE_BASE_URL=$VA_BANQUE_PRIMARY_URL" >> "$GITHUB_ENV"
           else
-            echo "::warning title=zagraj.fun unavailable::Custom production domain is unreachable from the runner. Falling back to the project's Vercel production alias so VA BANQUE regression testing can still run. Check DNS configuration for zagraj.fun."
+            echo "::warning title=zagraj.fun unavailable::Using the project's production Vercel alias for the manual VA BANQUE regression."
             echo "VA_BANQUE_BASE_URL=$VA_BANQUE_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
 
-      - name: Wait for audited production version
+      - name: Wait for manual production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..60}; do
             HTML="$(curl -LfsS --max-time 20 "$VA_BANQUE_BASE_URL/gry/va-banque" || true)"
@@ -67,13 +103,17 @@ jobs:
           done
           exit 1
 
-      - name: Run VA BANQUE production browser E2E
+      - name: Run VA BANQUE browser E2E
         run: node scripts/va-banque-e2e.mjs
 
-      - name: Upload production screenshots and report
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/va-banque-pr.log || true
+
+      - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: va-banque-production-e2e
+          name: va-banque-e2e
           path: artifacts/va-banque
           if-no-files-found: ignore
