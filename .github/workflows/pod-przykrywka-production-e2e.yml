@@ -1,21 +1,32 @@
-name: Pod Przykrywką production E2E
+name: Pod Przykrywką E2E
 
 on:
-  push:
+  workflow_dispatch:
+  pull_request:
     branches: [main]
     paths:
-      - "app/api/gra/pod-przykrywka/[code]/route.ts"
+      - "app/api/gra/pod-przykrywka/**"
+      - "app/gra/pod-przykrywka/**"
+      - "app/gry/pod-przykrywka/**"
+      - "app/pokoj/**"
+      - "app/api/pokoj/**"
+      - "lib/platform-db*"
+      - "components/active-game-rejoin-panel.tsx"
       - "scripts/pod-przykrywka-e2e.mjs"
       - ".github/workflows/pod-przykrywka-production-e2e.yml"
-  workflow_dispatch:
+
+concurrency:
+  group: pod-przykrywka-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  pod-przykrywka-production-e2e:
+  pod-przykrywka-e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
-      PP_BASE_URL: https://platforma-gier.vercel.app
-      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      PP_PRIMARY_URL: https://zagraj.fun
+      PP_FALLBACK_URL: https://platforma-gier.vercel.app
+      PP_BASE_URL: http://127.0.0.1:3000
 
     steps:
       - name: Checkout
@@ -29,21 +40,56 @@ jobs:
       - name: Install app dependencies
         run: npm ci
 
-      - name: Install Playwright driver and prepare runner Chrome
+      - name: Install Playwright and Chromium
         run: |
           npm install --no-save --package-lock=false playwright@1.55.0
-          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-          if [ -z "$CHROME_BIN" ]; then
-            echo "Chrome/Chromium not found on GitHub runner"
-            exit 1
+          npx playwright install chromium
+
+      - name: Build PR app locally
+        if: github.event_name == 'pull_request'
+        run: npm run build
+
+      - name: Start PR app locally
+        if: github.event_name == 'pull_request'
+        run: |
+          nohup npm start -- -H 127.0.0.1 -p 3000 > /tmp/pod-przykrywka-pr.log 2>&1 &
+          echo $! > /tmp/pod-przykrywka-pr.pid
+
+      - name: Wait for local PR app
+        if: github.event_name == 'pull_request'
+        run: |
+          for i in {1..60}; do
+            HTML="$(curl -LfsS --max-time 10 "$PP_BASE_URL/gry/pod-przykrywka" || true)"
+            if echo "$HTML" | grep -Eqi "POD PRZYKRYWKĄ|POD PRZYKRYWKA"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Local Pod Przykrywką app did not become ready."
+          cat /tmp/pod-przykrywka-pr.log || true
+          exit 1
+
+      - name: Select production target for manual regression
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          PRIMARY_OK=0
+          for i in {1..6}; do
+            HTML="$(curl -LfsS --max-time 10 "$PP_PRIMARY_URL/gry/pod-przykrywka" || true)"
+            if echo "$HTML" | grep -Eqi "POD PRZYKRYWKĄ|POD PRZYKRYWKA"; then
+              PRIMARY_OK=1
+              break
+            fi
+            sleep 3
+          done
+          if [ "$PRIMARY_OK" -eq 1 ]; then
+            echo "PP_BASE_URL=$PP_PRIMARY_URL" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=zagraj.fun unavailable::Using the production Vercel alias for the manual Pod Przykrywką regression."
+            echo "PP_BASE_URL=$PP_FALLBACK_URL" >> "$GITHUB_ENV"
           fi
-          "$CHROME_BIN" --version
-          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
 
-      - name: Give production time to publish main push
-        run: sleep 75
-
-      - name: Wait for production landing page
+      - name: Wait for manual production target
+        if: github.event_name == 'workflow_dispatch'
         run: |
           for i in {1..60}; do
             if curl -LfsS --max-time 20 -o /dev/null "$PP_BASE_URL/gry/pod-przykrywka"; then
@@ -54,23 +100,16 @@ jobs:
           exit 1
 
       - name: Run Pod Przykrywką browser E2E
-        run: |
-          for attempt in 1 2; do
-            echo "Pod Przykrywką E2E, próba $attempt/2"
-            if node scripts/pod-przykrywka-e2e.mjs; then
-              exit 0
-            fi
-            if [ "$attempt" -eq 2 ]; then
-              exit 1
-            fi
-            echo "Pierwsza próba nie przeszła, ponawiam pełny scenariusz po krótkiej przerwie."
-            sleep 3
-          done
+        run: node scripts/pod-przykrywka-e2e.mjs
+
+      - name: Show local app log on failure
+        if: failure() && github.event_name == 'pull_request'
+        run: cat /tmp/pod-przykrywka-pr.log || true
 
       - name: Upload screenshots and report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pod-przykrywka-production-e2e
+          name: pod-przykrywka-e2e
           path: artifacts/pod-przykrywka
           if-no-files-found: ignore
