@@ -5,17 +5,17 @@ export const LEGAL_CONFIG = {
     "https://zagraj.fun",
   operatorName:
     process.env.NEXT_PUBLIC_LEGAL_OPERATOR_NAME ??
-    "[UZUPEŁNIJ: imię i nazwisko albo nazwa firmy]",
+    "Damian Mrożek",
   contactEmail:
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ??
     "hej@zagraj.fun",
   operatorAddress:
     process.env.NEXT_PUBLIC_LEGAL_OPERATOR_ADDRESS ??
-    "[UZUPEŁNIJ: adres usługodawcy]",
+    "Krakowska 84/5, 50-426 Wrocław",
   effectiveDate: "24 września 2026",
   country:
     process.env.NEXT_PUBLIC_LEGAL_OPERATOR_COUNTRY ??
-    "[UZUPEŁNIJ: kraj usługodawcy]",
+    "Polska",
 } as const;
 
 export function hasLegalContactConfigured() {
